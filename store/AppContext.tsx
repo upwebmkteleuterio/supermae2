@@ -1,0 +1,236 @@
+
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { AppState, ViewState, MoodType, Child, Activity, AgendaItem, DailyMission, ChatMessage, UserProfile, Routine } from '../types';
+
+interface AppContextProps {
+  state: AppState;
+  navigate: (page: ViewState) => void;
+  goBack: () => void;
+  setSelectedDate: (date: string) => void;
+  setMood: (mood: MoodType) => void;
+  addChild: (child: Child) => void;
+  selectChild: (id: string | null) => void;
+  toggleBreathing: (active: boolean) => void;
+  addAgendaItem: (item: AgendaItem) => void;
+  updateAgendaItem: (item: AgendaItem) => void;
+  deleteAgendaItem: (id: string) => void;
+  toggleAgendaItemCompletion: (id: string, owner: 'mãe' | 'filho') => void;
+  updateMomSelfCare: (activities: Activity[]) => void;
+  addRoutine: (routine: Routine) => void;
+  deleteRoutine: (id: string) => void;
+  selectRoutine: (id: string | null) => void;
+  addHabitToRoutine: (routineId: string, habit: Activity) => void;
+  toggleHabitCompletion: (routineId: string, habitId: string, date: string) => void;
+  deleteHabitFromRoutine: (routineId: string, habitId: string) => void;
+  setDailyMission: (mission: DailyMission) => void;
+  completeDailyMission: () => void;
+  addReward: (reward: string) => void;
+  resetState: () => void;
+  addChatMessage: (msg: ChatMessage) => void;
+  clearChatHistory: () => void;
+  setVoice: (voice: string) => void;
+  updateUserProfile: (profile: Partial<UserProfile>) => void;
+}
+
+const STORAGE_KEY = 'super_mae_app_state_v17';
+
+const getTodayStr = () => {
+  const d = new Date();
+  const offset = d.getTimezoneOffset();
+  const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().split('T')[0];
+};
+
+const INITIAL_STATE: AppState = {
+  currentPage: 'welcome',
+  navigationStack: ['welcome'],
+  selectedDate: getTodayStr(),
+  selectedMood: null,
+  lastMoodSelectedDate: null,
+  children: [],
+  selectedChildId: null,
+  isBreathingActive: false,
+  isSilentMode: false,
+  momSelfCareAgenda: [],
+  manualMomAgenda: [],
+  manualChildAgenda: [],
+  routines: [
+    { id: 'r1', name: 'Rotina Acolhedora', subtitle: 'Abraço de Mãe', image: '/images/frame1.png', habits: [] },
+    { id: 'r2', name: 'Rotina Enérgica', subtitle: 'Super Mãe em Movimento!', image: '/images/frame2.png', habits: [] }
+  ],
+  habitCompletions: {},
+  selectedRoutineId: null,
+  completedRewards: [],
+  dailyMission: null,
+  chatHistory: [],
+  selectedVoice: 'Kore',
+  userProfile: {
+    name: 'Maria Helena',
+    email: 'maria.helena@gmail.com',
+    phone: '(11) 99999-9999',
+    state: 'SP',
+    city: 'São Paulo',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
+    onboardingCompleted: false
+  }
+};
+
+const AppContext = createContext<AppContextProps | undefined>(undefined);
+
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [state, setState] = useState<AppState>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const parsed = saved ? JSON.parse(saved) : INITIAL_STATE;
+    // Se o onboarding não foi concluído, força a página inicial
+    if (!parsed.userProfile?.onboardingCompleted && parsed.currentPage !== 'welcome' && parsed.currentPage !== 'onboarding') {
+       return { ...parsed, currentPage: 'welcome', navigationStack: ['welcome'] };
+    }
+    return parsed;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
+
+  const navigate = useCallback((page: ViewState) => {
+    setState(prev => ({
+      ...prev,
+      currentPage: page,
+      navigationStack: [...prev.navigationStack, page]
+    }));
+  }, []);
+
+  const goBack = useCallback(() => {
+    setState(prev => {
+      if (prev.navigationStack.length <= 1) return prev;
+      const newStack = [...prev.navigationStack];
+      newStack.pop();
+      return { ...prev, navigationStack: newStack, currentPage: newStack[newStack.length - 1] as ViewState };
+    });
+  }, []);
+
+  const setSelectedDate = (date: string) => setState(prev => ({ ...prev, selectedDate: date }));
+
+  const setMood = useCallback((mood: MoodType) => {
+    const today = getTodayStr();
+    setState(prev => ({ 
+      ...prev, 
+      selectedMood: mood, 
+      lastMoodSelectedDate: today,
+      momSelfCareAgenda: prev.selectedMood !== mood ? [] : prev.momSelfCareAgenda 
+    }));
+  }, []);
+
+  const addChild = (child: Child) => setState(prev => ({ ...prev, children: [...prev.children, child] }));
+  const selectChild = (id: string | null) => setState(prev => ({ ...prev, selectedChildId: id }));
+  const toggleBreathing = (active: boolean) => setState(prev => ({ ...prev, isBreathingActive: active }));
+
+  const addAgendaItem = (item: AgendaItem) => {
+    setState(prev => {
+      const newState = { ...prev };
+      const participants = item.participantIds && item.participantIds.length > 0 
+        ? item.participantIds 
+        : [item.owner === 'mãe' ? 'mom' : item.childId!];
+      
+      if (participants.includes('mom')) {
+        newState.manualMomAgenda = [...newState.manualMomAgenda, { ...item, owner: 'mãe', participantIds: participants }];
+      }
+      
+      const childIds = participants.filter(p => p !== 'mom');
+      childIds.forEach(cid => {
+        newState.manualChildAgenda = [...newState.manualChildAgenda, { ...item, owner: 'filho', childId: cid, participantIds: participants }];
+      });
+      
+      return newState;
+    });
+  };
+
+  const updateAgendaItem = (item: AgendaItem) => {
+    setState(prev => ({
+      ...prev,
+      manualMomAgenda: prev.manualMomAgenda.map(i => i.id === item.id ? { ...item, owner: 'mãe' } : i),
+      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === item.id ? { ...item, childId: i.childId, owner: 'filho' } : i)
+    }));
+  };
+
+  const deleteAgendaItem = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      manualMomAgenda: prev.manualMomAgenda.filter(i => i.id !== id),
+      manualChildAgenda: prev.manualChildAgenda.filter(i => i.id !== id)
+    }));
+  };
+
+  const toggleAgendaItemCompletion = (id: string, owner: 'mãe' | 'filho') => {
+    setState(prev => ({
+      ...prev,
+      manualMomAgenda: prev.manualMomAgenda.map(i => i.id === id ? { ...i, completed: !i.completed } : i),
+      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === id ? { ...i, completed: !i.completed } : i)
+    }));
+  };
+
+  const updateMomSelfCare = (activities: Activity[]) => setState(prev => ({ ...prev, momSelfCareAgenda: activities }));
+  
+  const addRoutine = (routine: Routine) => setState(prev => ({ ...prev, routines: [...prev.routines, routine] }));
+  const deleteRoutine = (id: string) => setState(prev => ({ ...prev, routines: prev.routines.filter(r => r.id !== id) }));
+  const selectRoutine = (id: string | null) => setState(prev => ({ ...prev, selectedRoutineId: id }));
+
+  const addHabitToRoutine = (routineId: string, habit: Activity) => {
+    setState(prev => ({
+      ...prev,
+      routines: prev.routines.map(r => r.id === routineId ? { ...r, habits: [...r.habits, habit] } : r)
+    }));
+  };
+
+  const toggleHabitCompletion = (routineId: string, habitId: string, date: string) => {
+    setState(prev => {
+      const completions = { ...prev.habitCompletions };
+      const dateCompletions = [...(completions[date] || [])];
+      
+      if (dateCompletions.includes(habitId)) {
+        completions[date] = dateCompletions.filter(id => id !== habitId);
+      } else {
+        completions[date] = [...dateCompletions, habitId];
+      }
+      
+      return { ...prev, habitCompletions: completions };
+    });
+  };
+
+  const deleteHabitFromRoutine = (routineId: string, habitId: string) => {
+    setState(prev => ({
+      ...prev,
+      routines: prev.routines.map(r => r.id === routineId ? {
+        ...r,
+        habits: r.habits.filter(h => h.id !== habitId)
+      } : r)
+    }));
+  };
+
+  const setDailyMission = (mission: DailyMission) => setState(prev => ({ ...prev, dailyMission: mission }));
+  const completeDailyMission = () => setState(prev => ({ ...prev, dailyMission: prev.dailyMission ? { ...prev.dailyMission, completed: true } : null }));
+  const addReward = (reward: string) => setState(prev => ({ ...prev, completedRewards: [...prev.completedRewards, reward] }));
+  const resetState = () => setState(INITIAL_STATE);
+  const addChatMessage = (msg: ChatMessage) => setState(prev => ({ ...prev, chatHistory: [...prev.chatHistory, msg] }));
+  const clearChatHistory = () => setState(prev => ({ ...prev, chatHistory: [] }));
+  const setVoice = (voice: string) => setState(prev => ({ ...prev, selectedVoice: voice }));
+  const updateUserProfile = (profile: Partial<UserProfile>) => setState(prev => ({ ...prev, userProfile: { ...prev.userProfile, ...profile } }));
+
+  return (
+    <AppContext.Provider value={{ 
+      state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
+      toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
+      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, toggleHabitCompletion, deleteHabitFromRoutine,
+      setDailyMission, completeDailyMission, addReward, resetState,
+      addChatMessage, clearChatHistory, setVoice, updateUserProfile
+    }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) throw new Error('useApp must be used within an AppProvider');
+  return context;
+};
