@@ -49,12 +49,34 @@ export const BottomNav: React.FC = () => {
     }
   };
 
-  // useLayoutEffect executa ANTES da pintura, evitando o flash sem bolha
+  // Sincronização em tempo real com ResizeObserver
+  // Isso garante que a bolha acompanhe a expansão do texto (maxWidth) milimetricamente
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.ResizeObserver) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updatePosition();
+    });
+
+    // Observamos todos os itens para garantir transições suaves entre qualquer um
+    itemRefs.current.forEach(ref => {
+      if (ref) resizeObserver.observe(ref);
+    });
+
+    return () => resizeObserver.disconnect();
+  }, [activeIndex]);
+
+  // Garantia de primeiro carregamento e mudanças de estado
   useLayoutEffect(() => {
     updatePosition();
-    // Pequeno fallback para garantir que fontes/layout finalizaram
-    const timer = setTimeout(updatePosition, 100);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(updatePosition, 50);
+    const timer2 = setTimeout(updatePosition, 300); // Meio da animação
+    const timer3 = setTimeout(updatePosition, 600); // Fim da animação
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
   }, [activeIndex, state.currentPage]);
 
   useEffect(() => {

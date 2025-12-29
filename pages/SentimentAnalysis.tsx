@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../store/AppContext';
-import { SOSButton } from '../components/SOSButton';
 import { VoiceSelectionModal } from '../components/VoiceSelectionModal';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { Send, Volume2, ArrowLeft, Loader2, Sparkles, Trash2, Pause, PlayCircle, Mic2, AudioLines } from 'lucide-react';
+import { Send, Volume2, ArrowLeft, Loader2, Sparkles, Trash2, Mic2, AudioLines, MoreVertical } from 'lucide-react';
 import { GoogleGenAI, Chat, Modality } from "@google/genai";
 import { ChatMessage } from '../types';
 import { BottomNav } from '../components/BottomNav';
@@ -45,6 +44,7 @@ export const SentimentAnalysis: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showVoiceModal, setShowVoiceModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -170,21 +170,43 @@ export const SentimentAnalysis: React.FC = () => {
         </svg>
       </div>
 
-      <header className="relative z-10 flex items-center justify-between px-6 pt-14 pb-4 bg-white/50 backdrop-blur-sm shadow-sm border-b border-purple-50">
-        <div className="flex items-center gap-4">
-          <button onClick={goBack} className="p-2 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
-            <ArrowLeft className="w-5 h-5" />
+      <header className="relative z-40 flex items-center px-6 pt-14 pb-4 bg-white/50 backdrop-blur-sm shadow-sm border-b border-purple-50">
+        <button onClick={goBack} className="p-2 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform shrink-0">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        
+        <h1 className="flex-1 text-center text-lg font-bold text-slate-700 truncate px-2">Análise de sentimentos</h1>
+        
+        <div className="relative shrink-0">
+          <button 
+            onClick={() => setShowMenu(!showMenu)} 
+            className="p-2 text-slate-400 hover:text-purple-600 transition-colors active:scale-90"
+          >
+            <MoreVertical className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold text-slate-700">Análise de sentimentos</h1>
-        </div>
-        <div className="flex items-center gap-1">
-           <button onClick={() => setShowVoiceModal(true)} className="p-2 text-slate-400 hover:text-purple-500 transition-colors active:scale-90">
-             <Mic2 className="w-5 h-5" />
-           </button>
-           <button onClick={() => setShowClearModal(true)} className="p-2 text-slate-400 hover:text-red-500 transition-colors active:scale-90">
-             <Trash2 className="w-5 h-5" />
-           </button>
-           <SOSButton />
+
+          {showMenu && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)}></div>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-purple-50 py-2 z-20 animate-in zoom-in-95 duration-200 origin-top-right">
+                <button 
+                  onClick={() => { setShowVoiceModal(true); setShowMenu(false); }} 
+                  className="w-full px-4 py-3 text-left text-sm font-bold text-slate-600 hover:bg-purple-50 flex items-center gap-3 transition-colors"
+                >
+                  <Volume2 className="w-4 h-4 text-purple-400" /> 
+                  Configurar Voz
+                </button>
+                <div className="h-px bg-purple-50 mx-2 my-1"></div>
+                <button 
+                  onClick={() => { setShowClearModal(true); setShowMenu(false); }} 
+                  className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-50 flex items-center gap-3 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" /> 
+                  Limpar Histórico
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
