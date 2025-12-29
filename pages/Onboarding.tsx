@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../store/AppContext';
 import { ArrowLeft, ChevronRight, Check, ShieldCheck, Eye, EyeOff, X, AlertCircle } from 'lucide-react';
 
@@ -27,6 +27,16 @@ export const Onboarding: React.FC = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-scroll para o topo quando houver erro
+  useEffect(() => {
+    if (error) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Remove o erro automaticamente após 4 segundos
+      const timer = setTimeout(() => setError(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -99,6 +109,19 @@ export const Onboarding: React.FC = () => {
         <div className="absolute bottom-[20%] -right-20 w-72 h-72 bg-purple-300/10 rounded-full blur-[110px] animate-float-reverse"></div>
       </div>
 
+      {/* Floating Error Toast - Padrão Profissional Mobile */}
+      {error && (
+        <div className="fixed top-12 left-6 right-6 z-[100] animate-in slide-in-from-top-4 duration-300">
+          <div className="bg-red-500/90 backdrop-blur-md text-white p-4 rounded-2xl flex items-center gap-3 shadow-[0_10px_30px_rgba(239,68,68,0.3)] border border-red-400/20">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span className="text-xs font-bold leading-tight flex-1">{error}</span>
+            <button onClick={() => setError(null)} className="p-1 hover:bg-white/10 rounded-lg">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header com Progresso */}
       <header className="pt-12 px-6 pb-4 bg-white/80 backdrop-blur-md flex flex-col gap-4 shadow-sm border-b border-slate-100 relative z-10">
         <div className="flex items-center gap-4">
@@ -122,13 +145,6 @@ export const Onboarding: React.FC = () => {
       </header>
 
       <main className="flex-1 px-6 pt-8 pb-32 overflow-y-auto no-scrollbar relative z-10">
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-3 mb-6 animate-in slide-in-from-top-2">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span className="text-xs font-bold leading-tight">{error}</span>
-          </div>
-        )}
-
         {/* STEP 1: DADOS PESSOAIS */}
         {step === 1 && (
           <div className="space-y-6">

@@ -4,6 +4,7 @@ import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
 import { WeeklyCalendar } from '../components/WeeklyCalendar';
+import { AnimatedCalendarIcon } from '../components/AnimatedCalendarIcon';
 import { 
   Heart, 
   ChevronRight, 
@@ -14,12 +15,18 @@ import {
   Sparkles,
   Baby,
   CalendarDays,
-  ExternalLink
+  ExternalLink,
+  LogOut
 } from 'lucide-react';
 
 export const Home: React.FC = () => {
-  const { navigate, state } = useApp();
+  const { navigate, state, updateUserProfile } = useApp();
   const { userProfile } = state;
+
+  const handleResetForClient = () => {
+    updateUserProfile({ onboardingCompleted: false });
+    navigate('welcome');
+  };
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
@@ -94,20 +101,18 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Card Diário Emocional */}
+        {/* Card Diário Emocional com Ícone Animado */}
         <button 
           onClick={() => navigate('sentiment_analysis')}
-          className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative"
+          className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative overflow-hidden"
         >
           <div className="absolute -top-2 left-6 z-10 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
             Em construção
           </div>
           <h3 className="text-slate-400 text-sm font-bold mb-4">Diário emocional</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-2">
-            <div className="w-12 h-12 bg-purple-500 rounded-2xl flex items-center justify-center text-white mb-4 shadow-lg shadow-purple-100 group-hover:rotate-6 transition-transform">
-               <Calendar className="w-6 h-6" />
-            </div>
-            <div className="flex items-center justify-between w-full">
+            <AnimatedCalendarIcon />
+            <div className="flex items-center justify-between w-full mt-4">
                <p className="text-[10px] text-slate-400 font-bold leading-tight max-w-[80px]">Como você está se sentindo?</p>
                <ChevronRight className="w-4 h-4 text-slate-300" />
             </div>
@@ -151,7 +156,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Menu de Atalhos */}
-      <div className="px-6 pb-24">
+      <div className="px-6 pb-4">
         <div className="bg-slate-100 rounded-[2.5rem] p-6 border border-slate-200/50">
           <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
             <LayoutGrid className="w-3 h-3" /> Atalhos Rápidos
@@ -163,6 +168,16 @@ export const Home: React.FC = () => {
             <QuickLink icon={<ExternalLink className="w-4 h-4" />} label="Integrada" onClick={() => navigate('integrated_agenda')} />
           </div>
         </div>
+      </div>
+
+      {/* Debug Section for Client */}
+      <div className="px-6 pb-32 flex justify-center">
+        <button 
+          onClick={handleResetForClient}
+          className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:text-purple-400 transition-colors py-4 active:scale-95"
+        >
+          <LogOut className="w-3 h-3" /> Voltar para tela de boas-vindas
+        </button>
       </div>
 
       <style>{`

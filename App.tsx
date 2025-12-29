@@ -19,6 +19,7 @@ import { AddChild } from './pages/AddChild';
 import { RoutinesList } from './pages/RoutinesList';
 import { RoutineDetail } from './pages/RoutineDetail';
 import { HabitSelection } from './pages/HabitSelection';
+import { BottomNav } from './components/BottomNav';
 
 const AppRouter: React.FC = () => {
   const { state } = useApp();
@@ -51,7 +52,10 @@ const AppRouter: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AppProvider>
-      <AppRouter />
+      <div className="relative min-h-screen">
+        <AppRouter />
+        <BottomNav />
+      </div>
     </AppProvider>
   );
 };

@@ -2,7 +2,6 @@
 import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { BottomNav } from './BottomNav';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -48,8 +47,6 @@ export const Layout: React.FC<LayoutProps> = ({
           {children}
         </div>
       </main>
-
-      <BottomNav />
     </div>
   );
 };
