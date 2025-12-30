@@ -36,6 +36,7 @@ export interface UserProfile {
   diagnosisStatus?: string;
   appInterests?: string[];
   onboardingCompleted?: boolean;
+  hasSeenWelcomeModal?: boolean;
 }
 
 export interface Activity {

@@ -77,7 +77,8 @@ const INITIAL_STATE: AppState = {
     state: 'SP',
     city: 'São Paulo',
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
-    onboardingCompleted: false
+    onboardingCompleted: false,
+    hasSeenWelcomeModal: false
   }
 };
 

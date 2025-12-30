@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
@@ -23,10 +23,23 @@ import {
 export const Home: React.FC = () => {
   const { navigate, state, updateUserProfile } = useApp();
   const { userProfile, routines, habitCompletions, selectedDate } = state;
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    // Exibe o modal se o onboarding foi concluído mas o modal ainda não foi visto
+    if (userProfile.onboardingCompleted && !userProfile.hasSeenWelcomeModal) {
+      setShowWelcome(true);
+    }
+  }, [userProfile.onboardingCompleted, userProfile.hasSeenWelcomeModal]);
 
   const handleResetForClient = () => {
-    updateUserProfile({ onboardingCompleted: false });
+    updateUserProfile({ onboardingCompleted: false, hasSeenWelcomeModal: false });
     navigate('welcome');
+  };
+
+  const closeWelcome = () => {
+    updateUserProfile({ hasSeenWelcomeModal: true });
+    setShowWelcome(false);
   };
 
   const habitsData = useMemo(() => {
@@ -48,6 +61,9 @@ export const Home: React.FC = () => {
       total: totalHabits
     };
   }, [routines, habitCompletions, selectedDate]);
+
+  // Determina qual versão do modal exibir baseada na resposta de onboarding
+  const isAtypical = userProfile.welcomingGoal?.toLowerCase().includes('atípico');
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
@@ -213,6 +229,63 @@ export const Home: React.FC = () => {
           <LogOut className="w-3 h-3" /> Voltar para tela de boas-vindas
         </button>
       </div>
+
+      {/* Modais de Boas-vindas Personalizados */}
+      {showWelcome && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in duration-300" style={{ backgroundColor: 'rgba(30, 31, 41, 0.85)' }}>
+          {isAtypical ? (
+            /* Modal Mãe Atípica */
+            <article className="bg-white rounded-[16px] shadow-2xl p-[30px] flex flex-col items-center text-center w-full max-w-[340px] animate-in zoom-in-95 duration-300">
+              <div className="mb-6">
+                <img 
+                  alt="Envelope with flowers" 
+                  className="w-[220px] h-auto object-contain" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCv0BfWiRm4mMwYuQAet7wGM2CEKn4eTRh7QvxYRWe8Td4FFcyOK3x813RvQmulCdNTS1z5_hfceBNW3wR1MS-9PNW88VmskejMlL54xylClASWeQ7tpR86qsx0-cwsXEthx4Gxcxv6LYSqMhafb10vvqbsZQ0rdMBCf0uqw-euSNnEtaaNaOwJOezHdfL8WMskXQytkPxG16jOw-LP-BXikn7zuDLE3-bt6A4InJKqIfWIVP6nK8WamWSFVelAVHrfRBuXMgWgvnOB" 
+                />
+              </div>
+              <section className="mb-8">
+                <h1 className="text-[#2D2D2D] font-bold leading-[1.3] text-[22px] mb-0">
+                  Bem-vinda à sua rede de apoio personalizada, Mãe Atípica!
+                </h1>
+                <p className="text-[#6B6B6B] font-medium leading-[1.5] px-2 mt-[15px] text-[16px]">
+                  Aqui você não precisa dar conta de tudo. Aqui você será cuidada também.
+                </p>
+              </section>
+              <button 
+                onClick={closeWelcome}
+                className="w-full bg-[#8e54a9] hover:bg-purple-600 text-white font-bold rounded-[25px] transition duration-300 ease-in-out transform active:scale-95 shadow-md h-[50px] mt-[10px]"
+              >
+                Vamos lá!
+              </button>
+            </article>
+          ) : (
+            /* Modal Apoio Emocional */
+            <main className="bg-white rounded-[32px] shadow-2xl w-full max-w-[340px] flex flex-col items-center text-center px-[32px] py-[40px] animate-in zoom-in-95 duration-300">
+              <div className="flex justify-center w-full mb-[20px]">
+                <img 
+                  alt="Flowers in a pot" 
+                  className="w-[140px] h-auto object-contain block mx-auto" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkVUSzNrIYiYzblKCpuiwNULUcBYnM8yrc7aqP4bsDhmQsRX_fMaDX1BD9bobo3MDgYleZU_BUtUUqEA4EjT7JCe_xZF-rBZ4IqfCE4CGx2n1SsOxOZQbPPzeoKRbKmt449CNxNpWRdIMvJrxZ8I-SetWBGtATABAN_nRLBTlcEkWLLkIbTOIgYYW3oQ4zTToE9zWIOW5Wj3lgGRpTpjwchPr-EuFQz5lw--YdN92VntmhdgU6_8Pbfbyw-r3gSSjd9dXbKAYimtdx" 
+                />
+              </div>
+              <section className="space-y-4 mb-[32px]">
+                <h1 className="text-[22px] font-bold leading-snug tracking-tight text-[#1F2937]">
+                  Bem-vinda ao seu espaço de cuidado, Super Mãe!
+                </h1>
+                <p className="text-[16px] text-[#6B7280] leading-[1.5] font-normal px-2">
+                  A maternidade não precisa ser solitária. Aqui você encontra leveza e apoio.
+                </p>
+              </section>
+              <button 
+                onClick={closeWelcome}
+                className="w-full hover:bg-[#4b3791] active:scale-95 transition-all duration-200 text-white font-bold text-base py-3.5 rounded-full bg-[#6A4BC1] shadow-[0_10px_20px_-5px_rgba(106,75,193,0.5)]"
+              >
+                Vamos lá!
+              </button>
+            </main>
+          )}
+        </div>
+      )}
     </Layout>
   );
 };

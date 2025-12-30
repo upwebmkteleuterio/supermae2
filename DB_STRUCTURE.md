@@ -17,6 +17,7 @@ Simulado via React Context para gerenciar o estado da aplicação em tempo real.
 - `habitCompletions`: Objeto Record<String, String[]> (Data -> IDs de Hábitos concluídos).
 - `chatHistory`: Array de Objetos { role, text, timestamp }.
 - `userProfile`: Objeto com dados cadastrais e preferências.
+  - `hasSeenWelcomeModal`: Boolean (Controla exibição do modal de recepção pós-onboarding)
 
 ### 2. `agenda_items` (Estrutura lógica)
 *Nota: Atualizações em tarefas com o mesmo ID em listas diferentes (mãe/filho) são síncronas.*
