@@ -93,10 +93,11 @@ export const MoodDiary: React.FC = () => {
                   className="flex flex-col items-center gap-1 group relative"
                 >
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${isToday ? 'bg-purple-50 ring-2 ring-purple-100' : ''}`}>
-                    {moodColors.length > 0 && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                         <svg className="w-full h-full -rotate-90" viewBox="0 0 32 32">
-                           {moodColors.map((color, idx) => (
+                    {/* Anéis Coloridos ou Círculo Vazio */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                       <svg className="w-full h-full -rotate-90" viewBox="0 0 32 32">
+                         {moodColors.length > 0 ? (
+                           moodColors.map((color, idx) => (
                              <circle
                                key={idx}
                                cx="16" cy="16" r="14"
@@ -107,10 +108,19 @@ export const MoodDiary: React.FC = () => {
                                strokeDashoffset={-((idx / moodColors.length) * 88)}
                                className="transition-all duration-500"
                              />
-                           ))}
-                         </svg>
-                      </div>
-                    )}
+                           ))
+                         ) : (
+                           /* Círculo Cinza Claro para dias sem registro */
+                           <circle
+                             cx="16" cy="16" r="14"
+                             fill="none"
+                             stroke="#F1F5F9"
+                             strokeWidth="2"
+                             className="opacity-100"
+                           />
+                         )}
+                       </svg>
+                    </div>
                     <span className={`text-[11px] font-bold z-10 ${moodColors.length > 0 ? 'text-slate-700' : 'text-slate-400'}`}>
                       {date.getDate()}
                     </span>

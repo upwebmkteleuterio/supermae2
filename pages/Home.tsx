@@ -28,7 +28,7 @@ export const Home: React.FC = () => {
     navigate('welcome');
   };
 
-  const habitsProgress = useMemo(() => {
+  const habitsData = useMemo(() => {
     let totalHabits = 0;
     let completedHabits = 0;
     const todayCompletions = habitCompletions[selectedDate] || [];
@@ -42,7 +42,10 @@ export const Home: React.FC = () => {
       });
     });
 
-    return totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+    return {
+      progress: totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0,
+      total: totalHabits
+    };
   }, [routines, habitCompletions, selectedDate]);
 
   return (
@@ -73,7 +76,7 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Calendário Semanal Modular */}
+      {/* Calendário Semanal Modular - Integrado com Diário Emocional */}
       <div className="px-4 mb-6 relative">
         <WeeklyCalendar />
       </div>
@@ -104,7 +107,7 @@ export const Home: React.FC = () => {
                    strokeLinecap="round"
                    strokeDasharray="125.6"
                    style={{ 
-                     strokeDashoffset: 125.6 * (1 - (habitsProgress / 100)),
+                     strokeDashoffset: 125.6 * (1 - (habitsData.progress / 100)),
                      transition: 'stroke-dashoffset 1s ease-out'
                    }}
                  />
@@ -116,10 +119,12 @@ export const Home: React.FC = () => {
                  </defs>
                </svg>
                <div className="absolute inset-0 flex items-end justify-center pb-1">
-                  <span className="text-sm font-black text-slate-700">{habitsProgress}%</span>
+                  <span className="text-sm font-black text-slate-700">{habitsData.progress}%</span>
                </div>
              </div>
-             <p className="text-[10px] text-slate-400 font-bold mt-4">Concluído hoje</p>
+             <p className="text-[10px] text-slate-400 font-bold mt-4">
+               {habitsData.total === 0 ? 'Sem tarefas hoje' : 'Concluído hoje'}
+             </p>
           </div>
         </div>
 

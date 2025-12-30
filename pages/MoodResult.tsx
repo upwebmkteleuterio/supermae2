@@ -117,18 +117,18 @@ export const MoodResult: React.FC = () => {
         <h1 className="text-xl font-bold text-slate-800">Cuidado emocional</h1>
       </div>
 
-      <div className="px-6 flex flex-col items-center justify-center h-[calc(100vh-180px)] pb-20">
-        <div className="mb-8">
+      <div className="px-6 flex flex-col items-center justify-center h-full min-h-[calc(100vh-280px)] pb-40">
+        <div className="mb-8 shrink-0">
           <AIIcon className="w-32 h-32" />
         </div>
 
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 shrink-0">
           <span className="text-purple-400 font-bold text-sm uppercase tracking-widest">
             {new Date(state.selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
           </span>
         </div>
 
-        <div className="w-full bg-white/80 backdrop-blur-md rounded-[2.5rem] p-8 shadow-xl border border-white relative overflow-hidden min-h-[200px] flex flex-col items-center justify-center">
+        <div className="w-full bg-white/80 backdrop-blur-md rounded-[2.5rem] p-8 shadow-xl border border-white relative overflow-hidden min-h-fit py-10 flex flex-col items-center justify-center">
           {loading ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <Loader2 className="w-10 h-10 animate-spin text-purple-400" />
@@ -151,15 +151,16 @@ export const MoodResult: React.FC = () => {
           )}
         </div>
 
-        <div className="mt-10 bg-[#E9E4FF] px-8 py-4 rounded-[1.8rem] shadow-inner">
+        <div className="mt-10 bg-[#E9E4FF] px-8 py-4 rounded-[1.8rem] shadow-inner shrink-0">
            <p className="text-purple-900 font-bold text-sm">Você não está sozinha!</p>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 z-30">
+      {/* Botão Fixo Bottom - Ajustado para bottom-28 para ficar acima da nav bar */}
+      <div className="fixed bottom-28 left-0 right-0 p-6 pointer-events-none z-30">
         <button 
           onClick={() => navigate('mood_diary')}
-          className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-100 active:scale-95 transition-all text-sm uppercase tracking-widest"
+          className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-200 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest"
         >
           Acessar diário emocional
         </button>
