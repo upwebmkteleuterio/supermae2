@@ -66,6 +66,8 @@ export const HabitSelection: React.FC = () => {
       ...showConfigModal,
       id: Math.random().toString(36).substr(2, 9),
       period: habitPeriod,
+      // Salva a configuração de lembrete
+      reminder: habitReminder,
       repetition: repetition,
       customDays: repetition === 'Personalizar' ? customDays : undefined,
       completed: false

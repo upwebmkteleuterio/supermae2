@@ -45,6 +45,8 @@ export interface Activity {
   completed: boolean;
   period?: 'Manhã' | 'Tarde' | 'Noite' | 'A qualquer momento';
   category?: string;
+  // Adicionado para suportar lembretes em hábitos
+  reminder?: boolean;
   repetition?: string;
   customDays?: number[]; // 0-6 (Sun-Sat)
 }

@@ -20,6 +20,7 @@ interface AppContextProps {
   deleteRoutine: (id: string) => void;
   selectRoutine: (id: string | null) => void;
   addHabitToRoutine: (routineId: string, habit: Activity) => void;
+  updateHabitInRoutine: (routineId: string, habit: Activity) => void; // Novo
   registerHabitTemplate: (habit: Activity) => void; // Novo
   deleteCategory: (oldCategory: string, migrateToCategory: string) => void; // Novo
   toggleHabitCompletion: (routineId: string, habitId: string, date: string) => void;
@@ -177,6 +178,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
+  const updateHabitInRoutine = (routineId: string, habit: Activity) => {
+    setState(prev => ({
+      ...prev,
+      routines: prev.routines.map(r => r.id === routineId 
+        ? { ...r, habits: r.habits.map(h => h.id === habit.id ? habit : h) } 
+        : r)
+    }));
+  };
+
   const registerHabitTemplate = (habit: Activity) => {
     setState(prev => {
       const isAlreadyIn = prev.customHabitTemplates.some(h => h.title === habit.title && h.category === habit.category);
@@ -252,7 +262,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider value={{ 
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
-      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
+      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
       addChatMessage, clearChatHistory, setVoice, updateUserProfile
     }}>
