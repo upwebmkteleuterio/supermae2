@@ -2,14 +2,17 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 
-export const CalendarHeader: React.FC = () => {
+interface CalendarHeaderProps {
+  disabled?: boolean;
+}
+
+export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ disabled = false }) => {
   const { state, setSelectedDate } = useApp();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const days = useMemo(() => {
     const arr = [];
     const today = new Date();
-    // Aumentado para 45 dias para permitir visualizar início do mês mesmo no final do período
     for (let i = -45; i <= 30; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
@@ -40,7 +43,7 @@ export const CalendarHeader: React.FC = () => {
   };
 
   const handleScroll = () => {
-    if (!scrollContainerRef.current) return;
+    if (!scrollContainerRef.current || disabled) return;
     
     const container = scrollContainerRef.current;
     const containerCenter = container.scrollLeft + container.offsetWidth / 2;
@@ -70,10 +73,10 @@ export const CalendarHeader: React.FC = () => {
       scrollToDate(state.selectedDate, 'auto');
     }, 150);
     return () => clearTimeout(timer);
-  }, []);
+  }, [state.selectedDate]);
 
   return (
-    <div className="relative mb-8 h-28 flex items-center overflow-hidden">
+    <div className={`relative mb-8 h-28 flex items-center overflow-hidden ${disabled ? 'opacity-80 grayscale-[0.2]' : ''}`}>
       
       {/* Indicador Central Fixo */}
       <div className="absolute left-1/2 -translate-x-1/2 w-16 h-20 bg-purple-600 rounded-[2rem] shadow-[0_15px_30px_rgba(147,51,234,0.35)] z-10 pointer-events-none border-none ring-0">
@@ -83,7 +86,7 @@ export const CalendarHeader: React.FC = () => {
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex items-center gap-6 overflow-x-auto px-[calc(50%-32px)] py-4 no-scrollbar snap-x snap-mandatory scroll-smooth w-full relative z-20"
+        className={`flex items-center gap-6 overflow-x-auto px-[calc(50%-32px)] py-4 no-scrollbar snap-x snap-mandatory scroll-smooth w-full relative z-20 ${disabled ? 'pointer-events-none' : ''}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {days.map((date, idx) => {
@@ -97,8 +100,10 @@ export const CalendarHeader: React.FC = () => {
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                setSelectedDate(dStr);
-                scrollToDate(dStr, 'smooth');
+                if (!disabled) {
+                  setSelectedDate(dStr);
+                  scrollToDate(dStr, 'smooth');
+                }
               }}
               className={`flex flex-col items-center min-w-[64px] py-4 transition-all duration-300 snap-center shrink-0 outline-none select-none ${
                 active 

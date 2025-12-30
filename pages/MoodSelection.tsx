@@ -7,9 +7,12 @@ import { CalendarHeader } from '../components/CalendarHeader';
 import { Check, AlertCircle } from 'lucide-react';
 
 export const MoodSelection: React.FC = () => {
-  const { state, navigate, setTempMoodSelection } = useApp();
+  const { state, navigate, setTempMoodSelection, saveMoodRecord } = useApp();
   const [selectedIds, setSelectedIds] = useState<string[]>(state.moodHistory[state.selectedDate] || []);
   const [error, setError] = useState<string | null>(null);
+
+  // Verifica se já existe um registro para esta data (modo edição)
+  const isEditing = !!state.moodHistory[state.selectedDate];
 
   useEffect(() => {
     setSelectedIds(state.moodHistory[state.selectedDate] || []);
@@ -33,21 +36,29 @@ export const MoodSelection: React.FC = () => {
       setError("Por favor, selecione ao menos um sentimento.");
       return;
     }
-    // Salvamento temporário via estado global para a tela de resultado ler
-    setTempMoodSelection(selectedIds);
-    navigate('mood_result');
+
+    if (isEditing) {
+      // Se for edição, salva e volta direto para o diário, sem IA
+      saveMoodRecord(state.selectedDate, selectedIds);
+      navigate('mood_diary');
+    } else {
+      // Se for novo, segue o fluxo normal da IA
+      setTempMoodSelection(selectedIds);
+      navigate('mood_result');
+    }
   };
 
   return (
     <Layout title="Registro de humor" showBack themeColor="bg-[#F9F7FC]" headerTransparent={false}>
       <div className="px-6 pt-4 pb-4">
-        <CalendarHeader />
+        {/* CalendarHeader desativado para cliques conforme solicitado */}
+        <CalendarHeader disabled />
       </div>
 
       <div className="text-center mb-8 px-6">
         <p className="text-slate-600 text-sm font-medium">Como você está se sentindo hoje?</p>
         <p className="text-[10px] font-black uppercase tracking-widest mt-1 animate-pulse-hint">
-          Escolha até 3 sentimentos
+          {isEditing ? "Alterando seu registro" : "Escolha até 3 sentimentos"}
         </p>
       </div>
 
@@ -95,7 +106,7 @@ export const MoodSelection: React.FC = () => {
           onClick={handleContinue}
           className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-200 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest"
         >
-          Continuar
+          {isEditing ? "Salvar Alterações" : "Continuar"}
         </button>
       </div>
 

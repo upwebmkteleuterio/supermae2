@@ -1,19 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS } from '../constants';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X, Edit2 } from 'lucide-react';
+import { MoodCircle } from './MoodCircle';
 
 export const WeeklyCalendar: React.FC = () => {
   const { state, setSelectedDate, navigate } = useApp();
+  const [selectedDayDetail, setSelectedDayDetail] = useState<string | null>(null);
   
   const getWeekDays = () => {
     const now = new Date();
-    const currentDay = now.getDay(); // 0 (Dom) a 6 (Sab)
-    
-    // Ajuste para Segunda como primeiro dia (1)
-    // Se hoje for Domingo (0), retrocede 6 dias para pegar a segunda
-    // Caso contrário, retrocede (currentDay - 1) dias.
+    const currentDay = now.getDay();
     const diff = currentDay === 0 ? 6 : currentDay - 1;
     
     const monday = new Date(now);
@@ -43,9 +41,18 @@ export const WeeklyCalendar: React.FC = () => {
     return sentimentsIds.map(id => SENTIMENTS.find(s => s.id === id)?.color).filter(Boolean) as string[];
   };
 
+  const handleDayClick = (dateStr: string) => {
+    setSelectedDate(dateStr);
+    if (state.moodHistory[dateStr]) {
+      setSelectedDayDetail(dateStr);
+    } else {
+      navigate('mood_selection');
+    }
+  };
+
   return (
     <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 relative">
-      <div className="grid grid-cols-7 gap-y-6">
+      <div className="grid grid-cols-7 gap-y-4">
         {weekDays.map((day, i) => {
           const isSelected = state.selectedDate === day.date;
           const moodColors = getMoodColors(day.date);
@@ -53,55 +60,19 @@ export const WeeklyCalendar: React.FC = () => {
           return (
             <button 
               key={i} 
-              onClick={() => setSelectedDate(day.date)}
+              onClick={() => handleDayClick(day.date)}
               className="flex flex-col items-center gap-2 group outline-none"
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${
-                day.isToday ? 'bg-purple-50 ring-2 ring-purple-100' : ''
-              } ${isSelected ? 'scale-110' : ''}`}>
-                
-                {/* Mood Rings - Exatamente como no Diário Emocional */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                   <svg className="w-full h-full -rotate-90" viewBox="0 0 32 32">
-                     {moodColors.length > 0 ? (
-                       moodColors.map((color, idx) => (
-                         <circle
-                           key={idx}
-                           cx="16" cy="16" r="14"
-                           fill="none"
-                           stroke={color}
-                           strokeWidth="3"
-                           strokeDasharray={`${(1 / moodColors.length) * 88} 88`}
-                           strokeDashoffset={-((idx / moodColors.length) * 88)}
-                           className="transition-all duration-500"
-                         />
-                       ))
-                     ) : (
-                       <circle
-                         cx="16" cy="16" r="14"
-                         fill="none"
-                         stroke="#F1F5F9"
-                         strokeWidth="2"
-                       />
-                     )}
-                   </svg>
-                </div>
-
-                <div className={`w-1.5 h-1.5 rounded-full z-10 transition-colors ${
-                   day.isToday ? 'bg-purple-500' : 
-                   day.label === 'D' ? 'bg-orange-200' : 
-                   'bg-slate-200'
-                 } ${moodColors.length > 0 ? 'opacity-0' : 'opacity-100'}`}></div>
-              </div>
+              <MoodCircle 
+                colors={moodColors} 
+                dayNum={day.dayNum} 
+                isToday={day.isToday} 
+                isSelected={isSelected}
+              />
               
-              <div className="flex flex-col items-center">
-                <span className={`text-[9px] font-black transition-colors ${isSelected ? 'text-purple-500' : 'text-slate-300'}`}>
-                  {day.label}
-                </span>
-                <span className={`text-[10px] font-black transition-colors ${isSelected ? 'text-purple-600' : 'text-slate-600'}`}>
-                  {day.dayNum}
-                </span>
-              </div>
+              <span className={`text-[9px] font-black transition-colors ${isSelected ? 'text-purple-500' : 'text-slate-300'}`}>
+                {day.label}
+              </span>
             </button>
           );
         })}
@@ -114,6 +85,53 @@ export const WeeklyCalendar: React.FC = () => {
          <span className="text-[10px] font-bold text-purple-400">Ver diário emocional</span>
          <ChevronRight className="w-4 h-4 text-purple-400 rotate-90" />
       </button>
+
+      {/* Modal Detalhes do Dia (Igual ao do Diário Emocional) */}
+      {selectedDayDetail && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Registro de humor</h3>
+              <button onClick={() => setSelectedDayDetail(null)} className="p-1 text-slate-300"><X className="w-6 h-6" /></button>
+            </div>
+            
+            <div className="text-center mb-8">
+              <span className="text-purple-600 font-bold text-lg">
+                {new Date(selectedDayDetail + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+              </span>
+            </div>
+
+            <div className="flex justify-center gap-4 mb-10">
+              {state.moodHistory[selectedDayDetail].map(id => {
+                const sentiment = SENTIMENTS.find(s => s.id === id);
+                return (
+                  <div key={id} className="flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-50 shadow-sm">
+                      <img src={sentiment?.img} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500">{sentiment?.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="space-y-3">
+              <button 
+                onClick={() => { setSelectedDate(selectedDayDetail); navigate('mood_selection'); }}
+                className="w-full bg-purple-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+              >
+                <Edit2 className="w-4 h-4" /> Alterar Registro
+              </button>
+              <button 
+                onClick={() => setSelectedDayDetail(null)}
+                className="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
