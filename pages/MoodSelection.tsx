@@ -7,7 +7,7 @@ import { CalendarHeader } from '../components/CalendarHeader';
 import { Check, AlertCircle } from 'lucide-react';
 
 export const MoodSelection: React.FC = () => {
-  const { state, goBack, navigate, setSelectedDate } = useApp();
+  const { state, navigate, setTempMoodSelection } = useApp();
   const [selectedIds, setSelectedIds] = useState<string[]>(state.moodHistory[state.selectedDate] || []);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +33,8 @@ export const MoodSelection: React.FC = () => {
       setError("Por favor, selecione ao menos um sentimento.");
       return;
     }
+    // Salvamento temporário via estado global para a tela de resultado ler
+    setTempMoodSelection(selectedIds);
     navigate('mood_result');
   };
 
@@ -87,7 +89,7 @@ export const MoodSelection: React.FC = () => {
         </div>
       </main>
 
-      {/* Botão Fixo Bottom - Ajustado para bottom-28 para ficar acima da nav bar */}
+      {/* Botão Fixo Bottom */}
       <div className="fixed bottom-28 left-0 right-0 p-6 pointer-events-none z-30">
         <button 
           onClick={handleContinue}
@@ -106,8 +108,6 @@ export const MoodSelection: React.FC = () => {
           animation: pulse-hint 2s infinite ease-in-out;
         }
       `}</style>
-
-      <script dangerouslySetInnerHTML={{ __html: `window.tempSelectedSentiments = ${JSON.stringify(selectedIds)};` }} />
     </Layout>
   );
 };

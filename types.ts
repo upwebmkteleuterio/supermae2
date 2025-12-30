@@ -118,6 +118,7 @@ export interface AppState {
   customCategories: string[]; 
   habitCompletions: Record<string, string[]>; 
   moodHistory: Record<string, string[]>; // YYYY-MM-DD -> [sentimentId1, sentimentId2, ...]
+  tempMoodSelection: string[]; // Temporário para fluxo de registro
   selectedRoutineId: null | string;
   completedRewards: string[];
   dailyMission: DailyMission | null;

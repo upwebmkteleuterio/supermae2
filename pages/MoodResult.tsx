@@ -29,14 +29,15 @@ export const MoodResult: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Recupera sentimentos selecionados (via hack window ou estado temporário se existisse)
-  const selectedIds = (window as any).tempSelectedSentiments || [];
+  // Recupera sentimentos selecionados do estado global
+  const selectedIds = state.tempMoodSelection || [];
   const selectedSentiments = selectedIds.map((id: string) => SENTIMENTS.find(s => s.id === id)).filter(Boolean);
 
   useEffect(() => {
     const generateAnalysis = async () => {
+      // Se não houver seleção, volta para a tela de seleção
       if (selectedIds.length === 0) {
-        navigate('mood_diary');
+        navigate('mood_selection');
         return;
       }
 
@@ -45,7 +46,7 @@ export const MoodResult: React.FC = () => {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         const labels = selectedSentiments.map((s: any) => s.label).join(', ');
         
-        const prompt = `A usuária ${state.userProfile.name} registrou que está se sentindo: ${labels}. 
+        const prompt = `A usuária ${state.userProfile.name} registrou hoje que está se sentindo: ${labels}. 
         CONTEXTO: Ela é uma mãe atípica (filho: ${state.userProfile.childrenAgeGroup}, diagnóstico: ${state.userProfile.diagnosisStatus}).
         OBJETIVO: Dê uma resposta acolhedora de alívio, conselho ou carinho. Seja breve, poética e empática. 
         Encerre com uma pequena frase de força.`;
@@ -58,11 +59,16 @@ export const MoodResult: React.FC = () => {
           }
         });
 
-        setResponse(res.text || "Estou aqui com você. Respire fundo.");
-        // Salva oficialmente no histórico
+        const aiText = res.text || "Estou aqui com você. Respire fundo.";
+        setResponse(aiText);
+        
+        // SALVAMENTO OFICIAL: Persiste no histórico global do calendário
         saveMoodRecord(state.selectedDate, selectedIds);
+        
       } catch (e) {
         setResponse("Às vezes as palavras faltam, mas meu abraço virtual está com você. Você é uma super mãe.");
+        // Mesmo com erro na IA, salvamos o registro da mãe
+        saveMoodRecord(state.selectedDate, selectedIds);
       } finally {
         setLoading(false);
       }
@@ -108,7 +114,7 @@ export const MoodResult: React.FC = () => {
   return (
     <Layout headerTransparent themeColor="bg-[#F9F7FC]">
       <div className="pt-12 px-6 flex items-center mb-8">
-        <h1 className="text-xl font-bold text-slate-800">Registro de humor</h1>
+        <h1 className="text-xl font-bold text-slate-800">Cuidado emocional</h1>
       </div>
 
       <div className="px-6 flex flex-col items-center justify-center h-[calc(100vh-180px)] pb-20">
@@ -118,7 +124,7 @@ export const MoodResult: React.FC = () => {
 
         <div className="text-center mb-6">
           <span className="text-purple-400 font-bold text-sm uppercase tracking-widest">
-            {new Date(state.selectedDate).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+            {new Date(state.selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
           </span>
         </div>
 

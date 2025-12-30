@@ -47,22 +47,25 @@ export const Home: React.FC = () => {
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      {/* Top Bar */}
+      {/* Top Bar - Toda a área do perfil agora é clicável */}
       <div className="pt-6 px-6 flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
+        <button 
+          onClick={() => navigate('personal_data')}
+          className="flex items-center gap-3 text-left active:opacity-70 transition-opacity"
+        >
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
             <img 
               src={userProfile.avatar} 
               alt="Avatar" 
               className="w-full h-full object-cover"
             />
           </div>
-          <div>
-            <h2 className="text-slate-800 font-bold text-lg leading-tight">Olá, {userProfile.name.split(' ')[0]}!</h2>
-            <p className="text-slate-400 text-xs font-medium">Vamos juntas nessa.</p>
+          <div className="min-w-0">
+            <h2 className="text-slate-800 font-bold text-lg leading-tight truncate">Olá, {userProfile.name.split(' ')[0]}!</h2>
+            <p className="text-slate-400 text-xs font-medium truncate">Vamos juntas nessa.</p>
           </div>
-        </div>
-        <div className="flex gap-2">
+        </button>
+        <div className="flex gap-2 shrink-0">
           <button className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-purple-200 border border-slate-100 shadow-sm active:scale-95 transition-transform">
             <Heart className="w-6 h-6" />
           </button>

@@ -34,11 +34,11 @@ interface AppContextProps {
   setVoice: (voice: string) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
   saveMoodRecord: (date: string, sentimentIds: string[]) => void;
+  setTempMoodSelection: (ids: string[]) => void;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v20';
+const STORAGE_KEY = 'super_mae_app_state_v21';
 
-// Função unificada para evitar bugs de fuso horário (ISO 8601 local)
 const getTodayStr = () => {
   return new Date().toLocaleDateString('sv-SE');
 };
@@ -64,6 +64,7 @@ const INITIAL_STATE: AppState = {
   customCategories: [],
   habitCompletions: {},
   moodHistory: {},
+  tempMoodSelection: [],
   selectedRoutineId: null,
   completedRewards: [],
   dailyMission: null,
@@ -260,13 +261,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
+  const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
+
   return (
     <AppContext.Provider value={{ 
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
       updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
-      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord
+      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord, setTempMoodSelection
     }}>
       {children}
     </AppContext.Provider>
