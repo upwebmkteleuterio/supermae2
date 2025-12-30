@@ -20,6 +20,8 @@ interface AppContextProps {
   deleteRoutine: (id: string) => void;
   selectRoutine: (id: string | null) => void;
   addHabitToRoutine: (routineId: string, habit: Activity) => void;
+  registerHabitTemplate: (habit: Activity) => void; // Novo
+  deleteCategory: (oldCategory: string, migrateToCategory: string) => void; // Novo
   toggleHabitCompletion: (routineId: string, habitId: string, date: string) => void;
   deleteHabitFromRoutine: (routineId: string, habitId: string) => void;
   setDailyMission: (mission: DailyMission) => void;
@@ -32,7 +34,7 @@ interface AppContextProps {
   updateUserProfile: (profile: Partial<UserProfile>) => void;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v17';
+const STORAGE_KEY = 'super_mae_app_state_v18';
 
 const getTodayStr = () => {
   const d = new Date();
@@ -58,6 +60,8 @@ const INITIAL_STATE: AppState = {
     { id: 'r1', name: 'Rotina Acolhedora', subtitle: 'Abraço de Mãe', image: '/images/frame1.png', habits: [] },
     { id: 'r2', name: 'Rotina Enérgica', subtitle: 'Super Mãe em Movimento!', image: '/images/frame2.png', habits: [] }
   ],
+  customHabitTemplates: [],
+  customCategories: [],
   habitCompletions: {},
   selectedRoutineId: null,
   completedRewards: [],
@@ -81,7 +85,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     const parsed = saved ? JSON.parse(saved) : INITIAL_STATE;
-    // Se o onboarding não foi concluído, força a página inicial
     if (!parsed.userProfile?.onboardingCompleted && parsed.currentPage !== 'welcome' && parsed.currentPage !== 'onboarding') {
        return { ...parsed, currentPage: 'welcome', navigationStack: ['welcome'] };
     }
@@ -128,19 +131,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addAgendaItem = (item: AgendaItem) => {
     setState(prev => {
       const newState = { ...prev };
-      const participants = item.participantIds && item.participantIds.length > 0 
-        ? item.participantIds 
-        : [item.owner === 'mãe' ? 'mom' : item.childId!];
-      
-      if (participants.includes('mom')) {
-        newState.manualMomAgenda = [...newState.manualMomAgenda, { ...item, owner: 'mãe', participantIds: participants }];
-      }
-      
-      const childIds = participants.filter(p => p !== 'mom');
-      childIds.forEach(cid => {
-        newState.manualChildAgenda = [...newState.manualChildAgenda, { ...item, owner: 'filho', childId: cid, participantIds: participants }];
+      const participants = item.participantIds || [];
+      if (participants.includes('mom')) newState.manualMomAgenda = [...newState.manualMomAgenda, { ...item, owner: 'mãe' }];
+      participants.filter(p => p !== 'mom').forEach(cid => {
+        newState.manualChildAgenda = [...newState.manualChildAgenda, { ...item, owner: 'filho', childId: cid }];
       });
-      
       return newState;
     });
   };
@@ -149,7 +144,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState(prev => ({
       ...prev,
       manualMomAgenda: prev.manualMomAgenda.map(i => i.id === item.id ? { ...item, owner: 'mãe' } : i),
-      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === item.id ? { ...item, childId: i.childId, owner: 'filho' } : i)
+      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === item.id ? { ...item, owner: 'filho' } : i)
     }));
   };
 
@@ -182,17 +177,57 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
+  const registerHabitTemplate = (habit: Activity) => {
+    setState(prev => {
+      const isAlreadyIn = prev.customHabitTemplates.some(h => h.title === habit.title && h.category === habit.category);
+      if (isAlreadyIn) return prev;
+      
+      const updatedCategories = habit.category && !INITIAL_STATE.customCategories.includes(habit.category) && !prev.customCategories.includes(habit.category)
+        ? [...prev.customCategories, habit.category]
+        : prev.customCategories;
+
+      return {
+        ...prev,
+        customHabitTemplates: [...prev.customHabitTemplates, habit],
+        customCategories: updatedCategories
+      };
+    });
+  };
+
+  const deleteCategory = (oldCategory: string, migrateToCategory: string) => {
+    setState(prev => {
+      // 1. Atualiza templates
+      const updatedTemplates = prev.customHabitTemplates.map(h => 
+        h.category === oldCategory ? { ...h, category: migrateToCategory } : h
+      );
+
+      // 2. Atualiza rotinas
+      const updatedRoutines = prev.routines.map(r => ({
+        ...r,
+        habits: r.habits.map(h => h.category === oldCategory ? { ...h, category: migrateToCategory } : h)
+      }));
+
+      // 3. Remove das categorias customizadas
+      const updatedCustomCategories = prev.customCategories.filter(c => c !== oldCategory);
+
+      return {
+        ...prev,
+        customHabitTemplates: updatedTemplates,
+        routines: updatedRoutines,
+        customCategories: updatedCustomCategories
+      };
+    });
+  };
+
   const toggleHabitCompletion = (routineId: string, habitId: string, date: string) => {
     setState(prev => {
       const completions = { ...prev.habitCompletions };
       const dateCompletions = [...(completions[date] || [])];
-      
       if (dateCompletions.includes(habitId)) {
         completions[date] = dateCompletions.filter(id => id !== habitId);
       } else {
         completions[date] = [...dateCompletions, habitId];
       }
-      
       return { ...prev, habitCompletions: completions };
     });
   };
@@ -200,10 +235,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteHabitFromRoutine = (routineId: string, habitId: string) => {
     setState(prev => ({
       ...prev,
-      routines: prev.routines.map(r => r.id === routineId ? {
-        ...r,
-        habits: r.habits.filter(h => h.id !== habitId)
-      } : r)
+      routines: prev.routines.map(r => r.id === routineId ? { ...r, habits: r.habits.filter(h => h.id !== habitId) } : r)
     }));
   };
 
@@ -220,7 +252,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider value={{ 
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
-      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, toggleHabitCompletion, deleteHabitFromRoutine,
+      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
       addChatMessage, clearChatHistory, setVoice, updateUserProfile
     }}>

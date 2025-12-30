@@ -28,7 +28,6 @@ export interface UserProfile {
   state: string;
   city: string;
   avatar: string;
-  // Novos campos Onboarding
   welcomingGoal?: string;
   childrenAgeGroup?: string;
   diagnosisStatus?: string;
@@ -111,6 +110,8 @@ export interface AppState {
   manualMomAgenda: AgendaItem[];
   manualChildAgenda: AgendaItem[];
   routines: Routine[];
+  customHabitTemplates: Activity[]; // Novo: Para salvar hábitos criados manualmente
+  customCategories: string[]; // Novo: Para salvar categorias criadas manualmente
   habitCompletions: Record<string, string[]>; // { "2025-05-29": ["habitId1", "habitId2"] }
   selectedRoutineId: null | string;
   completedRewards: string[];

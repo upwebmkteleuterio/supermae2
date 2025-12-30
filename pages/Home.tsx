@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
@@ -21,12 +21,30 @@ import {
 
 export const Home: React.FC = () => {
   const { navigate, state, updateUserProfile } = useApp();
-  const { userProfile } = state;
+  const { userProfile, routines, habitCompletions, selectedDate } = state;
 
   const handleResetForClient = () => {
     updateUserProfile({ onboardingCompleted: false });
     navigate('welcome');
   };
+
+  // Cálculo do progresso real de hábitos do dia
+  const habitsProgress = useMemo(() => {
+    let totalHabits = 0;
+    let completedHabits = 0;
+    const todayCompletions = habitCompletions[selectedDate] || [];
+
+    routines.forEach(r => {
+      r.habits.forEach(h => {
+        totalHabits++;
+        if (todayCompletions.includes(h.id)) {
+          completedHabits++;
+        }
+      });
+    });
+
+    return totalHabits > 0 ? Math.round((completedHabits / totalHabits) * 100) : 0;
+  }, [routines, habitCompletions, selectedDate]);
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
@@ -63,12 +81,12 @@ export const Home: React.FC = () => {
 
       {/* Grid Dashboard */}
       <div className="px-4 grid grid-cols-2 gap-4 mb-8">
-        {/* Card Tarefas */}
-        <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col relative overflow-hidden">
-          <div className="absolute top-3 left-5 z-10 bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
-            Em construção
-          </div>
-          <h3 className="text-slate-400 text-sm font-bold mt-4 mb-4">Tarefas</h3>
+        {/* Card Hábitos (Antigo Tarefas) */}
+        <div 
+          onClick={() => navigate('routines_list')}
+          className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col relative overflow-hidden active:scale-95 transition-all cursor-pointer"
+        >
+          <h3 className="text-slate-400 text-sm font-bold mb-4">Hábitos</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-2">
              <div className="relative w-24 h-16 overflow-hidden">
                <svg className="w-full h-full" viewBox="0 0 100 50">
@@ -86,8 +104,10 @@ export const Home: React.FC = () => {
                    strokeWidth="12" 
                    strokeLinecap="round"
                    strokeDasharray="125.6"
-                   strokeDashoffset={125.6 * (1 - 0.45)}
-                   className="animate-[gauge-fill_1.5s_ease-out_forwards]"
+                   style={{ 
+                     strokeDashoffset: 125.6 * (1 - (habitsProgress / 100)),
+                     transition: 'stroke-dashoffset 1s ease-out'
+                   }}
                  />
                  <defs>
                    <linearGradient id="gradient-purple" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -97,10 +117,10 @@ export const Home: React.FC = () => {
                  </defs>
                </svg>
                <div className="absolute inset-0 flex items-end justify-center pb-1">
-                  <span className="text-sm font-black text-slate-700">45%</span>
+                  <span className="text-sm font-black text-slate-700">{habitsProgress}%</span>
                </div>
              </div>
-             <p className="text-[10px] text-slate-400 font-bold mt-4">Seu progresso do dia</p>
+             <p className="text-[10px] text-slate-400 font-bold mt-4">Concluído hoje</p>
           </div>
         </div>
 
@@ -109,7 +129,6 @@ export const Home: React.FC = () => {
           onClick={() => navigate('sentiment_analysis')}
           className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative overflow-hidden"
         >
-          {/* Tag movida para dentro (top-3) para evitar ser cortada pelo overflow-hidden */}
           <div className="absolute top-3 left-5 z-10 bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
             Em construção
           </div>
@@ -185,10 +204,7 @@ export const Home: React.FC = () => {
       </div>
 
       <style>{`
-        @keyframes gauge-fill {
-          from { stroke-dashoffset: 125.6; }
-          to { stroke-dashoffset: ${125.6 * (1 - 0.45)}; }
-        }
+        /* Gauge animation handled by JS transition now */
       `}</style>
     </Layout>
   );

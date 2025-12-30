@@ -4,7 +4,8 @@ import { useApp } from '../store/AppContext';
 import { Layout } from '../components/Layout';
 import { VoiceSelectionModal } from '../components/VoiceSelectionModal';
 import { ConfirmModal } from '../components/ConfirmModal';
-import { Send, Volume2, Loader2, Sparkles, Trash2, AudioLines, MoreVertical } from 'lucide-react';
+import { AIIcon } from '../components/AIIcon';
+import { Send, Volume2, Loader2, Trash2, AudioLines, MoreVertical } from 'lucide-react';
 import { GoogleGenAI, Chat, Modality } from "@google/genai";
 import { ChatMessage } from '../types';
 
@@ -210,19 +211,19 @@ export const SentimentAnalysis: React.FC = () => {
           </svg>
         </div>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-12 no-scrollbar relative">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pt-20 pb-4 space-y-12 no-scrollbar relative">
           {state.chatHistory.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300 relative`}>
               {msg.role === 'model' && (
-                <div className="absolute left-0 -top-8 flex flex-col items-center">
-                   <div className="w-14 h-14 bg-purple-500 rounded-3xl flex items-center justify-center text-white shadow-xl rotate-3">
-                     <Sparkles className="w-7 h-7" />
+                <div className="absolute left-0 -top-12 flex flex-col items-center">
+                   <div className="w-16 h-16 shadow-2xl scale-75">
+                     <AIIcon className="w-16 h-16" />
                    </div>
                 </div>
               )}
               
               <div className={`max-w-[85%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start pt-8'}`}>
-                 <div className={`p-5 rounded-[2rem] text-sm leading-relaxed shadow-sm relative z-20 ${
+                 <div className={`p-5 rounded-[2.5rem] text-sm leading-relaxed shadow-sm relative z-20 ${
                    msg.role === 'user' ? 'bg-white text-slate-700 border border-slate-100 rounded-tr-none' : 'bg-[#E9E4FF] text-slate-800 rounded-tl-none'
                  }`}>
                    {msg.text.split('\n').map((line, idx) => <p key={idx} className="mb-2">{line}</p>)}
@@ -252,7 +253,7 @@ export const SentimentAnalysis: React.FC = () => {
 
         <div className="p-6 bg-white/80 backdrop-blur-md sticky bottom-0 left-0 right-0 z-30">
           <div className="max-w-md mx-auto flex gap-2">
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend(input)} placeholder="Compartilhe seus sentimentos..." className="flex-1 bg-white border border-slate-100 rounded-2xl px-5 py-4 text-sm focus:ring-2 ring-purple-500 outline-none shadow-sm font-medium" />
+            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSend(input)} placeholder="Compartilhe seus sentimentos..." className="flex-1 bg-white border border-slate-100 rounded-2xl px-5 py-4 text-sm focus:ring-2 ring-purple-500/20 outline-none shadow-sm font-medium" />
             <button onClick={() => handleSend(input)} disabled={!input.trim() || loading} className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg active:scale-90 transition-transform disabled:opacity-50"><Send className="w-6 h-6" /></button>
           </div>
         </div>
