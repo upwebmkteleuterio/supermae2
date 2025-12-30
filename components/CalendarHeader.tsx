@@ -9,7 +9,8 @@ export const CalendarHeader: React.FC = () => {
   const days = useMemo(() => {
     const arr = [];
     const today = new Date();
-    for (let i = -15; i <= 30; i++) {
+    // Aumentado para 45 dias para permitir visualizar início do mês mesmo no final do período
+    for (let i = -45; i <= 30; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       arr.push(d);
@@ -24,7 +25,6 @@ export const CalendarHeader: React.FC = () => {
     return { day, weekday, dStr };
   };
 
-  // Função de scroll otimizada para NÃO afetar o scroll vertical da janela
   const scrollToDate = (dateStr: string, behavior: ScrollBehavior = 'smooth') => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -32,7 +32,6 @@ export const CalendarHeader: React.FC = () => {
     const activeBtn = container.querySelector(`[data-date="${dateStr}"]`) as HTMLElement;
     if (activeBtn) {
       const targetScroll = activeBtn.offsetLeft + (activeBtn.offsetWidth / 2) - (container.offsetWidth / 2);
-      // Usamos scrollTo apenas no container local, evitando window.scroll
       container.scrollTo({
         left: targetScroll,
         behavior
@@ -76,9 +75,8 @@ export const CalendarHeader: React.FC = () => {
   return (
     <div className="relative mb-8 h-28 flex items-center overflow-hidden">
       
-      {/* Indicador Central Fixo - Sólido e sem bordas brancas */}
+      {/* Indicador Central Fixo */}
       <div className="absolute left-1/2 -translate-x-1/2 w-16 h-20 bg-purple-600 rounded-[2rem] shadow-[0_15px_30px_rgba(147,51,234,0.35)] z-10 pointer-events-none border-none ring-0">
-         {/* Espaço limpo e sólido conforme pedido */}
       </div>
 
       {/* Container de Scroll */}
@@ -98,7 +96,7 @@ export const CalendarHeader: React.FC = () => {
               data-date={dStr}
               type="button"
               onClick={(e) => {
-                e.preventDefault(); // Previne qualquer ação padrão que cause scroll
+                e.preventDefault();
                 setSelectedDate(dStr);
                 scrollToDate(dStr, 'smooth');
               }}
@@ -113,7 +111,7 @@ export const CalendarHeader: React.FC = () => {
               </span>
               <span className="text-xl font-black">{day}</span>
               
-              {date.toDateString() === new Date().toDateString() && (
+              {dStr === new Date().toLocaleDateString('sv-SE') && (
                 <div className={`w-1 h-1 rounded-full mt-1.5 ${active ? 'bg-white' : 'bg-purple-300'}`}></div>
               )}
             </button>
@@ -121,9 +119,8 @@ export const CalendarHeader: React.FC = () => {
         })}
       </div>
       
-      {/* Sombras laterais para o efeito de desfoque */}
-      <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#F8F9FE] to-transparent pointer-events-none z-10"></div>
-      <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#F8F9FE] to-transparent pointer-events-none z-10"></div>
+      <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-slate-50 to-transparent pointer-events-none z-10"></div>
+      <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none z-10"></div>
     </div>
   );
 };

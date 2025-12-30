@@ -4,7 +4,7 @@ import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS } from '../constants';
 import { CalendarHeader } from '../components/CalendarHeader';
-import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
 
 export const MoodSelection: React.FC = () => {
   const { state, goBack, navigate, setSelectedDate } = useApp();
@@ -33,32 +33,20 @@ export const MoodSelection: React.FC = () => {
       setError("Por favor, selecione ao menos um sentimento.");
       return;
     }
-    // Salvamos temporariamente para a IA processar na tela seguinte
-    // O salvamento definitivo no MoodHistory ocorre após a resposta da IA
     navigate('mood_result');
   };
 
-  // Precisamos injetar os IDs selecionados na navegação ou num estado global temporário
-  // Para simplicidade, vamos usar um hack temporário no navigate ou passar via context
-  // Adicionando um campo temporário no estado via saveMoodRecord antes de mudar de tela?
-  // Na verdade, vamos apenas mudar a navegação para que MoodResult use o que foi selecionado aqui.
-
   return (
-    <Layout headerTransparent themeColor="bg-[#F9F7FC]">
-      <div className="pt-12 px-6 flex items-center justify-between mb-4">
-        <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-xl font-bold text-slate-800">Registro de humor</h1>
-      </div>
-
-      <div className="px-6 pb-4">
+    <Layout title="Registro de humor" showBack themeColor="bg-[#F9F7FC]" headerTransparent={false}>
+      <div className="px-6 pt-4 pb-4">
         <CalendarHeader />
       </div>
 
       <div className="text-center mb-8 px-6">
         <p className="text-slate-600 text-sm font-medium">Como você está se sentindo hoje?</p>
-        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Escolha até 3 sentimentos</p>
+        <p className="text-[10px] font-black uppercase tracking-widest mt-1 animate-pulse-hint">
+          Escolha até 3 sentimentos
+        </p>
       </div>
 
       {error && (
@@ -70,7 +58,7 @@ export const MoodSelection: React.FC = () => {
         </div>
       )}
 
-      <main className="px-6 pb-40">
+      <main className="px-6 pb-48">
         <div className="grid grid-cols-3 gap-3">
           {SENTIMENTS.map((s) => {
             const isSelected = selectedIds.includes(s.id);
@@ -78,7 +66,7 @@ export const MoodSelection: React.FC = () => {
               <button 
                 key={s.id}
                 onClick={() => toggleSentiment(s.id)}
-                className={`bg-white rounded-[1.8rem] p-3 flex flex-col items-center justify-center shadow-sm border-2 transition-all active:scale-95 h-36 ${
+                className={`bg-white rounded-[1.8rem] p-3 flex flex-col items-center justify-center shadow-sm border-2 transition-all active:scale-95 h-36 relative ${
                   isSelected ? 'border-purple-500 ring-4 ring-purple-100' : 'border-transparent'
                 }`}
               >
@@ -99,18 +87,26 @@ export const MoodSelection: React.FC = () => {
         </div>
       </main>
 
-      {/* Botão Fixo Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#F9F7FC] via-[#F9F7FC] to-transparent pointer-events-none z-30">
+      {/* Botão Fixo Bottom - Ajustado para bottom-28 para ficar acima da nav bar */}
+      <div className="fixed bottom-28 left-0 right-0 p-6 pointer-events-none z-30">
         <button 
           onClick={handleContinue}
-          className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-100 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest"
+          className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-200 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest"
         >
           Continuar
         </button>
       </div>
 
-      {/* Armazenamento temporário dos sentimentos para a próxima tela ler */}
-      {/* (Usando hack de sessionStorage para não poluir o AppState se não for necessário persistir ainda) */}
+      <style>{`
+        @keyframes pulse-hint {
+          0%, 100% { color: #94a3b8; }
+          50% { color: #A855F7; }
+        }
+        .animate-pulse-hint {
+          animation: pulse-hint 2s infinite ease-in-out;
+        }
+      `}</style>
+
       <script dangerouslySetInnerHTML={{ __html: `window.tempSelectedSentiments = ${JSON.stringify(selectedIds)};` }} />
     </Layout>
   );

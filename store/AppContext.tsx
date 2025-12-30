@@ -33,16 +33,14 @@ interface AppContextProps {
   clearChatHistory: () => void;
   setVoice: (voice: string) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
-  saveMoodRecord: (date: string, sentimentIds: string[]) => void; // Novo
+  saveMoodRecord: (date: string, sentimentIds: string[]) => void;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v19';
+const STORAGE_KEY = 'super_mae_app_state_v20';
 
+// Função unificada para evitar bugs de fuso horário (ISO 8601 local)
 const getTodayStr = () => {
-  const d = new Date();
-  const offset = d.getTimezoneOffset();
-  const localDate = new Date(d.getTime() - (offset * 60 * 1000));
-  return localDate.toISOString().split('T')[0];
+  return new Date().toLocaleDateString('sv-SE');
 };
 
 const INITIAL_STATE: AppState = {
@@ -193,11 +191,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setState(prev => {
       const isAlreadyIn = prev.customHabitTemplates.some(h => h.title === habit.title && h.category === habit.category);
       if (isAlreadyIn) return prev;
-      
       const updatedCategories = habit.category && !INITIAL_STATE.customCategories.includes(habit.category) && !prev.customCategories.includes(habit.category)
         ? [...prev.customCategories, habit.category]
         : prev.customCategories;
-
       return {
         ...prev,
         customHabitTemplates: [...prev.customHabitTemplates, habit],

@@ -4,7 +4,6 @@ import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
 import { SENTIMENTS } from '../constants';
-// Add missing Smile icon to imports from lucide-react
 import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile } from 'lucide-react';
 
 export const MoodDiary: React.FC = () => {
@@ -36,7 +35,7 @@ export const MoodDiary: React.FC = () => {
   };
 
   const handleDayClick = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = date.toLocaleDateString('sv-SE');
     if (state.moodHistory[dateStr]) {
       setSelectedDayDetail(dateStr);
     } else {
@@ -46,7 +45,7 @@ export const MoodDiary: React.FC = () => {
   };
 
   const handleRegisterToday = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('sv-SE');
     setSelectedDate(today);
     navigate('mood_selection');
   };
@@ -83,9 +82,9 @@ export const MoodDiary: React.FC = () => {
             {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
             
             {daysInMonth.map((date, i) => {
-              const dateStr = date.toISOString().split('T')[0];
+              const dateStr = date.toLocaleDateString('sv-SE');
               const moodColors = getMoodColors(dateStr);
-              const isToday = dateStr === new Date().toISOString().split('T')[0];
+              const isToday = dateStr === new Date().toLocaleDateString('sv-SE');
 
               return (
                 <button 
@@ -93,8 +92,7 @@ export const MoodDiary: React.FC = () => {
                   onClick={() => handleDayClick(date)}
                   className="flex flex-col items-center gap-1 group relative"
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${isToday ? 'bg-purple-50' : ''}`}>
-                    {/* Anéis Coloridos */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all relative ${isToday ? 'bg-purple-50 ring-2 ring-purple-100' : ''}`}>
                     {moodColors.length > 0 && (
                       <div className="absolute inset-0 flex items-center justify-center">
                          <svg className="w-full h-full -rotate-90" viewBox="0 0 32 32">
@@ -161,7 +159,7 @@ export const MoodDiary: React.FC = () => {
             
             <div className="text-center mb-8">
               <span className="text-purple-600 font-bold text-lg">
-                {new Date(selectedDayDetail).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+                {new Date(selectedDayDetail + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
               </span>
             </div>
 
