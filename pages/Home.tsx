@@ -16,7 +16,8 @@ import {
   Baby,
   CalendarDays,
   ExternalLink,
-  LogOut
+  LogOut,
+  Info
 } from 'lucide-react';
 
 export const Home: React.FC = () => {
@@ -50,13 +51,13 @@ export const Home: React.FC = () => {
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      {/* Top Bar - Toda a área do perfil agora é clicável */}
-      <div className="pt-6 px-6 flex items-center justify-between mb-8">
+      {/* Top Bar - Perfil Clicável */}
+      <div className="pt-6 px-6 flex items-center justify-between mb-4">
         <button 
           onClick={() => navigate('personal_data')}
-          className="flex items-center gap-3 text-left active:opacity-70 transition-opacity"
+          className="flex items-center gap-3 text-left active:opacity-70 transition-all group"
         >
-          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 group-active:scale-90 transition-transform">
             <img 
               src={userProfile.avatar} 
               alt="Avatar" 
@@ -64,8 +65,8 @@ export const Home: React.FC = () => {
             />
           </div>
           <div className="min-w-0">
-            <h2 className="text-slate-800 font-bold text-lg leading-tight truncate">Olá, {userProfile.name.split(' ')[0]}!</h2>
-            <p className="text-slate-400 text-xs font-medium truncate">Vamos juntas nessa.</p>
+            <h2 className="text-slate-800 font-bold text-lg leading-tight truncate group-active:text-purple-600 transition-colors">Olá, {userProfile.name.split(' ')[0]}!</h2>
+            <p className="text-slate-400 text-xs font-medium truncate">Ver meu perfil</p>
           </div>
         </button>
         <div className="flex gap-2 shrink-0">
@@ -76,7 +77,17 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Calendário Semanal Modular - Integrado com Diário Emocional */}
+      {/* Explicação da Home */}
+      <div className="px-6 mb-6">
+        <div className="bg-purple-50 rounded-2xl p-3 flex items-start gap-3 border border-purple-100/50">
+          <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
+          <p className="text-[10px] text-purple-600 font-medium leading-relaxed">
+            Aqui está o resumo do seu dia. Acompanhe seu progresso e acesse suas ferramentas de cuidado rapidamente.
+          </p>
+        </div>
+      </div>
+
+      {/* Calendário Semanal Modular */}
       <div className="px-4 mb-6 relative">
         <WeeklyCalendar />
       </div>
@@ -128,7 +139,7 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Card Diário Emocional habilitado */}
+        {/* Card Diário Emocional */}
         <button 
           onClick={() => navigate('mood_diary')}
           className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative overflow-hidden"
@@ -194,7 +205,6 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Debug Section for Client */}
       <div className="px-6 pb-32 flex justify-center">
         <button 
           onClick={handleResetForClient}

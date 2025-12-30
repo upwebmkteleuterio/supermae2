@@ -5,7 +5,7 @@ import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
 import { SENTIMENTS } from '../constants';
 import { MoodCircle } from '../components/MoodCircle';
-import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile, Info } from 'lucide-react';
 
 export const MoodDiary: React.FC = () => {
   const { state, navigate, setSelectedDate } = useApp();
@@ -64,6 +64,19 @@ export const MoodDiary: React.FC = () => {
       </div>
 
       <div className="px-6 pb-32">
+        {/* Texto Explicativo */}
+        <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-50 mb-6 flex items-start gap-4">
+          <div className="w-10 h-10 bg-purple-100 rounded-2xl flex items-center justify-center shrink-0">
+             <Info className="w-5 h-5 text-purple-500" />
+          </div>
+          <div>
+            <h4 className="text-slate-700 font-bold text-sm mb-1">Acompanhe suas emoções</h4>
+            <p className="text-slate-400 text-[10px] font-medium leading-relaxed">
+              Cada anel colorido representa um sentimento que você registrou. Toque em um dia para ver os detalhes ou registrar como se sente.
+            </p>
+          </div>
+        </div>
+
         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 mb-8">
           {/* Header Calendário */}
           <div className="flex items-center justify-between mb-8">

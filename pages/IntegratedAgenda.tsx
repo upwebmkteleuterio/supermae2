@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { CalendarHeader } from '../components/CalendarHeader';
-import { AlertCircle, Zap, Sparkles, CalendarDays, Plus } from 'lucide-react';
+import { AlertCircle, Zap, Sparkles, CalendarDays, Plus, Info } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { AgendaList } from '../components/AgendaList';
 import { TaskModal } from '../components/TaskModal';
@@ -71,6 +71,19 @@ export const IntegratedAgenda: React.FC = () => {
     <Layout title="Agenda Integrada" showBack themeColor="bg-purple-50/10">
       <div className="px-6 pt-6 pb-32">
         <CalendarHeader />
+
+        {/* Texto Explicativo */}
+        <div className="bg-indigo-50 rounded-[2rem] p-6 mb-8 border border-indigo-100 flex items-start gap-4 shadow-sm">
+          <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+             <Info className="w-5 h-5 text-indigo-400" />
+          </div>
+          <div>
+            <h4 className="text-indigo-900 font-bold text-sm mb-1">Harmonia na rotina</h4>
+            <p className="text-indigo-400 text-[10px] font-medium leading-relaxed">
+              Aqui você vê seus compromissos e os do seu filho em uma única linha do tempo. Nossa IA analisa conflitos e sugere pausas para garantir seu bem-estar.
+            </p>
+          </div>
+        </div>
 
         {/* Carousel Insights */}
         <div className="mb-10 -mx-6">
@@ -145,6 +158,6 @@ export const IntegratedAgenda: React.FC = () => {
           date={state.selectedDate}
         />
       )}
-    </Layout>
+    </div>
   );
 };
