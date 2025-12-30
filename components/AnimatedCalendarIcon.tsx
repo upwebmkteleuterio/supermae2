@@ -8,11 +8,11 @@ export const AnimatedCalendarIcon: React.FC<{ className?: string }> = ({ classNa
   const [trigger, setTrigger] = useState<'loop' | 'hover'>('loop');
 
   useEffect(() => {
-    // Faz o ícone animar sozinho por 3 segundos (aprox. 2 ciclos completos) 
+    // Faz o ícone animar sozinho por 2 segundos (aprox. 2 ciclos completos) 
     // e depois muda para o modo 'hover' para interações futuras.
     const timer = setTimeout(() => {
       setTrigger('hover');
-    }, 3000);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 

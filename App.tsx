@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './store/AppContext';
 import { Home } from './pages/Home';
 import { Welcome } from './pages/Welcome';
@@ -23,6 +23,11 @@ import { BottomNav } from './components/BottomNav';
 
 const AppRouter: React.FC = () => {
   const { state } = useApp();
+
+  // Reset de Rolagem Global: Resolve o problema de persistência de scroll entre telas
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [state.currentPage]);
 
   if (state.isBreathingActive) return <BreathingExercise />;
 

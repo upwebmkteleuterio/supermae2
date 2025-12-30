@@ -9,6 +9,7 @@ interface LayoutProps {
   showBack?: boolean;
   themeColor?: string;
   headerTransparent?: boolean;
+  rightAction?: React.ReactNode;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
@@ -16,7 +17,8 @@ export const Layout: React.FC<LayoutProps> = ({
   title, 
   showBack = false, 
   themeColor = 'bg-slate-50',
-  headerTransparent = false
+  headerTransparent = false,
+  rightAction
 }) => {
   const { goBack } = useApp();
 
@@ -27,7 +29,7 @@ export const Layout: React.FC<LayoutProps> = ({
         ? 'bg-transparent' 
         : 'bg-white/80 backdrop-blur-md border-b border-slate-100'
       }`}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 overflow-hidden">
           {showBack && (
             <button 
               onClick={goBack}
@@ -36,10 +38,11 @@ export const Layout: React.FC<LayoutProps> = ({
               <ChevronLeft className={`w-6 h-6 ${headerTransparent ? 'text-white' : 'text-slate-700'}`} />
             </button>
           )}
-          <h1 className={`font-bold text-lg tracking-tight ${headerTransparent ? 'text-white' : 'text-slate-800'}`}>
+          <h1 className={`font-bold text-lg tracking-tight truncate ${headerTransparent ? 'text-white' : 'text-slate-800'}`}>
             {title || (headerTransparent ? '' : 'Super Mãe')}
           </h1>
         </div>
+        {rightAction && <div className="flex items-center">{rightAction}</div>}
       </header>
 
       <main className={`flex-1 ${headerTransparent ? '' : 'mt-16'} pb-32 safe-bottom animate-in fade-in duration-500`}>
