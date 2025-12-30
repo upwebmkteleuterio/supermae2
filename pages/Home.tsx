@@ -64,8 +64,11 @@ export const Home: React.FC = () => {
       {/* Grid Dashboard */}
       <div className="px-4 grid grid-cols-2 gap-4 mb-8">
         {/* Card Tarefas */}
-        <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col">
-          <h3 className="text-slate-400 text-sm font-bold mb-4">Tarefas</h3>
+        <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col relative overflow-hidden">
+          <div className="absolute top-3 left-5 z-10 bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
+            Em construção
+          </div>
+          <h3 className="text-slate-400 text-sm font-bold mt-4 mb-4">Tarefas</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-2">
              <div className="relative w-24 h-16 overflow-hidden">
                <svg className="w-full h-full" viewBox="0 0 100 50">
@@ -106,12 +109,13 @@ export const Home: React.FC = () => {
           onClick={() => navigate('sentiment_analysis')}
           className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative overflow-hidden"
         >
-          <div className="absolute -top-2 left-6 z-10 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
+          {/* Tag movida para dentro (top-3) para evitar ser cortada pelo overflow-hidden */}
+          <div className="absolute top-3 left-5 z-10 bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
             Em construção
           </div>
-          <h3 className="text-slate-400 text-sm font-bold mb-4">Diário emocional</h3>
+          <h3 className="text-slate-400 text-sm font-bold mt-4 mb-4">Diário emocional</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-2">
-            <AnimatedCalendarIcon />
+            <AnimatedCalendarIcon className="w-14 h-14" />
             <div className="flex items-center justify-between w-full mt-4">
                <p className="text-[10px] text-slate-400 font-bold leading-tight max-w-[80px]">Como você está se sentindo?</p>
                <ChevronRight className="w-4 h-4 text-slate-300" />
@@ -204,7 +208,7 @@ const ExploreItem: React.FC<{
     className="w-full bg-white rounded-[1.8rem] p-4 flex items-center gap-5 border border-slate-50 shadow-sm active:scale-[0.98] transition-all group relative"
   >
     {isUnderConstruction && (
-      <div className="absolute -top-2 left-6 z-10 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
+      <div className="absolute top-3 left-5 z-10 bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
         Em construção
       </div>
     )}
