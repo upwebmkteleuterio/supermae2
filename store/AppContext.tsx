@@ -20,9 +20,9 @@ interface AppContextProps {
   deleteRoutine: (id: string) => void;
   selectRoutine: (id: string | null) => void;
   addHabitToRoutine: (routineId: string, habit: Activity) => void;
-  updateHabitInRoutine: (routineId: string, habit: Activity) => void; // Novo
-  registerHabitTemplate: (habit: Activity) => void; // Novo
-  deleteCategory: (oldCategory: string, migrateToCategory: string) => void; // Novo
+  updateHabitInRoutine: (routineId: string, habit: Activity) => void;
+  registerHabitTemplate: (habit: Activity) => void;
+  deleteCategory: (oldCategory: string, migrateToCategory: string) => void;
   toggleHabitCompletion: (routineId: string, habitId: string, date: string) => void;
   deleteHabitFromRoutine: (routineId: string, habitId: string) => void;
   setDailyMission: (mission: DailyMission) => void;
@@ -33,9 +33,10 @@ interface AppContextProps {
   clearChatHistory: () => void;
   setVoice: (voice: string) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
+  saveMoodRecord: (date: string, sentimentIds: string[]) => void; // Novo
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v18';
+const STORAGE_KEY = 'super_mae_app_state_v19';
 
 const getTodayStr = () => {
   const d = new Date();
@@ -64,6 +65,7 @@ const INITIAL_STATE: AppState = {
   customHabitTemplates: [],
   customCategories: [],
   habitCompletions: {},
+  moodHistory: {},
   selectedRoutineId: null,
   completedRewards: [],
   dailyMission: null,
@@ -206,20 +208,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const deleteCategory = (oldCategory: string, migrateToCategory: string) => {
     setState(prev => {
-      // 1. Atualiza templates
       const updatedTemplates = prev.customHabitTemplates.map(h => 
         h.category === oldCategory ? { ...h, category: migrateToCategory } : h
       );
-
-      // 2. Atualiza rotinas
       const updatedRoutines = prev.routines.map(r => ({
         ...r,
         habits: r.habits.map(h => h.category === oldCategory ? { ...h, category: migrateToCategory } : h)
       }));
-
-      // 3. Remove das categorias customizadas
       const updatedCustomCategories = prev.customCategories.filter(c => c !== oldCategory);
-
       return {
         ...prev,
         customHabitTemplates: updatedTemplates,
@@ -258,13 +254,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setVoice = (voice: string) => setState(prev => ({ ...prev, selectedVoice: voice }));
   const updateUserProfile = (profile: Partial<UserProfile>) => setState(prev => ({ ...prev, userProfile: { ...prev.userProfile, ...profile } }));
 
+  const saveMoodRecord = (date: string, sentimentIds: string[]) => {
+    setState(prev => ({
+      ...prev,
+      moodHistory: {
+        ...prev.moodHistory,
+        [date]: sentimentIds
+      }
+    }));
+  };
+
   return (
     <AppContext.Provider value={{ 
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
       updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
-      addChatMessage, clearChatHistory, setVoice, updateUserProfile
+      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord
     }}>
       {children}
     </AppContext.Provider>

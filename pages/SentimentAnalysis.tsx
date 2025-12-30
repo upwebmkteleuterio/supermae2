@@ -216,7 +216,8 @@ export const SentimentAnalysis: React.FC = () => {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300 relative`}>
               {msg.role === 'model' && (
                 <div className="absolute left-0 -top-12 flex flex-col items-center">
-                   <div className="w-16 h-16 shadow-2xl scale-75">
+                   {/* Container do ícone agora é arredondado (rounded-full) para evitar sombras quadradas */}
+                   <div className="w-16 h-16 rounded-full shadow-2xl scale-75 bg-transparent overflow-visible">
                      <AIIcon className="w-16 h-16" />
                    </div>
                 </div>

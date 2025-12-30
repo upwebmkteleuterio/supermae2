@@ -19,12 +19,14 @@ import { AddChild } from './pages/AddChild';
 import { RoutinesList } from './pages/RoutinesList';
 import { RoutineDetail } from './pages/RoutineDetail';
 import { HabitSelection } from './pages/HabitSelection';
+import { MoodDiary } from './pages/MoodDiary'; // Novo
+import { MoodSelection } from './pages/MoodSelection'; // Novo
+import { MoodResult } from './pages/MoodResult'; // Novo
 import { BottomNav } from './components/BottomNav';
 
 const AppRouter: React.FC = () => {
   const { state } = useApp();
 
-  // Reset de Rolagem Global: Resolve o problema de persistência de scroll entre telas
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [state.currentPage]);
@@ -50,6 +52,9 @@ const AppRouter: React.FC = () => {
     case 'routines_list': return <RoutinesList />;
     case 'routine_detail': return <RoutineDetail />;
     case 'habit_selection': return <HabitSelection />;
+    case 'mood_diary': return <MoodDiary />;
+    case 'mood_selection': return <MoodSelection />;
+    case 'mood_result': return <MoodResult />;
     default: return <Welcome />;
   }
 };

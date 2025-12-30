@@ -6,6 +6,9 @@ export type ViewState =
   | 'onboarding'
   | 'home' 
   | 'self_care_selection' 
+  | 'mood_diary'
+  | 'mood_selection'
+  | 'mood_result'
   | 'mom_self_care' 
   | 'mom_agenda' 
   | 'children_selection' 
@@ -45,7 +48,6 @@ export interface Activity {
   completed: boolean;
   period?: 'Manhã' | 'Tarde' | 'Noite' | 'A qualquer momento';
   category?: string;
-  // Adicionado para suportar lembretes em hábitos
   reminder?: boolean;
   repetition?: string;
   customDays?: number[]; // 0-6 (Sun-Sat)
@@ -112,9 +114,10 @@ export interface AppState {
   manualMomAgenda: AgendaItem[];
   manualChildAgenda: AgendaItem[];
   routines: Routine[];
-  customHabitTemplates: Activity[]; // Novo: Para salvar hábitos criados manualmente
-  customCategories: string[]; // Novo: Para salvar categorias criadas manualmente
-  habitCompletions: Record<string, string[]>; // { "2025-05-29": ["habitId1", "habitId2"] }
+  customHabitTemplates: Activity[]; 
+  customCategories: string[]; 
+  habitCompletions: Record<string, string[]>; 
+  moodHistory: Record<string, string[]>; // YYYY-MM-DD -> [sentimentId1, sentimentId2, ...]
   selectedRoutineId: null | string;
   completedRewards: string[];
   dailyMission: DailyMission | null;

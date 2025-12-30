@@ -28,7 +28,6 @@ export const Home: React.FC = () => {
     navigate('welcome');
   };
 
-  // Cálculo do progresso real de hábitos do dia
   const habitsProgress = useMemo(() => {
     let totalHabits = 0;
     let completedHabits = 0;
@@ -73,15 +72,12 @@ export const Home: React.FC = () => {
 
       {/* Calendário Semanal Modular */}
       <div className="px-4 mb-6 relative">
-        <div className="absolute -top-2 left-8 z-10 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
-          Em construção
-        </div>
         <WeeklyCalendar />
       </div>
 
       {/* Grid Dashboard */}
       <div className="px-4 grid grid-cols-2 gap-4 mb-8">
-        {/* Card Hábitos (Antigo Tarefas) */}
+        {/* Card Hábitos */}
         <div 
           onClick={() => navigate('routines_list')}
           className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col relative overflow-hidden active:scale-95 transition-all cursor-pointer"
@@ -124,15 +120,12 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Card Diário Emocional com Ícone Animado */}
+        {/* Card Diário Emocional habilitado */}
         <button 
-          onClick={() => navigate('sentiment_analysis')}
+          onClick={() => navigate('mood_diary')}
           className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative overflow-hidden"
         >
-          <div className="absolute top-3 left-5 z-10 bg-slate-100 text-slate-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
-            Em construção
-          </div>
-          <h3 className="text-slate-400 text-sm font-bold mt-4 mb-4">Diário emocional</h3>
+          <h3 className="text-slate-400 text-sm font-bold mb-4">Diário emocional</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-2">
             <AnimatedCalendarIcon className="w-14 h-14" />
             <div className="flex items-center justify-between w-full mt-4">
@@ -202,10 +195,6 @@ export const Home: React.FC = () => {
           <LogOut className="w-3 h-3" /> Voltar para tela de boas-vindas
         </button>
       </div>
-
-      <style>{`
-        /* Gauge animation handled by JS transition now */
-      `}</style>
     </Layout>
   );
 };
