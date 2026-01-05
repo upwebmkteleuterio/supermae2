@@ -22,7 +22,20 @@ export type ViewState =
   | 'care_agenda'
   | 'routines_list'
   | 'routine_detail'
-  | 'habit_selection';
+  | 'habit_selection'
+  | 'mood_diary_selection'
+  | 'child_mood_children_selection'
+  | 'child_mood_diary'
+  | 'child_mood_selection'
+  | 'child_mood_result'
+  | 'mood_dashboard'
+  | 'channels_list'
+  | 'care_instances_target'
+  | 'care_instances_list'
+  | 'care_instances_intensity'
+  | 'care_instances_tasks'
+  | 'subscription_plans'
+  | 'payment_selection';
 
 export interface UserProfile {
   name: string;
@@ -119,6 +132,7 @@ export interface AppState {
   customCategories: string[]; 
   habitCompletions: Record<string, string[]>; 
   moodHistory: Record<string, string[]>; // YYYY-MM-DD -> [sentimentId1, sentimentId2, ...]
+  childMoodHistory: Record<string, Record<string, string[]>>; // childId -> date -> [sentimentIds]
   tempMoodSelection: string[]; // Temporário para fluxo de registro
   selectedRoutineId: null | string;
   completedRewards: string[];

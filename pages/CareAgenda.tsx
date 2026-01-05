@@ -8,8 +8,8 @@ import {
   CalendarCheck, 
   Book, 
   BookOpen, 
-  Settings, 
-  ChevronRight 
+  Sparkles, 
+  ChevronRight
 } from 'lucide-react';
 
 export const CareAgenda: React.FC = () => {
@@ -22,32 +22,36 @@ export const CareAgenda: React.FC = () => {
         <SOSButton />
       </div>
 
-      <div className="px-6 space-y-3 pb-32">
+      <div className="px-6 space-y-4 pb-32">
         <AgendaListItem 
           icon={<CalendarCheck className="w-6 h-6" />} 
           label="Ver rotinas" 
+          description="Crie seus hábitos e diários e leve uma vida mais leve e organizada"
           onClick={() => navigate('routines_list')} 
         />
         <AgendaListItem 
           icon={<Calendar className="w-6 h-6" />} 
           label="Minha Agenda" 
+          description="Gerencie seus compromissos e lembretes."
           onClick={() => navigate('mom_agenda')} 
         />
         <AgendaListItem 
           icon={<Book className="w-6 h-6" />} 
           label="Ver agenda do meu filho" 
+          description="Acompanhe as terapias e atividades do seu pequeno."
           onClick={() => navigate('children_selection')} 
         />
         <AgendaListItem 
           icon={<BookOpen className="w-6 h-6" />} 
           label="Ver agenda integrada" 
+          description="Visão unificada das agendas para evitar conflitos."
           onClick={() => navigate('integrated_agenda')} 
         />
         <AgendaListItem 
-          icon={<Settings className="w-6 h-6" />} 
-          label="Atividades" 
-          onClick={() => navigate('self_care_selection')} 
-          isUnderConstruction
+          icon={<Sparkles className="w-6 h-6" />} 
+          label="Instâncias de cuidados" 
+          description="Sugestões de tarefas baseadas no seu estado emocional."
+          onClick={() => navigate('care_instances_target')} 
         />
       </div>
     </Layout>
@@ -57,9 +61,10 @@ export const CareAgenda: React.FC = () => {
 const AgendaListItem: React.FC<{ 
   icon: React.ReactNode; 
   label: string; 
+  description: string;
   onClick: () => void;
   isUnderConstruction?: boolean;
-}> = ({ icon, label, onClick, isUnderConstruction }) => (
+}> = ({ icon, label, description, onClick, isUnderConstruction }) => (
   <button 
     onClick={onClick}
     className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all group relative"
@@ -73,8 +78,11 @@ const AgendaListItem: React.FC<{
       <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
         {icon}
       </div>
-      <span className="text-slate-700 font-bold text-sm">{label}</span>
+      <div className="flex flex-col text-left">
+        <span className="text-slate-700 font-bold text-sm">{label}</span>
+        <span className="text-slate-400 text-[10px] font-medium leading-tight mt-0.5">{description}</span>
+      </div>
     </div>
-    <ChevronRight className="w-6 h-6 text-purple-300" />
+    <ChevronRight className="w-6 h-6 text-purple-300 shrink-0" />
   </button>
 );

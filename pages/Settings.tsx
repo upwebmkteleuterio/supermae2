@@ -49,7 +49,10 @@ export const Settings: React.FC = () => {
           </div>
           <h3 className="font-bold text-lg mb-2">Torne-se um assinante e tenha acesso a todos os recursos</h3>
           <p className="text-white/70 text-xs mb-8">Conheça todos os benefícios dos nossos planos.</p>
-          <button className="w-full bg-white text-[#A855F7] py-4 rounded-full font-bold text-sm shadow-md active:scale-95 transition-transform">
+          <button 
+            onClick={() => navigate('subscription_plans')}
+            className="w-full bg-white text-[#A855F7] py-4 rounded-full font-bold text-sm shadow-md active:scale-95 transition-transform"
+          >
             Tornar-me assinante
           </button>
         </div>

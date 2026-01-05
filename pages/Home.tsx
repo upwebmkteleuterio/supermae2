@@ -26,7 +26,6 @@ export const Home: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
-    // Exibe o modal se o onboarding foi concluído mas o modal ainda não foi visto
     if (userProfile.onboardingCompleted && !userProfile.hasSeenWelcomeModal) {
       setShowWelcome(true);
     }
@@ -62,12 +61,10 @@ export const Home: React.FC = () => {
     };
   }, [routines, habitCompletions, selectedDate]);
 
-  // Determina qual versão do modal exibir baseada na resposta de onboarding
   const isAtypical = userProfile.welcomingGoal?.toLowerCase().includes('atípico');
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      {/* Top Bar - Perfil Clicável */}
       <div className="pt-6 px-6 flex items-center justify-between mb-4">
         <button 
           onClick={() => navigate('personal_data')}
@@ -86,14 +83,16 @@ export const Home: React.FC = () => {
           </div>
         </button>
         <div className="flex gap-2 shrink-0">
-          <button className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-purple-200 border border-slate-100 shadow-sm active:scale-95 transition-transform">
+          <button 
+            onClick={() => navigate('self_care_selection')}
+            className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-purple-200 border border-slate-100 shadow-sm active:scale-95 transition-transform"
+          >
             <Heart className="w-6 h-6" />
           </button>
           <SOSButton />
         </div>
       </div>
 
-      {/* Explicação da Home */}
       <div className="px-6 mb-6">
         <div className="bg-purple-50 rounded-2xl p-3 flex items-start gap-3 border border-purple-100/50">
           <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
@@ -103,14 +102,11 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Calendário Semanal Modular */}
       <div className="px-4 mb-6 relative">
         <WeeklyCalendar />
       </div>
 
-      {/* Grid Dashboard */}
       <div className="px-4 grid grid-cols-2 gap-4 mb-8">
-        {/* Card Hábitos */}
         <div 
           onClick={() => navigate('routines_list')}
           className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col relative overflow-hidden active:scale-95 transition-all cursor-pointer"
@@ -155,9 +151,8 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Card Diário Emocional */}
         <button 
-          onClick={() => navigate('mood_diary')}
+          onClick={() => navigate('mood_diary_selection')}
           className="group bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col active:scale-95 transition-all text-left relative overflow-hidden"
         >
           <h3 className="text-slate-400 text-sm font-bold mb-4">Diário emocional</h3>
@@ -171,7 +166,6 @@ export const Home: React.FC = () => {
         </button>
       </div>
 
-      {/* Seção Explorar */}
       <div className="px-6 mb-8">
         <h3 className="text-xl font-bold text-slate-800 mb-6">Explorar</h3>
         
@@ -195,18 +189,16 @@ export const Home: React.FC = () => {
           />
 
           <ExploreItem 
-            onClick={() => {}}
+            onClick={() => navigate('channels_list')}
             icon={<Users className="w-7 h-7" />}
             title="Canais temáticos"
             subtitle="Conecte-se com outras mães"
             color="bg-[#F3F0FF]"
             iconColor="text-purple-300"
-            isUnderConstruction
           />
         </div>
       </div>
 
-      {/* Menu de Atalhos */}
       <div className="px-6 pb-4">
         <div className="bg-slate-100 rounded-[2.5rem] p-6 border border-slate-200/50">
           <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
@@ -230,11 +222,9 @@ export const Home: React.FC = () => {
         </button>
       </div>
 
-      {/* Modais de Boas-vindas Personalizados */}
       {showWelcome && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in duration-300" style={{ backgroundColor: 'rgba(30, 31, 41, 0.85)' }}>
           {isAtypical ? (
-            /* Modal Mãe Atípica */
             <article className="bg-white rounded-[16px] shadow-2xl p-[30px] flex flex-col items-center text-center w-full max-w-[340px] animate-in zoom-in-95 duration-300">
               <div className="mb-6">
                 <img 
@@ -259,7 +249,6 @@ export const Home: React.FC = () => {
               </button>
             </article>
           ) : (
-            /* Modal Apoio Emocional */
             <main className="bg-white rounded-[32px] shadow-2xl w-full max-w-[340px] flex flex-col items-center text-center px-[32px] py-[40px] animate-in zoom-in-95 duration-300">
               <div className="flex justify-center w-full mb-[20px]">
                 <img 

@@ -19,9 +19,18 @@ import { AddChild } from './pages/AddChild';
 import { RoutinesList } from './pages/RoutinesList';
 import { RoutineDetail } from './pages/RoutineDetail';
 import { HabitSelection } from './pages/HabitSelection';
-import { MoodDiary } from './pages/MoodDiary'; // Novo
-import { MoodSelection } from './pages/MoodSelection'; // Novo
-import { MoodResult } from './pages/MoodResult'; // Novo
+import { MoodDiary } from './pages/MoodDiary';
+import { MoodSelection } from './pages/MoodSelection';
+import { MoodResult } from './pages/MoodResult';
+import { MoodDiarySelection } from './pages/MoodDiarySelection';
+import { ChildMoodChildrenSelection } from './pages/ChildMoodChildrenSelection';
+import { ChildMoodDiary } from './pages/ChildMoodDiary';
+import { ChildMoodSelection } from './pages/ChildMoodSelection';
+import { ChildMoodResult } from './pages/ChildMoodResult';
+import { MoodDashboard } from './pages/MoodDashboard';
+import { ChannelsList } from './pages/ChannelsList';
+import { CareInstancesFlow } from './pages/CareInstancesFlow';
+import { SubscriptionPlans } from './pages/SubscriptionPlans';
 import { BottomNav } from './components/BottomNav';
 
 const AppRouter: React.FC = () => {
@@ -55,6 +64,21 @@ const AppRouter: React.FC = () => {
     case 'mood_diary': return <MoodDiary />;
     case 'mood_selection': return <MoodSelection />;
     case 'mood_result': return <MoodResult />;
+    case 'mood_diary_selection': return <MoodDiarySelection />;
+    case 'child_mood_children_selection': return <ChildMoodChildrenSelection />;
+    case 'child_mood_diary': return <ChildMoodDiary />;
+    case 'child_mood_selection': return <ChildMoodSelection />;
+    case 'child_mood_result': return <ChildMoodResult />;
+    case 'mood_dashboard': return <MoodDashboard />;
+    case 'channels_list': return <ChannelsList />;
+    case 'care_instances_target':
+    case 'care_instances_list':
+    case 'care_instances_intensity':
+    case 'care_instances_tasks':
+      return <CareInstancesFlow />;
+    case 'subscription_plans':
+    case 'payment_selection':
+      return <SubscriptionPlans />;
     default: return <Welcome />;
   }
 };

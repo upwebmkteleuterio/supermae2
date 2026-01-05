@@ -34,10 +34,11 @@ interface AppContextProps {
   setVoice: (voice: string) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
   saveMoodRecord: (date: string, sentimentIds: string[]) => void;
+  saveChildMoodRecord: (childId: string, date: string, sentimentIds: string[]) => void;
   setTempMoodSelection: (ids: string[]) => void;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v21';
+const STORAGE_KEY = 'super_mae_app_state_v22';
 
 const getTodayStr = () => {
   return new Date().toLocaleDateString('sv-SE');
@@ -64,6 +65,7 @@ const INITIAL_STATE: AppState = {
   customCategories: [],
   habitCompletions: {},
   moodHistory: {},
+  childMoodHistory: {},
   tempMoodSelection: [],
   selectedRoutineId: null,
   completedRewards: [],
@@ -262,6 +264,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
+  const saveChildMoodRecord = (childId: string, date: string, sentimentIds: string[]) => {
+    setState(prev => {
+      const childHistory = { ...prev.childMoodHistory };
+      if (!childHistory[childId]) childHistory[childId] = {};
+      childHistory[childId][date] = sentimentIds;
+      return { ...prev, childMoodHistory: childHistory };
+    });
+  };
+
   const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
 
   return (
@@ -270,7 +281,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
       updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
-      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord, setTempMoodSelection
+      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord, saveChildMoodRecord, setTempMoodSelection
     }}>
       {children}
     </AppContext.Provider>

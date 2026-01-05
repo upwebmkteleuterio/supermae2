@@ -55,10 +55,10 @@ export const MoodSelection: React.FC = () => {
         <CalendarHeader disabled />
       </div>
 
-      <div className="text-center mb-8 px-6">
-        <p className="text-slate-600 text-sm font-medium">Como você está se sentindo hoje?</p>
+      <div className="text-center mb-6 px-6">
+        <h2 className="text-slate-800 font-bold text-base leading-tight">Escolha até 3 sentimentos</h2>
         <p className="text-[10px] font-black uppercase tracking-widest mt-1 animate-pulse-hint">
-          {isEditing ? "Alterando seu registro" : "Escolha até 3 sentimentos"}
+          {isEditing ? "Alterando seu registro" : "Como você está hoje?"}
         </p>
       </div>
 
@@ -71,29 +71,33 @@ export const MoodSelection: React.FC = () => {
         </div>
       )}
 
-      <main className="px-6 pb-48">
-        <div className="grid grid-cols-3 gap-3">
+      <main className="px-4 pb-48">
+        <div className="grid grid-cols-4 gap-3">
           {SENTIMENTS.map((s) => {
             const isSelected = selectedIds.includes(s.id);
             return (
               <button 
                 key={s.id}
                 onClick={() => toggleSentiment(s.id)}
-                className={`bg-white rounded-[1.8rem] p-3 flex flex-col items-center justify-center shadow-sm border-2 transition-all active:scale-95 h-36 relative ${
-                  isSelected ? 'border-purple-500 ring-4 ring-purple-100' : 'border-transparent'
-                }`}
+                className="flex flex-col items-center gap-2 group cursor-pointer outline-none active:scale-95 transition-all"
               >
-                <div className="w-16 h-16 mb-2 rounded-full overflow-hidden bg-slate-50 border border-slate-100 shadow-inner">
+                <div className={`w-full aspect-square relative overflow-hidden shadow-sm rounded-[20px] border-2 transition-all ${
+                  isSelected ? 'border-purple-500 ring-2 ring-purple-100' : 'border-transparent'
+                }`}>
                   <img alt={s.label} className="w-full h-full object-cover" src={s.img} />
+                  {isSelected && (
+                    <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
+                       <div className="bg-purple-600 rounded-full p-1 shadow-md">
+                          <Check className="w-3 h-3 text-white" strokeWidth={4} />
+                       </div>
+                    </div>
+                  )}
                 </div>
-                <span className={`text-[10px] font-black text-center leading-tight uppercase tracking-tight ${isSelected ? 'text-purple-600' : 'text-slate-600'}`}>
+                <span className={`text-[10px] leading-tight text-center font-bold break-words w-full transition-colors ${
+                  isSelected ? 'text-purple-600' : 'text-slate-500'
+                }`}>
                   {s.label}
                 </span>
-                {isSelected && (
-                  <div className="absolute top-2 right-2 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center shadow-sm">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                )}
               </button>
             );
           })}

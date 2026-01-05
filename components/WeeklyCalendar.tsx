@@ -79,7 +79,7 @@ export const WeeklyCalendar: React.FC = () => {
       </div>
       
       <button 
-        onClick={() => navigate('mood_diary')}
+        onClick={() => navigate('mood_diary_selection')}
         className="w-full flex flex-col items-center justify-center mt-4 gap-1 active:opacity-60 transition-opacity"
       >
          <span className="text-[10px] font-bold text-purple-400">Ver diário emocional</span>

@@ -26,10 +26,10 @@ export const Layout: React.FC<LayoutProps> = ({
     <div className={`min-h-screen flex flex-col ${themeColor} transition-colors duration-500`}>
       <header className={`fixed top-0 left-0 right-0 z-40 h-16 flex items-center justify-between px-6 transition-all duration-300 ${
         headerTransparent 
-        ? 'bg-transparent' 
+        ? 'bg-transparent pointer-events-none' 
         : 'bg-white/80 backdrop-blur-md border-b border-slate-100'
       }`}>
-        <div className="flex items-center gap-3 overflow-hidden">
+        <div className={`flex items-center gap-3 overflow-hidden ${headerTransparent ? 'pointer-events-auto' : ''}`}>
           {showBack && (
             <button 
               onClick={goBack}
@@ -42,7 +42,7 @@ export const Layout: React.FC<LayoutProps> = ({
             {title || (headerTransparent ? '' : 'Super Mãe')}
           </h1>
         </div>
-        {rightAction && <div className="flex items-center">{rightAction}</div>}
+        {rightAction && <div className={`flex items-center ${headerTransparent ? 'pointer-events-auto' : ''}`}>{rightAction}</div>}
       </header>
 
       <main className={`flex-1 ${headerTransparent ? '' : 'mt-16'} pb-32 safe-bottom animate-in fade-in duration-500`}>
