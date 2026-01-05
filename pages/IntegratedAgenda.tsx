@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -158,6 +157,6 @@ export const IntegratedAgenda: React.FC = () => {
           date={state.selectedDate}
         />
       )}
-    </div>
+    </Layout>
   );
 };
