@@ -29,7 +29,10 @@ import { ChildMoodSelection } from './pages/ChildMoodSelection';
 import { ChildMoodResult } from './pages/ChildMoodResult';
 import { MoodDashboard } from './pages/MoodDashboard';
 import { ChannelsList } from './pages/ChannelsList';
-import { CareInstancesFlow } from './pages/CareInstancesFlow';
+import { CareInstancesTarget } from './pages/CareInstancesTarget';
+import { CareInstancesList } from './pages/CareInstancesList';
+import { CareInstancesIntensity } from './pages/CareInstancesIntensity';
+import { CareInstancesTasks } from './pages/CareInstancesTasks';
 import { SubscriptionPlans } from './pages/SubscriptionPlans';
 import { BottomNav } from './components/BottomNav';
 
@@ -71,11 +74,10 @@ const AppRouter: React.FC = () => {
     case 'child_mood_result': return <ChildMoodResult />;
     case 'mood_dashboard': return <MoodDashboard />;
     case 'channels_list': return <ChannelsList />;
-    case 'care_instances_target':
-    case 'care_instances_list':
-    case 'care_instances_intensity':
-    case 'care_instances_tasks':
-      return <CareInstancesFlow />;
+    case 'care_instances_target': return <CareInstancesTarget />;
+    case 'care_instances_list': return <CareInstancesList />;
+    case 'care_instances_intensity': return <CareInstancesIntensity />;
+    case 'care_instances_tasks': return <CareInstancesTasks />;
     case 'subscription_plans':
     case 'payment_selection':
       return <SubscriptionPlans />;

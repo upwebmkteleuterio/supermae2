@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { AppState, ViewState, MoodType, Child, Activity, AgendaItem, DailyMission, ChatMessage, UserProfile, Routine } from '../types';
+import { AppState, ViewState, MoodType, Child, Activity, AgendaItem, DailyMission, ChatMessage, UserProfile, Routine, CareTask } from '../types';
 
 interface AppContextProps {
   state: AppState;
@@ -36,9 +36,14 @@ interface AppContextProps {
   saveMoodRecord: (date: string, sentimentIds: string[]) => void;
   saveChildMoodRecord: (childId: string, date: string, sentimentIds: string[]) => void;
   setTempMoodSelection: (ids: string[]) => void;
+  // Care Instances
+  setSelectedCareCategory: (id: string | null) => void;
+  setSelectedCareIntensity: (intensity: 'light' | 'strong' | null) => void;
+  setCareTasks: (tasks: CareTask[]) => void;
+  toggleCareTask: (taskId: string) => void;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v22';
+const STORAGE_KEY = 'super_mae_app_state_v23';
 
 const getTodayStr = () => {
   return new Date().toLocaleDateString('sv-SE');
@@ -81,7 +86,10 @@ const INITIAL_STATE: AppState = {
     avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
     onboardingCompleted: false,
     hasSeenWelcomeModal: false
-  }
+  },
+  selectedCareCategoryId: null,
+  selectedCareIntensity: null,
+  careTasks: []
 };
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -275,13 +283,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
 
+  // Care Instances
+  const setSelectedCareCategory = (id: string | null) => setState(prev => ({ ...prev, selectedCareCategoryId: id }));
+  const setSelectedCareIntensity = (intensity: 'light' | 'strong' | null) => setState(prev => ({ ...prev, selectedCareIntensity: intensity }));
+  const setCareTasks = (tasks: CareTask[]) => setState(prev => ({ ...prev, careTasks: tasks }));
+  const toggleCareTask = (taskId: string) => setState(prev => ({
+    ...prev,
+    careTasks: prev.careTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
+  }));
+
   return (
     <AppContext.Provider value={{ 
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
       updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
-      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord, saveChildMoodRecord, setTempMoodSelection
+      addChatMessage, clearChatHistory, setVoice, updateUserProfile, saveMoodRecord, saveChildMoodRecord, setTempMoodSelection,
+      setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask
     }}>
       {children}
     </AppContext.Provider>

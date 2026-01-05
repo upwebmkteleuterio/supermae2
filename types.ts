@@ -114,6 +114,12 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface CareTask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface AppState {
   currentPage: ViewState;
   navigationStack: string[];
@@ -140,4 +146,8 @@ export interface AppState {
   chatHistory: ChatMessage[];
   selectedVoice: string;
   userProfile: UserProfile;
+  // Care Instances Flow State
+  selectedCareCategoryId: string | null;
+  selectedCareIntensity: 'light' | 'strong' | null;
+  careTasks: CareTask[];
 }
