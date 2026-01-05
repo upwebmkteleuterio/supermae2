@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -126,7 +125,9 @@ export const CareInstancesFlow: React.FC = () => {
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
       <div className="pt-12 px-6 flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600"><ArrowLeft className="w-6 h-6" /></button>
+          <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">{getHeaderTitle()}</h1>
         </div>
         <SOSButton />

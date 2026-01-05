@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -55,6 +54,15 @@ const PLANS: Plan[] = [
     color: 'bg-indigo-50 border-indigo-100',
     icon: <Sparkles className="w-6 h-6 text-indigo-500" />,
     features: ['Tudo do Conexão', 'Diário emocional do filho', 'Agenda terapêutica completa', 'Canais especializados']
+  },
+  {
+    id: 'completo',
+    name: 'Plano Completo',
+    price: 'R$ 15,90/mês',
+    description: 'Para mães que querem autonomia com suporte digital completo.',
+    color: 'bg-amber-50 border-amber-100',
+    icon: <Crown className="w-6 h-6 text-amber-500" />,
+    features: ['Tudo dos anteriores', 'Organizador de rotina IA', 'Relatórios semanais IA', 'Dashboard completo']
   }
 ];
 
@@ -99,7 +107,9 @@ export const SubscriptionPlans: React.FC = () => {
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
       <div className="pt-12 px-6 flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600"><ArrowLeft className="w-6 h-6" /></button>
+          <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">Assinatura</h1>
         </div>
         <SOSButton />
