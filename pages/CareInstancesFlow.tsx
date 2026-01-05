@@ -141,7 +141,12 @@ export const CareInstancesFlow: React.FC = () => {
       {showCompletionModal && selectedCatId && selectedIntensity && (
         <CareCompletionModal 
           onContinue={() => navigate('care_agenda')}
-          context={{ category: INSTANCE_DATA[selectedCatId].title, intensity: selectedIntensity, tasks: tasks.filter(t => t.completed).map(t => t.text), userName: state.userProfile.name.split(' ')[0] }}
+          context={{ 
+            category: INSTANCE_DATA[selectedCatId].title, 
+            intensity: selectedIntensity, 
+            tasks: tasks.filter(t => t.completed).map(t => t.text), 
+            userName: state.userProfile.name.split(' ')[0] 
+          }}
         />
       )}
     </Layout>
