@@ -3,8 +3,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS, SENTIMENTS_CHILD } from '../constants';
-import { SOSButton } from '../components/SOSButton';
-import { ChevronDown, BarChart3, TrendingUp, Calendar, Sparkles } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { MoodSummary } from '../components/dashboard/MoodSummary';
+import { WeeklyWellbeing } from '../components/dashboard/WeeklyWellbeing';
+import { AIDashTip } from '../components/dashboard/AIDashTip';
 
 const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
@@ -22,7 +24,7 @@ const MAPPING = {
 };
 
 export const MoodDashboard: React.FC = () => {
-  const { state } = useApp();
+  const { state, navigate } = useApp();
   const [activeTab, setActiveTab] = useState<'mom' | 'child'>('mom');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   
@@ -79,10 +81,16 @@ export const MoodDashboard: React.FC = () => {
   }, [history, selectedMonth, activeTab, currentYear]);
 
   const weeklyData = useMemo(() => {
-    const today = new Date();
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() - (6 - i));
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 (Dom) a 6 (Sáb)
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
       return d.toLocaleDateString('sv-SE');
     });
 
@@ -91,7 +99,7 @@ export const MoodDashboard: React.FC = () => {
     let diffCount = 0;
     let totalDaysWithRecord = 0;
 
-    const scores = last7Days.map(date => {
+    const scores = weekDays.map(date => {
       const ids = history[date] || [];
       if (ids.length === 0) return 0;
 
@@ -130,7 +138,12 @@ export const MoodDashboard: React.FC = () => {
   };
 
   return (
-    <Layout title="Dashboard de emoções" showBack themeColor="bg-[#F8F9FE]">
+    <Layout 
+      title="Dashboard de emoções" 
+      showBack 
+      onBack={() => navigate('mood_diary_selection')}
+      themeColor="bg-[#F8F9FE]"
+    >
       <div className="px-6 pt-4 pb-32">
         <div className="flex items-center justify-between mb-8">
            <div className="bg-slate-100 p-1.5 rounded-full flex gap-1 shadow-inner">
@@ -189,164 +202,12 @@ export const MoodDashboard: React.FC = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 mb-8">
-           <div className="flex items-center gap-3 mb-8">
-             <BarChart3 className="w-5 h-5 text-purple-400" />
-             <h3 className="font-bold text-slate-800">Resumo de humor {getTargetName()}</h3>
-           </div>
-           <div className="flex flex-col items-center">
-              {donutData.length > 0 ? (
-                <>
-                  <div className="relative w-48 h-48 mb-10">
-                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                      {donutData.reduce((acc, item, i) => {
-                        const start = acc.offset;
-                        const dashArray = `${item.percent} 100`;
-                        const dashOffset = -start;
-                        acc.offset += item.percent;
-                        acc.elements.push(
-                          <circle
-                            key={item.id}
-                            cx="50" cy="50" r="40"
-                            fill="none"
-                            stroke={item.color}
-                            strokeWidth="14"
-                            strokeDasharray={dashArray}
-                            strokeDashoffset={dashOffset}
-                            strokeLinecap={item.percent > 2 ? "round" : "butt"}
-                            className="transition-all duration-1000"
-                          />
-                        );
-                        return acc;
-                      }, { offset: 0, elements: [] as any[] }).elements}
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                       <span className="text-3xl font-black text-slate-700">{donutData[0].percent}%</span>
-                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{donutData[0].label}</span>
-                    </div>
-                  </div>
-                  <div className="w-full grid grid-cols-2 gap-x-4 gap-y-3">
-                    {donutData.map(item => (
-                      <div key={item.id} className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                        <span className="text-[10px] font-bold text-slate-500 truncate">{item.label} ({item.percent}%)</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="py-12 text-center">
-                   <p className="text-slate-300 text-sm font-medium italic">Nenhum registro emocional neste mês.</p>
-                </div>
-              )}
-           </div>
-        </div>
+        <MoodSummary data={donutData} targetName={getTargetName()} />
 
-        <div className="bg-[#FFF8F8] rounded-[2.5rem] p-8 border border-pink-50 shadow-sm mb-8">
-           <h3 className="font-bold text-slate-800 text-base mb-8">Bem-estar semanal {getTargetName()}</h3>
-           <div className="flex items-center gap-8 mb-12">
-              <div className="relative w-24 h-24 shrink-0">
-                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="#FDEFEF" strokeWidth="12" />
-                  <circle 
-                    cx="50" cy="50" r="42" fill="none" stroke="#F2A4A4" strokeWidth="12" 
-                    strokeDasharray={`${weeklyData.percents.good * 2.64} 264`}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                   <span className="text-xl font-black text-slate-700">{weeklyData.percents.good}%</span>
-                </div>
-              </div>
-              <div className="space-y-3 flex-1">
-                 <SummaryLine color="#F2A4A4" label="dias bons" percent={weeklyData.percents.good} />
-                 <SummaryLine color="#FDEFEF" label="dias neutros" percent={weeklyData.percents.neutral} />
-                 <SummaryLine color="#D6CCE6" label="dias difíceis" percent={weeklyData.percents.difficult} />
-              </div>
-           </div>
-           <h3 className="font-bold text-slate-800 text-base mb-6 flex items-center gap-2">
-             Check-in emocional
-             <TrendingUp className="w-4 h-4 text-purple-400" />
-           </h3>
-           <div className="w-full h-40 relative mt-4">
-              <svg viewBox="0 0 100 50" className="w-full h-full overflow-visible">
-                 <line x1="0" y1="10" x2="100" y2="10" stroke="#F1F5F9" strokeWidth="0.5" strokeDasharray="2 2" />
-                 <line x1="0" y1="25" x2="100" y2="25" stroke="#F1F5F9" strokeWidth="0.5" strokeDasharray="2 2" />
-                 <line x1="0" y1="40" x2="100" y2="40" stroke="#F1F5F9" strokeWidth="0.5" strokeDasharray="2 2" />
-                 <path 
-                    d={generatePath(weeklyData.scores)}
-                    fill="none"
-                    stroke="#D6CCE6"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                 />
-                 {weeklyData.scores.map((score, i) => score > 0 && (
-                   <circle 
-                     key={i} 
-                     cx={(i / 6) * 100} 
-                     cy={40 - ((score - 1) * 15)} 
-                     r="1.5" 
-                     fill="#A855F7" 
-                   />
-                 ))}
-              </svg>
-              <div className="flex justify-between mt-4 px-1">
-                 {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(d => (
-                   <span key={d} className="text-[9px] font-bold text-slate-400">{d}</span>
-                 ))}
-              </div>
-           </div>
-        </div>
+        <WeeklyWellbeing data={weeklyData} targetName={getTargetName()} />
 
-        {weeklyData.totalDays > 0 ? (
-          <div className="bg-purple-600 rounded-[2rem] p-6 text-white text-center shadow-lg shadow-purple-100 flex items-center gap-4">
-             <Calendar className="w-10 h-10 opacity-50 shrink-0" />
-             <div className="text-left">
-               <p className="text-xs font-bold opacity-80 mb-1">Dica da IA:</p>
-               <p className="text-sm font-bold leading-tight">
-                 {weeklyData.percents.good >= 50 
-                   ? `Você teve ${weeklyData.percents.good}% de dias bons! Que tal planejar uma rotina leve para manter esse ritmo?`
-                   : `Identificamos alguns dias desafiadores. Lembre-se que o autocuidado não é egoísmo, é necessário para seu equilíbrio.`}
-               </p>
-             </div>
-          </div>
-        ) : (
-          <div className="bg-white border border-dashed border-slate-200 rounded-[2rem] p-6 text-slate-400 text-center shadow-sm flex items-center gap-4">
-             <Sparkles className="w-10 h-10 opacity-30 shrink-0" />
-             <div className="text-left">
-               <p className="text-xs font-bold opacity-80 mb-1">Dica da IA:</p>
-               <p className="text-sm font-bold leading-tight">Registre o humor diariamente para que eu possa te dar dicas personalizadas de bem-estar!</p>
-             </div>
-          </div>
-        )}
+        <AIDashTip hasData={weeklyData.totalDays > 0} percentGood={weeklyData.percents.good} />
       </div>
     </Layout>
   );
 };
-
-const SummaryLine: React.FC<{ color: string, label: string, percent: number }> = ({ color, label, percent }) => (
-  <div className="flex items-center gap-3">
-    <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: color }} />
-    <span className="text-sm font-bold text-slate-700">{percent}%</span>
-    <span className="text-sm font-medium text-slate-400">{label}</span>
-  </div>
-);
-
-function generatePath(scores: number[]): string {
-  const points = scores.map((s, i) => {
-    if (s === 0) return null;
-    return { x: (i / 6) * 100, y: 40 - ((s - 1) * 15) };
-  }).filter(p => p !== null) as {x: number, y: number}[];
-  if (points.length < 2) return "";
-  let path = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const curr = points[i];
-    const next = points[i+1];
-    const cp1x = curr.x + (next.x - curr.x) / 2;
-    const cp2x = curr.x + (next.x - curr.x) / 2;
-    path += ` C ${cp1x} ${curr.y}, ${cp2x} ${next.y}, ${next.x} ${next.y}`;
-  }
-  return path;
-}

@@ -7,6 +7,7 @@ interface LayoutProps {
   children: React.ReactNode;
   title?: string;
   showBack?: boolean;
+  onBack?: () => void;
   themeColor?: string;
   headerTransparent?: boolean;
   rightAction?: React.ReactNode;
@@ -16,11 +17,20 @@ export const Layout: React.FC<LayoutProps> = ({
   children, 
   title, 
   showBack = false, 
+  onBack,
   themeColor = 'bg-slate-50',
   headerTransparent = false,
   rightAction
 }) => {
   const { goBack } = useApp();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      goBack();
+    }
+  };
 
   return (
     <div className={`min-h-screen flex flex-col ${themeColor} transition-colors duration-500`}>
@@ -32,7 +42,7 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className={`flex items-center gap-3 overflow-hidden ${headerTransparent ? 'pointer-events-auto' : ''}`}>
           {showBack && (
             <button 
-              onClick={goBack}
+              onClick={handleBack}
               className={`p-2 -ml-2 rounded-full transition-colors ${headerTransparent ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
             >
               <ChevronLeft className={`w-6 h-6 ${headerTransparent ? 'text-white' : 'text-slate-700'}`} />

@@ -1,10 +1,10 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
 import { WeeklyCalendar } from '../components/WeeklyCalendar';
 import { AnimatedCalendarIcon } from '../components/AnimatedCalendarIcon';
+import { BorderBeam } from '../components/BorderBeam';
 import { 
   Heart, 
   ChevronRight, 
@@ -45,12 +45,24 @@ export const Home: React.FC = () => {
     let totalHabits = 0;
     let completedHabits = 0;
     const todayCompletions = habitCompletions[selectedDate] || [];
+    
+    // Obter o dia da semana da data selecionada (0-6)
+    const dateObj = new Date(selectedDate + 'T12:00:00');
+    const dayIdx = dateObj.getDay();
 
     routines.forEach(r => {
       r.habits.forEach(h => {
-        totalHabits++;
-        if (todayCompletions.includes(h.id)) {
-          completedHabits++;
+        // Lógica para verificar se o hábito deve aparecer hoje
+        let isToday = true;
+        if (h.repetition === 'Segunda a sexta') isToday = dayIdx >= 1 && dayIdx <= 5;
+        else if (h.repetition === 'Sábado e Domingo') isToday = dayIdx === 0 || dayIdx === 6;
+        else if (h.repetition === 'Personalizar' && h.customDays) isToday = h.customDays.includes(dayIdx);
+        
+        if (isToday) {
+          totalHabits++;
+          if (todayCompletions.includes(h.id)) {
+            completedHabits++;
+          }
         }
       });
     });
@@ -93,15 +105,6 @@ export const Home: React.FC = () => {
         </div>
       </div>
 
-      <div className="px-6 mb-6">
-        <div className="bg-purple-50 rounded-2xl p-3 flex items-start gap-3 border border-purple-100/50">
-          <Info className="w-4 h-4 text-purple-400 shrink-0 mt-0.5" />
-          <p className="text-[10px] text-purple-600 font-medium leading-relaxed">
-            Aqui está o resumo do seu dia. Acompanhe seu progresso e acesse suas ferramentas de cuidado rapidamente.
-          </p>
-        </div>
-      </div>
-
       <div className="px-4 mb-6 relative">
         <WeeklyCalendar />
       </div>
@@ -111,6 +114,7 @@ export const Home: React.FC = () => {
           onClick={() => navigate('routines_list')}
           className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 flex flex-col relative overflow-hidden active:scale-95 transition-all cursor-pointer"
         >
+          <BorderBeam size={80} duration={8} colorFrom="#A855F7" colorTo="#EAB308" />
           <h3 className="text-slate-400 text-sm font-bold mb-4">Hábitos</h3>
           <div className="flex-1 flex flex-col items-center justify-center py-2">
              <div className="relative w-24 h-16 overflow-hidden">
@@ -159,7 +163,7 @@ export const Home: React.FC = () => {
           <div className="flex-1 flex flex-col items-center justify-center py-2">
             <AnimatedCalendarIcon className="w-14 h-14" />
             <div className="flex items-center justify-between w-full mt-4">
-               <p className="text-[10px] text-slate-400 font-bold leading-tight max-w-[80px]">Como você está se sentindo?</p>
+               <p className="text-[10px] text-slate-400 font-bold leading-tight max-w-[100px]">Registre as suas emoções e do seu pequeno</p>
                <ChevronRight className="w-4 h-4 text-slate-300" />
             </div>
           </div>
@@ -196,20 +200,6 @@ export const Home: React.FC = () => {
             color="bg-[#F3F0FF]"
             iconColor="text-purple-300"
           />
-        </div>
-      </div>
-
-      <div className="px-6 pb-4">
-        <div className="bg-slate-100 rounded-[2.5rem] p-6 border border-slate-200/50">
-          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-            <LayoutGrid className="w-3 h-3" /> Atalhos Rápidos
-          </h4>
-          <div className="grid grid-cols-2 gap-3">
-            <QuickLink icon={<Sparkles className="w-4 h-4" />} label="Autocuidado IA" onClick={() => navigate('self_care_selection')} />
-            <QuickLink icon={<CalendarDays className="w-4 h-4" />} label="Minha Agenda" onClick={() => navigate('mom_agenda')} />
-            <QuickLink icon={<Baby className="w-4 h-4" />} label="Agenda Filho" onClick={() => navigate('children_selection')} />
-            <QuickLink icon={<ExternalLink className="w-4 h-4" />} label="Integrada" onClick={() => navigate('integrated_agenda')} />
-          </div>
         </div>
       </div>
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS } from '../constants';
@@ -52,6 +51,8 @@ export const WeeklyCalendar: React.FC = () => {
 
   return (
     <div className="bg-white rounded-[2rem] p-5 shadow-sm border border-slate-50 relative">
+      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-5 ml-2">Meu diário de emoções semanal</h3>
+      
       <div className="grid grid-cols-7 gap-y-4">
         {weekDays.map((day, i) => {
           const isSelected = state.selectedDate === day.date;
