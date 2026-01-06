@@ -4,8 +4,9 @@ import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS, SENTIMENTS_CHILD } from '../constants';
 import { ChevronDown } from 'lucide-react';
+import { MonthlyWellbeing } from '../components/dashboard/MonthlyWellbeing';
 import { MoodSummary } from '../components/dashboard/MoodSummary';
-import { WeeklyWellbeing } from '../components/dashboard/WeeklyWellbeing';
+import { WeeklyCheckin } from '../components/dashboard/WeeklyCheckin';
 import { AIDashTip } from '../components/dashboard/AIDashTip';
 
 const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -27,6 +28,7 @@ export const MoodDashboard: React.FC = () => {
   const { state, navigate } = useApp();
   const [activeTab, setActiveTab] = useState<'mom' | 'child'>('mom');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const currentYear = new Date().getFullYear();
   
   const [selectedChildId, setSelectedChildId] = useState<string>(() => 
     state.children.length > 0 ? state.children[0].id : ''
@@ -48,43 +50,36 @@ export const MoodDashboard: React.FC = () => {
     return (selectedChildId && state.childMoodHistory[selectedChildId]) || {};
   }, [activeTab, selectedChildId, state.moodHistory, state.childMoodHistory]);
 
-  const currentYear = new Date().getFullYear();
-
-  const donutData = useMemo(() => {
-    const counts: Record<string, number> = {};
-    let total = 0;
+  // CÁLCULO MENSAL (PARA O TOP CARD)
+  const monthlyStats = useMemo(() => {
+    let good = 0, neutral = 0, diff = 0, total = 0;
+    const mapping = activeTab === 'mom' ? MAPPING.mom : MAPPING.child;
 
     Object.entries(history).forEach(([date, ids]) => {
       const d = new Date(date + 'T12:00:00');
       if (d.getMonth() === selectedMonth && d.getFullYear() === currentYear) {
-        (ids as string[]).forEach(id => {
-          counts[id] = (counts[id] || 0) + 1;
-          total++;
-        });
+        total++;
+        if (ids.some(id => mapping.difficult.includes(id))) diff++;
+        else if (ids.some(id => mapping.good.includes(id))) good++;
+        else neutral++;
       }
     });
 
-    const sentimentsList = activeTab === 'mom' ? SENTIMENTS : SENTIMENTS_CHILD;
-    
-    return Object.entries(counts)
-      .map(([id, count]) => {
-        const s = sentimentsList.find(item => item.id === id);
-        return {
-          id,
-          label: s?.label || id,
-          color: s?.color || '#ccc',
-          count,
-          percent: Math.round((count / total) * 100)
-        };
-      })
-      .sort((a, b) => b.count - a.count);
+    return {
+      percents: {
+        good: total ? Math.round((good / total) * 100) : 0,
+        neutral: total ? Math.round((neutral / total) * 100) : 0,
+        difficult: total ? Math.round((diff / total) * 100) : 0,
+      },
+      hasData: total > 0
+    };
   }, [history, selectedMonth, activeTab, currentYear]);
 
+  // CÁLCULO SEMANAL (PARA O DONUT E LINE CHART)
   const weeklyData = useMemo(() => {
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 (Dom) a 6 (Sáb)
+    const dayOfWeek = now.getDay(); 
     const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    
     const monday = new Date(now);
     monday.setDate(now.getDate() + diffToMonday);
     
@@ -94,47 +89,44 @@ export const MoodDashboard: React.FC = () => {
       return d.toLocaleDateString('sv-SE');
     });
 
-    let goodCount = 0;
-    let neutralCount = 0;
-    let diffCount = 0;
-    let totalDaysWithRecord = 0;
+    const mapping = activeTab === 'mom' ? MAPPING.mom : MAPPING.child;
+    const weeklyCounts: Record<string, number> = {};
+    let weeklyTotalSentiments = 0;
 
     const scores = weekDays.map(date => {
       const ids = history[date] || [];
       if (ids.length === 0) return 0;
 
-      totalDaysWithRecord++;
-      const mapping = activeTab === 'mom' ? MAPPING.mom : MAPPING.child;
-      
-      const hasDiff = ids.some(id => mapping.difficult.includes(id));
-      const hasGood = ids.some(id => mapping.good.includes(id));
+      ids.forEach(id => {
+        weeklyCounts[id] = (weeklyCounts[id] || 0) + 1;
+        weeklyTotalSentiments++;
+      });
 
-      if (hasDiff) {
-        diffCount++;
-        return 1;
-      }
-      if (hasGood) {
-        goodCount++;
-        return 3;
-      }
-      neutralCount++;
+      if (ids.some(id => mapping.difficult.includes(id))) return 1;
+      if (ids.some(id => mapping.good.includes(id))) return 3;
       return 2;
     });
 
-    return {
-      scores,
-      totalDays: totalDaysWithRecord,
-      percents: {
-        good: totalDaysWithRecord ? Math.round((goodCount / totalDaysWithRecord) * 100) : 0,
-        neutral: totalDaysWithRecord ? Math.round((neutralCount / totalDaysWithRecord) * 100) : 0,
-        difficult: totalDaysWithRecord ? Math.round((diffCount / totalDaysWithRecord) * 100) : 0,
-      }
-    };
+    const sentimentsList = activeTab === 'mom' ? SENTIMENTS : SENTIMENTS_CHILD;
+    const donutData = Object.entries(weeklyCounts)
+      .map(([id, count]) => {
+        const s = sentimentsList.find(item => item.id === id);
+        return {
+          id,
+          label: s?.label || id,
+          color: s?.color || '#ccc',
+          count,
+          percent: Math.round((count / weeklyTotalSentiments) * 100)
+        };
+      })
+      .sort((a, b) => b.count - a.count);
+
+    return { scores, donutData };
   }, [history, activeTab]);
 
   const getTargetName = () => {
     if (activeTab === 'mom') return 'Meu';
-    return selectedChild ? `de ${selectedChild.name.split(' ')[0]}` : 'do Filho';
+    return selectedChild ? `${selectedChild.name.split(' ')[0]}` : 'do Filho';
   };
 
   return (
@@ -202,11 +194,16 @@ export const MoodDashboard: React.FC = () => {
           </div>
         )}
 
-        <MoodSummary data={donutData} targetName={getTargetName()} />
+        {/* 1. Bem-estar Mensal no Topo */}
+        <MonthlyWellbeing data={monthlyStats} targetName={activeTab === 'mom' ? 'Meu' : selectedChild?.name.split(' ')[0] || 'do Filho'} />
 
-        <WeeklyWellbeing data={weeklyData} targetName={getTargetName()} />
+        {/* 2. Resumo do humor essa semana */}
+        <MoodSummary data={weeklyData.donutData} targetName={activeTab === 'mom' ? 'Meu' : selectedChild?.name.split(' ')[0] || 'do Filho'} />
 
-        <AIDashTip hasData={weeklyData.totalDays > 0} percentGood={weeklyData.percents.good} />
+        {/* 3. Check-in emocional da semana */}
+        <WeeklyCheckin scores={weeklyData.scores} />
+
+        <AIDashTip hasData={monthlyStats.hasData} percentGood={monthlyStats.percents.good} />
       </div>
     </Layout>
   );
