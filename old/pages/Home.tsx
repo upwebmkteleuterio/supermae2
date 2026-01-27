@@ -12,32 +12,20 @@ import {
   MessageCircle, 
   Calendar, 
   Users, 
+  LayoutGrid,
   Sparkles,
+  Baby,
+  CalendarDays,
+  ExternalLink,
   LogOut,
-  User as UserIcon,
-  Loader2
+  Info,
+  User as UserIcon
 } from 'lucide-react';
 
 export const Home: React.FC = () => {
-  const { navigate, state, persistUserProfile, fetchChildren, fetchMoodLogs, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, logout } = useApp();
+  const { navigate, state, updateUserProfile, persistUserProfile } = useApp();
   const { userProfile, routines, habitCompletions, selectedDate, isProfileLoading } = state;
   const [showWelcome, setShowWelcome] = useState(false);
-  const [isInitialSync, setIsInitialSync] = useState(true);
-
-  useEffect(() => {
-    const sync = async () => {
-      // Sincronização centralizada profissional
-      await Promise.all([
-        fetchChildren(), 
-        fetchMoodLogs(), 
-        fetchAgendaItems(),
-        fetchRoutines(),
-        fetchHabitCompletions()
-      ]);
-      setIsInitialSync(false);
-    };
-    sync();
-  }, [fetchChildren, fetchMoodLogs, fetchAgendaItems, fetchRoutines, fetchHabitCompletions]);
 
   useEffect(() => {
     if (userProfile.onboardingCompleted && !userProfile.hasSeenWelcomeModal) {
@@ -45,8 +33,8 @@ export const Home: React.FC = () => {
     }
   }, [userProfile.onboardingCompleted, userProfile.hasSeenWelcomeModal]);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleResetForClient = () => {
+    updateUserProfile({ onboardingCompleted: false, hasSeenWelcomeModal: false });
     navigate('welcome');
   };
 
@@ -78,6 +66,8 @@ export const Home: React.FC = () => {
   }, [routines, habitCompletions, selectedDate]);
 
   const isAtypical = userProfile.welcomingGoal?.toLowerCase().includes('atípico');
+
+  // Fallback de nome: Se não tiver nome, usa "Mãe"
   const displayName = userProfile.name ? userProfile.name.split(' ')[0] : 'Mãe';
 
   return (
@@ -88,7 +78,7 @@ export const Home: React.FC = () => {
           className="flex items-center gap-3 text-left active:opacity-70 transition-all group"
         >
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 group-active:scale-90 transition-transform bg-slate-100 flex items-center justify-center">
-            {isProfileLoading ? (
+            {isProfileLoading && !userProfile.avatar ? (
               <div className="skeleton w-full h-full" />
             ) : userProfile.avatar ? (
               <img src={userProfile.avatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -97,17 +87,14 @@ export const Home: React.FC = () => {
             )}
           </div>
           <div className="min-w-0">
-            {isProfileLoading ? (
+            {isProfileLoading && !userProfile.name ? (
               <div className="space-y-1">
                 <div className="skeleton h-4 w-24 rounded" />
                 <div className="skeleton h-3 w-16 rounded" />
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-slate-800 font-bold text-lg leading-tight truncate group-active:text-purple-600 transition-colors">Olá, {displayName}!</h2>
-                  {isInitialSync && <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-300" />}
-                </div>
+                <h2 className="text-slate-800 font-bold text-lg leading-tight truncate group-active:text-purple-600 transition-colors">Olá, {displayName}!</h2>
                 <p className="text-slate-400 text-xs font-medium truncate">Ver meu perfil</p>
               </>
             )}
@@ -173,7 +160,7 @@ export const Home: React.FC = () => {
       </div>
 
       <div className="px-6 pb-32 flex justify-center">
-        <button onClick={handleLogout} className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:text-purple-400 transition-colors py-4 active:scale-95"><LogOut className="w-3 h-3" /> Sair da conta</button>
+        <button onClick={handleResetForClient} className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-[0.2em] hover:text-purple-400 transition-colors py-4 active:scale-95"><LogOut className="w-3 h-3" /> Voltar para tela de boas-vindas</button>
       </div>
 
       {showWelcome && (
