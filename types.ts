@@ -27,9 +27,11 @@ export type ViewState =
   | 'child_mood_children_selection'
   | 'child_mood_diary'
   | 'child_mood_selection'
+  | 'child_mood_challenge'
   | 'child_mood_result'
   | 'mood_dashboard'
   | 'channels_list'
+  | 'channel_chat'
   | 'care_instances_target'
   | 'care_instances_list'
   | 'care_instances_intensity'
@@ -109,9 +111,11 @@ export interface DailyMission {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: 'user' | 'model' | 'system';
   text: string;
   timestamp: string;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 export interface CareTask {
@@ -121,6 +125,9 @@ export interface CareTask {
 }
 
 export interface AppState {
+  isAuthLoading: boolean;
+  isProfileLoading: boolean;
+  isAuthenticated: boolean;
   currentPage: ViewState;
   navigationStack: string[];
   selectedDate: string; // YYYY-MM-DD
@@ -137,16 +144,18 @@ export interface AppState {
   customHabitTemplates: Activity[]; 
   customCategories: string[]; 
   habitCompletions: Record<string, string[]>; 
-  moodHistory: Record<string, string[]>; // YYYY-MM-DD -> [sentimentId1, sentimentId2, ...]
-  childMoodHistory: Record<string, Record<string, string[]>>; // childId -> date -> [sentimentIds]
-  tempMoodSelection: string[]; // Temporário para fluxo de registro
+  moodHistory: Record<string, string[]>; 
+  childMoodHistory: Record<string, Record<string, string[]>>; 
+  tempMoodSelection: string[]; 
+  tempMoodNote: string; 
   selectedRoutineId: null | string;
+  selectedChannelId: null | string;
   completedRewards: string[];
   dailyMission: DailyMission | null;
   chatHistory: ChatMessage[];
+  channelMessages: Record<string, ChatMessage[]>;
   selectedVoice: string;
   userProfile: UserProfile;
-  // Care Instances Flow State
   selectedCareCategoryId: string | null;
   selectedCareIntensity: 'light' | 'strong' | null;
   careTasks: CareTask[];

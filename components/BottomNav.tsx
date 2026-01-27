@@ -1,4 +1,3 @@
-
 import React, { useLayoutEffect, useRef, useState, useMemo, useEffect } from 'react';
 import { LayoutGrid, MessageCircle, Calendar, MessagesSquare, Settings, LucideIcon } from 'lucide-react';
 import { useApp } from '../store/AppContext';
@@ -25,7 +24,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { id: 'config', icon: Settings, label: 'Config', pages: ['settings', 'personal_data'], target: 'settings' },
 ];
 
-const HIDDEN_PAGES: ViewState[] = ['welcome', 'onboarding', 'breathing_exercise'];
+const HIDDEN_PAGES: ViewState[] = ['welcome', 'onboarding', 'breathing_exercise', 'channel_chat'];
 
 export const BottomNav: React.FC = () => {
   const { state, navigate } = useApp();

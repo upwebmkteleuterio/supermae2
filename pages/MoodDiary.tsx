@@ -1,16 +1,27 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
 import { SENTIMENTS } from '../constants';
 import { MoodCircle } from '../components/MoodCircle';
-import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile, Info } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile, Info, Loader2 } from 'lucide-react';
 
 export const MoodDiary: React.FC = () => {
-  const { state, navigate, setSelectedDate, goBack } = useApp();
+  const { state, navigate, setSelectedDate, fetchMoodLogs } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDayDetail, setSelectedDayDetail] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Carrega os logs do Supabase ao entrar na tela para garantir dados atualizados
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      await fetchMoodLogs();
+      setLoading(false);
+    };
+    load();
+  }, [fetchMoodLogs]);
 
   const monthName = currentDate.toLocaleDateString('pt-BR', { month: 'long' });
   const year = currentDate.getFullYear();
@@ -67,7 +78,6 @@ export const MoodDiary: React.FC = () => {
       </div>
 
       <div className="px-6 pb-32">
-        {/* Texto Explicativo */}
         <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-50 mb-6 flex items-start gap-4">
           <div className="w-10 h-10 bg-purple-100 rounded-2xl flex items-center justify-center shrink-0">
              <Info className="w-5 h-5 text-purple-500" />
@@ -80,8 +90,13 @@ export const MoodDiary: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 mb-8">
-          {/* Header Calendário */}
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 mb-8 relative">
+          {loading && (
+            <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-50 rounded-[2.5rem] flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            </div>
+          )}
+          
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-lg font-bold text-slate-700 capitalize">{monthName} {year}</h2>
             <div className="flex gap-2">
@@ -90,9 +105,8 @@ export const MoodDiary: React.FC = () => {
             </div>
           </div>
 
-          {/* Grid de Dias */}
           <div className="grid grid-cols-7 gap-y-6 text-center">
-            {['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map(d => (
+            {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(d => (
               <span key={d} className="text-[10px] font-black text-slate-300 uppercase">{d}</span>
             ))}
             
@@ -119,7 +133,6 @@ export const MoodDiary: React.FC = () => {
             })}
           </div>
 
-          {/* Legenda */}
           <div className="mt-12 space-y-4">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-300">Legenda:</h4>
             <div className="grid grid-cols-3 gap-y-3">
@@ -147,10 +160,9 @@ export const MoodDiary: React.FC = () => {
         </button>
       </div>
 
-      {/* Modal Detalhes do Dia */}
       {selectedDayDetail && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
-          <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="w-full max-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Registro de humor</h3>
               <button onClick={() => setSelectedDayDetail(null)} className="p-1 text-slate-300"><X className="w-6 h-6" /></button>

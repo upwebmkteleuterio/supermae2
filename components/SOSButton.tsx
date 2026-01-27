@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Bell, X, Shield, Heart, Phone, MessageCircle, ExternalLink, ArrowLeft } from 'lucide-react';
 import { useApp } from '../store/AppContext';
@@ -35,13 +34,10 @@ export const SOSButton: React.FC = () => {
     <>
       <button 
         onClick={() => setShowModal(true)}
-        className="w-12 h-12 rounded-full bg-[#F3E8FF] flex items-center justify-center text-purple-600 border border-purple-100 shadow-sm relative active:scale-95 transition-all cursor-pointer group z-50"
-        aria-label="Botão de Ajuda SOS"
+        className="px-6 py-2.5 rounded-full bg-[#A855F7] flex items-center justify-center text-white shadow-lg shadow-purple-100 relative active:scale-95 transition-all cursor-pointer group z-50 border border-white/20"
+        aria-label="Botão Respiro"
       >
-        <Bell className="w-5 h-5 text-purple-400 pointer-events-none" />
-        <div className="absolute -top-1 -right-1 bg-[#A855F7] px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center pointer-events-none">
-          <span className="text-[7px] font-black text-white leading-none tracking-tighter">SOS</span>
-        </div>
+        <span className="text-[10px] font-black uppercase tracking-[0.15em] leading-none">Respiro</span>
       </button>
 
       {showModal && (

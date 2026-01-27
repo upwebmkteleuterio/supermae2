@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
@@ -13,41 +13,57 @@ import {
   Phone,
   Camera,
   Save,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 
 const BRAZILIAN_STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
 
 export const PersonalData: React.FC = () => {
-  const { state, goBack, updateUserProfile } = useApp();
+  const { state, goBack, persistUserProfile, uploadAvatar } = useApp();
   const { userProfile } = state;
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(userProfile);
   const [savedFeedback, setSavedFeedback] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSave = () => {
-    updateUserProfile(formData);
-    setIsEditing(false);
-    setSavedFeedback(true);
-    setTimeout(() => setSavedFeedback(false), 3000);
+  useEffect(() => {
+    setFormData(userProfile);
+  }, [userProfile]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    const success = await persistUserProfile(formData);
+    
+    if (success) {
+      setIsEditing(false);
+      setSavedFeedback(true);
+      setTimeout(() => setSavedFeedback(false), 3000);
+    } else {
+      alert("Ocorreu um erro ao salvar seus dados. Tente novamente.");
+    }
+    setLoading(false);
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatar: reader.result as string }));
-      };
-      reader.readAsDataURL(file);
+      setUploading(true);
+      const publicUrl = await uploadAvatar(file);
+      if (publicUrl) {
+        setFormData(prev => ({ ...prev, avatar: publicUrl }));
+      } else {
+        alert("Falha ao subir a imagem. Verifique sua conexão.");
+      }
+      setUploading(false);
     }
   };
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      {/* Header com Voltar e SOS */}
       <div className="pt-12 px-6 flex items-center justify-between mb-8">
         <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
           <ArrowLeft className="w-6 h-6" />
@@ -56,9 +72,11 @@ export const PersonalData: React.FC = () => {
            {isEditing ? (
              <button 
                onClick={handleSave}
-               className="bg-green-500 text-white px-5 py-2 rounded-full font-bold text-sm shadow-md active:scale-95 transition-transform flex items-center gap-2"
+               disabled={loading || uploading}
+               className="bg-green-500 text-white px-5 py-2 rounded-full font-bold text-sm shadow-md active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50"
              >
-               <Save className="w-4 h-4" /> Salvar
+               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+               {loading ? 'Salvando...' : 'Salvar'}
              </button>
            ) : (
              <button 
@@ -72,18 +90,21 @@ export const PersonalData: React.FC = () => {
         </div>
       </div>
 
-      {/* Card de Perfil */}
       <div className="px-6 mb-10">
         <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-slate-50 flex flex-col items-center">
           <div className="relative mb-6">
-            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-100">
-              <img 
-                src={formData.avatar} 
-                alt="Avatar" 
-                className="w-full h-full object-cover"
-              />
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-slate-100 flex items-center justify-center">
+              {uploading ? (
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+              ) : (
+                <img 
+                  src={formData.avatar} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
-            {isEditing && (
+            {isEditing && !uploading && (
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 className="absolute bottom-0 right-0 w-10 h-10 bg-[#A855F7] rounded-full flex items-center justify-center text-white border-2 border-white shadow-md active:scale-90"
@@ -119,7 +140,6 @@ export const PersonalData: React.FC = () => {
         </div>
       </div>
 
-      {/* Informações Editáveis */}
       <div className="px-6 pb-32 space-y-8">
         <div>
           <h4 className="text-slate-900 font-bold mb-4">Informações de contato</h4>

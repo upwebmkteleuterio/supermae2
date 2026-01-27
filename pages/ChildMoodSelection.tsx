@@ -4,7 +4,7 @@ import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS_CHILD } from '../constants';
 import { CalendarHeader } from '../components/CalendarHeader';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle, Loader2 } from 'lucide-react';
 
 export const ChildMoodSelection: React.FC = () => {
   const { state, navigate, setTempMoodSelection, saveChildMoodRecord } = useApp();
@@ -14,6 +14,7 @@ export const ChildMoodSelection: React.FC = () => {
   
   const [selectedIds, setSelectedIds] = useState<string[]>(initialSelection);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const isEditing = initialSelection.length > 0;
 
@@ -38,18 +39,24 @@ export const ChildMoodSelection: React.FC = () => {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedIds.length === 0) {
       setError("Selecione ao menos um sentimento do seu filho.");
       return;
     }
 
     if (isEditing) {
-      saveChildMoodRecord(selectedChild.id, state.selectedDate, selectedIds);
-      navigate('child_mood_diary');
+      setLoading(true);
+      const success = await saveChildMoodRecord(selectedChild.id, state.selectedDate, selectedIds);
+      if (success) {
+        navigate('child_mood_diary');
+      } else {
+        setError("Erro ao atualizar registro. Tente novamente.");
+        setLoading(false);
+      }
     } else {
       setTempMoodSelection(selectedIds);
-      navigate('child_mood_result');
+      navigate('child_mood_challenge');
     }
   };
 
@@ -87,10 +94,11 @@ export const ChildMoodSelection: React.FC = () => {
             return (
               <button 
                 key={s.id}
-                onClick={() => toggleSentiment(s.id)}
+                onClick={() => !loading && toggleSentiment(s.id)}
+                disabled={loading}
                 className={`bg-white rounded-2xl p-3 flex flex-col items-center justify-center shadow-sm transition-all duration-200 aspect-[4/5] border-2 ${
                   isSelected ? 'border-purple-500 ring-2 ring-purple-100 shadow-md scale-[1.02]' : 'border-transparent'
-                }`}
+                } ${loading ? 'opacity-50' : ''}`}
               >
                 <div className="w-[60px] h-[60px] mb-2 relative">
                   <img alt={s.label} className="w-full h-full object-contain rounded-full" src={s.img} />
@@ -111,13 +119,13 @@ export const ChildMoodSelection: React.FC = () => {
         </div>
       </main>
 
-      {/* Botão Fixo Bottom */}
       <div className="fixed bottom-28 left-0 right-0 p-6 pointer-events-none z-30">
         <button 
           onClick={handleContinue}
-          className="w-full bg-[#7C3AED] hover:bg-purple-700 text-white py-5 rounded-full font-bold shadow-xl shadow-purple-100 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest"
+          disabled={loading}
+          className="w-full bg-[#7C3AED] hover:bg-purple-700 text-white py-5 rounded-full font-bold shadow-xl shadow-purple-100 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2"
         >
-          {isEditing ? "Salvar Registro" : "Continuar"}
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isEditing ? "Salvar Registro" : "Continuar")}
         </button>
       </div>
     </Layout>

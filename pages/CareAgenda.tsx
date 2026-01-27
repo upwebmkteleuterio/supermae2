@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -9,7 +8,8 @@ import {
   Book, 
   BookOpen, 
   Sparkles, 
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
 
 export const CareAgenda: React.FC = () => {
@@ -18,7 +18,12 @@ export const CareAgenda: React.FC = () => {
   return (
     <Layout headerTransparent themeColor="bg-[#FDFCFE]">
       <div className="pt-12 px-6 flex items-center justify-between mb-8">
-        <h1 className="text-xl font-bold text-slate-800">Agenda de cuidados</h1>
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('home')} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-xl font-bold text-slate-800">Agenda de cuidados</h1>
+        </div>
         <SOSButton />
       </div>
 

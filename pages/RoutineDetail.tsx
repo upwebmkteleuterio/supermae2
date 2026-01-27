@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -12,15 +11,24 @@ import { Activity } from '../types';
 const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const REPETITION_OPTIONS = ["Todos os dias", "Segunda a sexta", "Sábado e Domingo", "Personalizar"];
 
+const CATEGORY_COLORS: Record<string, string> = {
+  "Saúde emocional": "bg-pink-50/50 border-pink-100",
+  "Corpo e bem-estar físico": "bg-green-50/50 border-green-100",
+  "Relações e rede de apoio": "bg-indigo-50/50 border-indigo-100",
+  "Organização e vida prática": "bg-amber-50/50 border-amber-100",
+  "Criatividade e leveza": "bg-yellow-50/50 border-yellow-100",
+  "Espiritualidade e auto conexão": "bg-blue-50/50 border-blue-100",
+  "Propósito e realização pessoal": "bg-purple-50/50 border-purple-100",
+  "Tempo para si": "bg-rose-50/50 border-rose-100"
+};
+
 export const RoutineDetail: React.FC = () => {
   const { state, goBack, navigate, toggleHabitCompletion, deleteHabitFromRoutine, updateHabitInRoutine } = useApp();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  // Estados para Edição e Exclusão
   const [editingHabit, setEditingHabit] = useState<Activity | null>(null);
   const [deletingHabit, setDeletingHabit] = useState<Activity | null>(null);
 
-  // Estados temporários do modal de edição
   const [tempPeriod, setTempPeriod] = useState<any>('A qualquer momento');
   const [tempReminder, setTempReminder] = useState(false);
   const [tempRepetition, setTempRepetition] = useState("Todos os dias");
@@ -32,7 +40,6 @@ export const RoutineDetail: React.FC = () => {
 
   const periods = ['A qualquer momento', 'Manhã', 'Tarde', 'Noite'];
   
-  // Lógica de progresso baseada na data selecionada
   const dateCompletions = state.habitCompletions[state.selectedDate] || [];
   const completedCount = routine.habits.filter(h => dateCompletions.includes(h.id)).length;
   const totalCount = routine.habits.length;
@@ -43,7 +50,6 @@ export const RoutineDetail: React.FC = () => {
   const handleOpenEdit = (habit: Activity) => {
     setEditingHabit(habit);
     setTempPeriod(habit.period || 'A qualquer momento');
-    // Corrigido: habit.reminder agora é reconhecido pelo TypeScript
     setTempReminder(!!habit.reminder);
     setTempRepetition(habit.repetition || 'Todos os dias');
     setTempCustomDays(habit.customDays || []);
@@ -56,11 +62,10 @@ export const RoutineDetail: React.FC = () => {
     const updated: Activity = {
       ...editingHabit,
       period: tempPeriod,
-      // Salva o novo estado do lembrete no objeto Activity
       reminder: tempReminder,
       repetition: tempRepetition,
       customDays: tempRepetition === 'Personalizar' ? tempCustomDays : undefined,
-      completed: editingHabit.completed // Mantém estado
+      completed: editingHabit.completed
     };
 
     updateHabitInRoutine(state.selectedRoutineId, updated);
@@ -80,7 +85,6 @@ export const RoutineDetail: React.FC = () => {
 
   return (
     <Layout headerTransparent themeColor="bg-[#FDFCFE]">
-      {/* Header */}
       <div className="pt-12 px-6 flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
@@ -92,7 +96,6 @@ export const RoutineDetail: React.FC = () => {
       </div>
 
       <div className="px-6 pb-32">
-        {/* Barra de Progresso */}
         <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-50 mb-10 flex flex-col items-center">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6 text-center w-full">Progresso do dia</h3>
           
@@ -121,7 +124,6 @@ export const RoutineDetail: React.FC = () => {
           </button>
         </div>
 
-        {/* Lista de Hábitos */}
         <div className="space-y-8">
           {periods.map(period => {
             const habits = routine.habits.filter(h => h.period === period);
@@ -141,9 +143,10 @@ export const RoutineDetail: React.FC = () => {
                 ) : (
                   habits.map(habit => {
                     const completed = isHabitCompleted(habit.id);
+                    const colorClass = habit.category ? CATEGORY_COLORS[habit.category] : 'bg-white border-slate-100';
                     return (
                       <div key={habit.id} className="relative group">
-                        <div className={`bg-white px-5 py-4 rounded-[1.8rem] border border-slate-100 shadow-sm flex items-center gap-4 transition-all ${completed ? 'opacity-50 grayscale-[0.3]' : ''}`}>
+                        <div className={`${colorClass.split(' ')[0]} bg-white px-5 py-4 rounded-[1.8rem] border ${colorClass.split(' ')[1] || 'border-slate-100'} shadow-sm flex items-center gap-4 transition-all ${completed ? 'opacity-50 grayscale-[0.3]' : ''}`}>
                           <div className="shrink-0 scale-75 -ml-2">
                             <HeartCheckbox 
                               checked={completed} 
@@ -155,6 +158,9 @@ export const RoutineDetail: React.FC = () => {
                              <h5 className={`font-bold text-slate-700 text-sm ${completed ? 'line-through text-slate-400' : ''}`}>
                                {habit.title}
                              </h5>
+                             {habit.category && (
+                               <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-60 block mt-1">{habit.category}</span>
+                             )}
                           </div>
 
                           <button 
@@ -194,7 +200,6 @@ export const RoutineDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal de Edição (Estilo Profissional HabitSelection) */}
       {editingHabit && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 overflow-y-auto no-scrollbar max-h-[90vh]">
@@ -266,7 +271,7 @@ export const RoutineDetail: React.FC = () => {
                 </div>
 
                 {tempRepetition === 'Personalizar' && (
-                  <div className="flex justify-between gap-1 animate-in zoom-in-95 duration-200 py-2">
+                  <div className="flex justify-between gap-1 py-2">
                     {WEEK_DAYS.map((day, idx) => (
                       <button
                         key={idx}
@@ -295,7 +300,6 @@ export const RoutineDetail: React.FC = () => {
         </div>
       )}
 
-      {/* Modal de Confirmação de Exclusão */}
       {deletingHabit && (
         <ConfirmModal 
           title="Excluir hábito?"

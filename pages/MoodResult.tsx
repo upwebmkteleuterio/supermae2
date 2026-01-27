@@ -29,13 +29,11 @@ export const MoodResult: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  // Recupera sentimentos selecionados do estado global
   const selectedIds = state.tempMoodSelection || [];
   const selectedSentiments = selectedIds.map((id: string) => SENTIMENTS.find(s => s.id === id)).filter(Boolean);
 
   useEffect(() => {
     const generateAnalysis = async () => {
-      // Se não houver seleção, volta para a tela de seleção
       if (selectedIds.length === 0) {
         navigate('mood_selection');
         return;
@@ -62,13 +60,13 @@ export const MoodResult: React.FC = () => {
         const aiText = res.text || "Estou aqui com você. Respire fundo.";
         setResponse(aiText);
         
-        // SALVAMENTO OFICIAL: Persiste no histórico global do calendário
-        saveMoodRecord(state.selectedDate, selectedIds);
+        // SALVAMENTO OFICIAL NO SUPABASE
+        await saveMoodRecord(state.selectedDate, selectedIds, aiText);
         
       } catch (e) {
-        setResponse("Às vezes as palavras faltam, mas meu abraço virtual está com você. Você é uma super mãe.");
-        // Mesmo com erro na IA, salvamos o registro da mãe
-        saveMoodRecord(state.selectedDate, selectedIds);
+        const fallbackMsg = "Às vezes as palavras faltam, mas meu abraço virtual está com você. Você é uma super mãe.";
+        setResponse(fallbackMsg);
+        await saveMoodRecord(state.selectedDate, selectedIds, fallbackMsg);
       } finally {
         setLoading(false);
       }
@@ -156,7 +154,6 @@ export const MoodResult: React.FC = () => {
         </div>
       </div>
 
-      {/* Botão Fixo Bottom - Ajustado para bottom-28 para ficar acima da nav bar */}
       <div className="fixed bottom-28 left-0 right-0 p-6 pointer-events-none z-30">
         <button 
           onClick={() => navigate('mood_diary')}

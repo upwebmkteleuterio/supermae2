@@ -4,12 +4,13 @@ import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SENTIMENTS } from '../constants';
 import { CalendarHeader } from '../components/CalendarHeader';
-import { Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle, Loader2 } from 'lucide-react';
 
 export const MoodSelection: React.FC = () => {
   const { state, navigate, setTempMoodSelection, saveMoodRecord } = useApp();
   const [selectedIds, setSelectedIds] = useState<string[]>(state.moodHistory[state.selectedDate] || []);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Verifica se já existe um registro para esta data (modo edição)
   const isEditing = !!state.moodHistory[state.selectedDate];
@@ -31,16 +32,22 @@ export const MoodSelection: React.FC = () => {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedIds.length === 0) {
       setError("Por favor, selecione ao menos um sentimento.");
       return;
     }
 
     if (isEditing) {
-      // Se for edição, salva e volta direto para o diário, sem IA
-      saveMoodRecord(state.selectedDate, selectedIds);
-      navigate('mood_diary');
+      setLoading(true);
+      // Se for edição, salva e aguarda antes de voltar para o diário
+      const success = await saveMoodRecord(state.selectedDate, selectedIds);
+      if (success) {
+        navigate('mood_diary');
+      } else {
+        setError("Erro ao atualizar registro. Tente novamente.");
+        setLoading(false);
+      }
     } else {
       // Se for novo, segue o fluxo normal da IA
       setTempMoodSelection(selectedIds);
@@ -51,7 +58,6 @@ export const MoodSelection: React.FC = () => {
   return (
     <Layout title="Registro de humor" showBack themeColor="bg-[#F9F7FC]" headerTransparent={false}>
       <div className="px-6 pt-4 pb-4">
-        {/* CalendarHeader desativado para cliques conforme solicitado */}
         <CalendarHeader disabled />
       </div>
 
@@ -78,8 +84,9 @@ export const MoodSelection: React.FC = () => {
             return (
               <button 
                 key={s.id}
-                onClick={() => toggleSentiment(s.id)}
-                className="flex flex-col items-center gap-2 group cursor-pointer outline-none active:scale-95 transition-all"
+                onClick={() => !loading && toggleSentiment(s.id)}
+                disabled={loading}
+                className={`flex flex-col items-center gap-2 group cursor-pointer outline-none active:scale-95 transition-all ${loading ? 'opacity-50' : ''}`}
               >
                 <div className={`w-full aspect-square relative overflow-hidden shadow-sm rounded-[20px] border-2 transition-all ${
                   isSelected ? 'border-purple-500 ring-2 ring-purple-100' : 'border-transparent'
@@ -104,13 +111,13 @@ export const MoodSelection: React.FC = () => {
         </div>
       </main>
 
-      {/* Botão Fixo Bottom */}
       <div className="fixed bottom-28 left-0 right-0 p-6 pointer-events-none z-30">
         <button 
           onClick={handleContinue}
-          className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-200 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest"
+          disabled={loading}
+          className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-200 pointer-events-auto active:scale-95 transition-all text-sm uppercase tracking-widest flex items-center justify-center gap-2"
         >
-          {isEditing ? "Salvar Alterações" : "Continuar"}
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isEditing ? "Salvar Alterações" : "Continuar")}
         </button>
       </div>
 

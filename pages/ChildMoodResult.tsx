@@ -31,6 +31,7 @@ export const ChildMoodResult: React.FC = () => {
 
   const selectedChild = state.children.find(c => c.id === state.selectedChildId);
   const selectedIds = state.tempMoodSelection || [];
+  const note = state.tempMoodNote || '';
   const selectedLabels = selectedIds.map(id => SENTIMENTS_CHILD.find(s => s.id === id)?.label).join(', ');
 
   useEffect(() => {
@@ -44,27 +45,37 @@ export const ChildMoodResult: React.FC = () => {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
         
+        const challengeContext = note ? `A mãe relatou o seguinte desafio hoje: "${note}".` : 'A mãe não detalhou um desafio específico hoje.';
+        
         const prompt = `A mãe registrou que seu filho ${selectedChild.name} está se sentindo: ${selectedLabels}. 
-        CONTEXTO: O filho tem ${selectedChild.age} e a situação de diagnóstico é: ${selectedChild.diagnosisStatus}.
-        OBJETIVO: Dê uma resposta acolhedora para a MÃE. Explique brevemente como ela pode lidar com esse estado emocional da criança de forma leve. 
-        Seja breve, empática e encerre com uma frase de validação materna.`;
+        ${challengeContext}
+        CONTEXTO DO FILHO: Tem ${selectedChild.age} e a situação de diagnóstico é: ${selectedChild.diagnosisStatus}.
+        USUÁRIA: ${state.userProfile.name}.
+        
+        OBJETIVO: Dê uma resposta acolhedora para a MÃE. 
+        1. Valide o sentimento da criança.
+        2. Dê uma palavra de conforto ou micro-estratégia específica para o desafio relatado por ela.
+        3. Seja breve, empática e poética. 
+        4. Encerre com uma frase de validação materna forte.`;
 
         const res = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
           contents: prompt,
           config: { 
-            systemInstruction: "Você é uma mentora especialista em maternidade atípica. Seu tom é calmo, seguro e muito acolhedor."
+            systemInstruction: "Você é uma mentora especialista em maternidade atípica. Seu tom é calmo, seguro e extremamente acolhedor."
           }
         });
 
         const aiText = res.text || "Obrigada por registrar. Sua percepção é fundamental para o desenvolvimento do seu filho.";
         setResponse(aiText);
         
-        saveChildMoodRecord(selectedChild.id, state.selectedDate, selectedIds);
+        // SALVAMENTO OFICIAL NO SUPABASE
+        await saveChildMoodRecord(selectedChild.id, state.selectedDate, selectedIds, note);
         
       } catch (e) {
-        setResponse("Registrar o humor é o primeiro passo para entender padrões. Você está fazendo um ótimo trabalho observando seu filho.");
-        saveChildMoodRecord(selectedChild.id, state.selectedDate, selectedIds);
+        const fallbackMsg = "Registrar o humor e os desafios é o primeiro passo para entender padrões. Você está fazendo um ótimo trabalho observando seu filho e cuidando de si mesma.";
+        setResponse(fallbackMsg);
+        await saveChildMoodRecord(selectedChild.id, state.selectedDate, selectedIds, note);
       } finally {
         setLoading(false);
       }

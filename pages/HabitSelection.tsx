@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -6,23 +5,42 @@ import { SOSButton } from '../components/SOSButton';
 import { Plus, ArrowLeft, ChevronRight, Check, X, Bell, Clock, Calendar as CalendarIcon, ChevronDown, Tag, Trash2, AlertCircle } from 'lucide-react';
 import { Activity } from '../types';
 
-const PRESET_CATEGORIES = ["Saúde Emocional", "Corpo e bem-estar físico", "Esportes"];
+const PRESET_CATEGORIES = [
+  "Saúde emocional",
+  "Corpo e bem-estar físico",
+  "Relações e rede de apoio",
+  "Organização e vida prática",
+  "Criatividade e leveza",
+  "Espiritualidade e auto conexão",
+  "Propósito e realização pessoal",
+  "Tempo para si"
+];
+
 const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const REPETITION_OPTIONS = ["Todos os dias", "Segunda a sexta", "Sábado e Domingo", "Personalizar"];
 
+// Cores mapeadas para as novas categorias
+const CATEGORY_COLORS: Record<string, string> = {
+  "Saúde emocional": "bg-pink-50/50",
+  "Corpo e bem-estar físico": "bg-green-50/50",
+  "Relações e rede de apoio": "bg-indigo-50/50",
+  "Organização e vida prática": "bg-amber-50/50",
+  "Criatividade e leveza": "bg-yellow-50/50",
+  "Espiritualidade e auto conexão": "bg-blue-50/50",
+  "Propósito e realização pessoal": "bg-purple-50/50",
+  "Tempo para si": "bg-rose-50/50"
+};
+
 const PRESET_HABITS: Activity[] = [
-  { id: 'h1', title: 'Fazer check-in emocional no app', description: '', duration: '', completed: false, category: 'Saúde Emocional' },
-  { id: 'h2', title: 'Escolher uma frase de acolhimento no dia', description: '', duration: '', completed: false, category: 'Saúde Emocional' },
-  { id: 'h3', title: 'Respirar fundo 3 vezes com presença', description: '', duration: '', completed: false, category: 'Saúde Emocional' },
-  { id: 'h4', title: 'Registrar uma emoção no diário do app', description: '', duration: '', completed: false, category: 'Saúde Emocional' },
-  { id: 'h5', title: 'Nomear o que está sentindo sem tentar resolver', description: '', duration: '', completed: false, category: 'Saúde Emocional' },
-  { id: 'h6', title: 'Beber um copo de água com intenção', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'h7', title: 'Alongar o pescoço e ombros por 2 minutos', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'h8', title: 'Fazer uma caminhada ou atividade física preferida', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'h9', title: 'Dormir 15 minutos mais cedo (ou cochilar)', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'h10', title: 'Comer algo gostoso e nutritivo com calma', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'h11', title: 'Sessão de Yoga Matinal', description: '', duration: '', completed: false, category: 'Esportes' },
-  { id: 'h12', title: 'Treino de Fortalecimento', description: '', duration: '', completed: false, category: 'Esportes' },
+  { id: 'h1', title: 'Fazer check-in emocional no app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
+  { id: 'h2', title: 'Meditação de 5 minutos', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
+  { id: 'h3', title: 'Beber 2L de água', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
+  { id: 'h4', title: 'Caminhada matinal', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
+  { id: 'h5', title: 'Organizar a agenda do dia', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
+  { id: 'h6', title: 'Ler 10 páginas de um livro', description: '', duration: '', completed: false, category: 'Tempo para si' },
+  { id: 'h7', title: 'Ligar para uma amiga/apoio', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
+  { id: 'h8', title: 'Desenhar ou pintar algo livre', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
+  { id: 'h9', title: 'Revisar metas pessoais', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
 ];
 
 export const HabitSelection: React.FC = () => {
@@ -34,13 +52,11 @@ export const HabitSelection: React.FC = () => {
   const [migrateTo, setMigrateTo] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState(false);
 
-  // Lista dinâmica de categorias unificada
   const dynamicCategories = useMemo(() => {
     const set = new Set([...PRESET_CATEGORIES, ...state.customCategories]);
     return ["Todos", ...Array.from(set)];
   }, [state.customCategories]);
 
-  // Lista dinâmica de hábitos unificada
   const allAvailableHabits = useMemo(() => {
     return [...PRESET_HABITS, ...state.customHabitTemplates];
   }, [state.customHabitTemplates]);
@@ -66,7 +82,6 @@ export const HabitSelection: React.FC = () => {
       ...showConfigModal,
       id: Math.random().toString(36).substr(2, 9),
       period: habitPeriod,
-      // Salva a configuração de lembrete
       reminder: habitReminder,
       repetition: repetition,
       customDays: repetition === 'Personalizar' ? customDays : undefined,
@@ -74,7 +89,7 @@ export const HabitSelection: React.FC = () => {
     };
 
     addHabitToRoutine(state.selectedRoutineId, newHabit);
-    registerHabitTemplate(showConfigModal); // Registra globalmente se for novo
+    registerHabitTemplate(showConfigModal);
     setShowConfigModal(null);
     setSuccessMsg(true);
     setTimeout(() => setSuccessMsg(false), 2000);
@@ -138,7 +153,7 @@ export const HabitSelection: React.FC = () => {
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 -mx-6 px-6">
           {dynamicCategories.map(cat => {
-            const isCustom = state.customCategories.includes(cat);
+            const isCustom = !PRESET_CATEGORIES.includes(cat) && cat !== "Todos";
             return (
               <div key={cat} className="relative group/pill">
                 <button
@@ -167,7 +182,8 @@ export const HabitSelection: React.FC = () => {
         <div className="space-y-6">
           {dynamicCategories.filter(c => c !== "Todos").map(cat => {
             const habits = filteredHabits.filter(h => h.category === cat);
-            if (habits.length === 0) return null;
+            if (habits.length === 0 && selectedCategory !== "Todos" && selectedCategory !== cat) return null;
+            if (habits.length === 0 && selectedCategory === "Todos") return null;
 
             return (
               <div key={cat} className="space-y-3">
@@ -178,11 +194,7 @@ export const HabitSelection: React.FC = () => {
                   {habits.map(h => (
                     <div 
                       key={h.id}
-                      className={`flex items-center justify-between p-4 rounded-[1.5rem] transition-all shadow-sm border border-slate-50 ${
-                        cat === 'Saúde Emocional' ? 'bg-pink-50/50' : 
-                        cat === 'Corpo e bem-estar físico' ? 'bg-green-50/50' : 
-                        cat === 'Esportes' ? 'bg-blue-50/50' : 'bg-purple-50/50'
-                      }`}
+                      className={`flex items-center justify-between p-4 rounded-[1.5rem] transition-all shadow-sm border border-slate-50 ${CATEGORY_COLORS[cat] || 'bg-slate-50/50'}`}
                     >
                       <span className="text-slate-700 font-bold text-xs flex-1 pr-4">{h.title}</span>
                       <button 
@@ -206,7 +218,7 @@ export const HabitSelection: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Excluir Categoria + Migração */}
+      {/* Modais de configuração e criação permanecem os mesmos, mas usando PRESET_CATEGORIES atualizado */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
@@ -251,7 +263,6 @@ export const HabitSelection: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Configuração */}
       {showConfigModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 overflow-y-auto no-scrollbar max-h-[90vh]">
@@ -306,7 +317,6 @@ export const HabitSelection: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Criar Hábito Personalizado */}
       {showCustomModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">

@@ -26,15 +26,27 @@ import { MoodDiarySelection } from './pages/MoodDiarySelection';
 import { ChildMoodChildrenSelection } from './pages/ChildMoodChildrenSelection';
 import { ChildMoodDiary } from './pages/ChildMoodDiary';
 import { ChildMoodSelection } from './pages/ChildMoodSelection';
+import { ChildMoodChallenge } from './pages/ChildMoodChallenge';
 import { ChildMoodResult } from './pages/ChildMoodResult';
 import { MoodDashboard } from './pages/MoodDashboard';
 import { ChannelsList } from './pages/ChannelsList';
+import { ChannelChat } from './pages/ChannelChat';
 import { CareInstancesTarget } from './pages/CareInstancesTarget';
 import { CareInstancesList } from './pages/CareInstancesList';
 import { CareInstancesIntensity } from './pages/CareInstancesIntensity';
 import { CareInstancesTasks } from './pages/CareInstancesTasks';
 import { SubscriptionPlans } from './pages/SubscriptionPlans';
 import { BottomNav } from './components/BottomNav';
+import { Loader2 } from 'lucide-react';
+
+const SplashScreen: React.FC = () => (
+  <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-4">
+    <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
+       <span className="text-white font-black text-2xl">SM</span>
+    </div>
+    <Loader2 className="w-6 h-6 animate-spin text-purple-200" />
+  </div>
+);
 
 const AppRouter: React.FC = () => {
   const { state } = useApp();
@@ -43,7 +55,15 @@ const AppRouter: React.FC = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [state.currentPage]);
 
+  // Se estiver validando o token, mostra a Splash
+  if (state.isAuthLoading) return <SplashScreen />;
+
   if (state.isBreathingActive) return <BreathingExercise />;
+
+  // Se não estiver autenticado, obriga ir para Welcome/Onboarding
+  if (!state.isAuthenticated && state.currentPage !== 'welcome' && state.currentPage !== 'onboarding') {
+    return <Welcome />;
+  }
 
   switch (state.currentPage) {
     case 'welcome': return <Welcome />;
@@ -71,9 +91,11 @@ const AppRouter: React.FC = () => {
     case 'child_mood_children_selection': return <ChildMoodChildrenSelection />;
     case 'child_mood_diary': return <ChildMoodDiary />;
     case 'child_mood_selection': return <ChildMoodSelection />;
+    case 'child_mood_challenge': return <ChildMoodChallenge />;
     case 'child_mood_result': return <ChildMoodResult />;
     case 'mood_dashboard': return <MoodDashboard />;
     case 'channels_list': return <ChannelsList />;
+    case 'channel_chat': return <ChannelChat />;
     case 'care_instances_target': return <CareInstancesTarget />;
     case 'care_instances_list': return <CareInstancesList />;
     case 'care_instances_intensity': return <CareInstancesIntensity />;
@@ -81,7 +103,7 @@ const AppRouter: React.FC = () => {
     case 'subscription_plans':
     case 'payment_selection':
       return <SubscriptionPlans />;
-    default: return <Welcome />;
+    default: return state.isAuthenticated ? <Home /> : <Welcome />;
   }
 };
 
