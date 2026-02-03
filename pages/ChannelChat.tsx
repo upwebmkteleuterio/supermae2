@@ -9,7 +9,10 @@ import {
   Smile,
   Bot,
   Loader2,
-  Check
+  Check,
+  Truck,
+  ChevronRight,
+  CalendarCheck
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { GoogleGenAI } from "@google/genai";
@@ -18,7 +21,7 @@ const QUICK_EMOJIS = ["❤️", "🙏", "💪", "🤗", "🌸", "✨", "☕", "�
 const AI_USER_ID = '00000000-0000-0000-0000-000000000000';
 
 export const ChannelChat: React.FC = () => {
-  const { state, goBack } = useApp();
+  const { state, goBack, navigate } = useApp();
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
   const [onlineCount, setOnlineCount] = useState(1);
@@ -31,7 +34,6 @@ export const ChannelChat: React.FC = () => {
   const channelInfo = CHANNELS.find(c => c.id === state.selectedChannelId);
   const user = state.userProfile;
 
-  // Gerar ID do quarto: Se for IA, o quarto é privado baseado no ID da usuária
   const getRoomId = (userId: string) => {
     if (state.selectedChannelId === 'ia_duvidas') {
       return `ia_private_${userId}`;
@@ -56,7 +58,6 @@ export const ChannelChat: React.FC = () => {
       if (data) setMessages(data);
       setLoading(false);
 
-      // Inscrição em Tempo Real
       const channel = supabase.channel(`room-${roomId}`, {
         config: { presence: { key: user.name } }
       });
@@ -69,7 +70,6 @@ export const ChannelChat: React.FC = () => {
           filter: `channel_id=eq.${roomId}` 
         }, (payload) => {
           setMessages(prev => {
-            // Evita duplicatas se a mensagem já foi adicionada localmente
             if (prev.some(m => m.id === payload.new.id)) return prev;
             return [...prev, payload.new];
           });
@@ -121,11 +121,9 @@ export const ChannelChat: React.FC = () => {
     if (error) {
       console.error(error);
     } else if (data) {
-      // Adiciona localmente para feedback instantâneo
       setMessages(prev => [...prev, data]);
     }
 
-    // Lógica IA se for canal de dúvidas
     if (state.selectedChannelId === 'ia_duvidas') {
       setLoadingIA(true);
       try {
@@ -133,9 +131,7 @@ export const ChannelChat: React.FC = () => {
         const res = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
           contents: finalMsg,
-          config: { systemInstruction: `Você é a Mentora IA do app Super Mãe. 
-          Sua usuária se chama ${user.name}. Ela é uma mãe atípica. 
-          Dê respostas curtas (máximo 3 parágrafos), acolhedoras e muito práticas.` }
+          config: { systemInstruction: `Você é a Mentora IA do app Super Mãe. Sua usuária se chama ${user.name}. Ela é uma mãe atípica. Dê respostas curtas, acolhedoras e muito práticas.` }
         });
         
         const aiResponse = {
@@ -147,7 +143,6 @@ export const ChannelChat: React.FC = () => {
 
         const { data: aiData } = await supabase.from('channel_messages').insert(aiResponse).select().single();
         if (aiData) setMessages(prev => [...prev, aiData]);
-
       } catch (e) {
         console.error(e);
       } finally {
@@ -160,7 +155,6 @@ export const ChannelChat: React.FC = () => {
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      {/* Header Customizado */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button onClick={goBack} className="p-2 -ml-2 text-slate-400">
@@ -184,11 +178,48 @@ export const ChannelChat: React.FC = () => {
         </div>
       </div>
 
-      {/* Mensagens */}
       <div 
         ref={scrollRef}
         className="flex-1 overflow-y-auto pt-24 pb-40 px-6 space-y-6 no-scrollbar h-screen bg-[#FDFCFE]"
       >
+        {/* Banner do Mural de Apoio (Carona e Desabafo) */}
+        {(channelInfo.id === 'carona' || channelInfo.id === 'desabafa' || channelInfo.id === 'atipica_desabafa') && (
+          <button 
+            onClick={() => navigate('local_support_mural')}
+            className="w-full bg-blue-50 rounded-2xl p-4 flex items-center justify-between border border-blue-100 shadow-sm animate-in fade-in zoom-in-95 duration-500 mb-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md">
+                <Truck className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none mb-1">Logística</p>
+                <h4 className="text-xs font-bold text-blue-700">Procurar / Oferecer Apoio Local</h4>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-blue-300" />
+          </button>
+        )}
+
+        {/* Novo Banner: Terapias e Rotinas -> Agenda */}
+        {channelInfo.id === 'atipica_terapias' && (
+          <button 
+            onClick={() => navigate('care_agenda')}
+            className="w-full bg-indigo-50 rounded-2xl p-4 flex items-center justify-between border border-indigo-100 shadow-sm animate-in fade-in zoom-in-95 duration-500 mb-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Gestão</p>
+                <h4 className="text-xs font-bold text-indigo-700">Organizar Terapias e Rotinas</h4>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-indigo-300" />
+          </button>
+        )}
+
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-purple-300" />
@@ -247,20 +278,12 @@ export const ChannelChat: React.FC = () => {
         )}
       </div>
 
-      {/* Input de Mensagem */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-t border-slate-100 pb-8 pt-4 px-6">
         <div className="max-w-lg mx-auto">
-          {/* Emojis Rápidos */}
           {showEmojiPicker && (
             <div className="flex justify-between items-center mb-4 bg-white/90 p-2 rounded-2xl border border-purple-50 shadow-lg animate-in slide-in-from-bottom-4">
               {QUICK_EMOJIS.map(e => (
-                <button 
-                  key={e} 
-                  onClick={() => handleSend(e)}
-                  className="text-xl p-1.5 hover:scale-125 transition-transform active:scale-90"
-                >
-                  {e}
-                </button>
+                <button key={e} onClick={() => handleSend(e)} className="text-xl p-1.5 hover:scale-125 transition-transform active:scale-90">{e}</button>
               ))}
             </div>
           )}

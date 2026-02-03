@@ -49,9 +49,9 @@ export const MoodSelection: React.FC = () => {
         setLoading(false);
       }
     } else {
-      // Se for novo, segue o fluxo normal da IA
+      // Se for novo registro, segue para a tela de Aprofundamento (Áudio/Foto)
       setTempMoodSelection(selectedIds);
-      navigate('mood_result');
+      navigate('mom_mood_challenge');
     }
   };
 

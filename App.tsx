@@ -21,6 +21,7 @@ import { RoutineDetail } from './pages/RoutineDetail';
 import { HabitSelection } from './pages/HabitSelection';
 import { MoodDiary } from './pages/MoodDiary';
 import { MoodSelection } from './pages/MoodSelection';
+import { MomMoodChallenge } from './pages/MomMoodChallenge';
 import { MoodResult } from './pages/MoodResult';
 import { MoodDiarySelection } from './pages/MoodDiarySelection';
 import { ChildMoodChildrenSelection } from './pages/ChildMoodChildrenSelection';
@@ -36,6 +37,8 @@ import { CareInstancesList } from './pages/CareInstancesList';
 import { CareInstancesIntensity } from './pages/CareInstancesIntensity';
 import { CareInstancesTasks } from './pages/CareInstancesTasks';
 import { SubscriptionPlans } from './pages/SubscriptionPlans';
+import { LocalSupportMural } from './pages/LocalSupportMural';
+import { NotificationsList } from './pages/NotificationsList';
 import { BottomNav } from './components/BottomNav';
 import { Loader2 } from 'lucide-react';
 
@@ -55,12 +58,9 @@ const AppRouter: React.FC = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [state.currentPage]);
 
-  // Se estiver validando o token, mostra a Splash
   if (state.isAuthLoading) return <SplashScreen />;
-
   if (state.isBreathingActive) return <BreathingExercise />;
 
-  // Se não estiver autenticado, obriga ir para Welcome/Onboarding
   if (!state.isAuthenticated && state.currentPage !== 'welcome' && state.currentPage !== 'onboarding') {
     return <Welcome />;
   }
@@ -86,6 +86,7 @@ const AppRouter: React.FC = () => {
     case 'habit_selection': return <HabitSelection />;
     case 'mood_diary': return <MoodDiary />;
     case 'mood_selection': return <MoodSelection />;
+    case 'mom_mood_challenge': return <MomMoodChallenge />;
     case 'mood_result': return <MoodResult />;
     case 'mood_diary_selection': return <MoodDiarySelection />;
     case 'child_mood_children_selection': return <ChildMoodChildrenSelection />;
@@ -100,6 +101,8 @@ const AppRouter: React.FC = () => {
     case 'care_instances_list': return <CareInstancesList />;
     case 'care_instances_intensity': return <CareInstancesIntensity />;
     case 'care_instances_tasks': return <CareInstancesTasks />;
+    case 'local_support_mural': return <LocalSupportMural />;
+    case 'notifications_list': return <NotificationsList />;
     case 'subscription_plans':
     case 'payment_selection':
       return <SubscriptionPlans />;

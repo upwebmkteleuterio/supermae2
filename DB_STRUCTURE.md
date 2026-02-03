@@ -1,44 +1,43 @@
 
-# Estrutura do Banco de Dados (Espelho Local/Supabase)
+# Estrutura do Banco de Dados (Sincronizada Março 2025)
 
-## Tabelas Atuais
+## Tabelas Ativas no Supabase
 
-### 1. `app_state` (LocalStorage Mock)
-Simulado via React Context para gerenciar o estado da aplicação em tempo real.
+### 1. `profiles`
+Perfil principal e configurações de voz/onboarding.
+- `id` (PK), `name`, `email`, `state`, `city`, `avatar_url`, `welcoming_goal`, `app_interests`, `selected_voice`, `has_seen_welcome_modal`.
 
-- `selectedDate`: String (YYYY-MM-DD)
-- `selectedMood`: String ('light', 'strong', 'breathe')
-- `childProfile`: JSON { name, needs: [] }
-- `momSelfCareAgenda`: Array de Objetos de Atividades sugeridas pela IA.
-- `manualMomAgenda`: Array de Objetos de Tarefas da mãe.
-- `manualChildAgenda`: Array de Objetos de Tarefas do filho.
-- `routines`: Array de Objetos de Rotinas.
-- `moodHistory`: Objeto Record<String, String[]> (Data -> IDs de Sentimentos).
-- `habitCompletions`: Objeto Record<String, String[]> (Data -> IDs de Hábitos concluídos).
-- `chatHistory`: Array de Objetos { role, text, timestamp }.
-- `userProfile`: Objeto com dados cadastrais e preferências.
-  - `hasSeenWelcomeModal`: Boolean (Controla exibição do modal de recepção pós-onboarding)
+### 2. `children`
+Dados dos filhos para agendas personalizadas.
+- `id` (PK), `parent_id` (FK), `name`, `birth_date`, `avatar_url`, `has_diagnosis`, `diagnosis_status`.
 
-### 2. `agenda_items` (Estrutura lógica)
-*Nota: Atualizações em tarefas com o mesmo ID em listas diferentes (mãe/filho) são síncronas.*
+### 3. `routines`
+Agrupadores de hábitos.
+- `id` (PK), `user_id` (FK), `name`, `subtitle`, `icon`, `image_url`.
 
-- `id`: UUID / Random String (Identificador único atômico)
-- `time`: String (HH:mm)
-- `title`: String
-- `date`: DateString (YYYY-MM-DD)
-- `category`: Enum ('Terapêutico', 'Sensorial', 'Funcional', 'Lúdico', 'Relacional', 'Cuidado', 'Outros')
-- `owner`: Enum ('mãe', 'filho')
-- `participantIds`: Array de Strings (Contém 'mom' e/ou IDs dos filhos para espelhamento)
-- `completed`: Boolean (Status compartilhado se o ID for o mesmo)
-- `reminder`: Boolean
-- `description`: String (Observações e recorrência)
+### 4. `habits`
+Ações recorrentes dentro de uma rotina.
+- `id` (PK), `routine_id` (FK), `user_id` (FK), `title`, `description`, `period`, `repetition`, `custom_days`.
 
-### 3. `routines` (Estrutura lógica)
-- `id`: UUID / Random String
-- `name`: String (Nome da rotina)
-- `subtitle`: String (Descrição curta)
-- `icon`: String (ID do ícone da galeria)
-- `habits`: Array de Activity (Atividades que compõem a rotina)
+### 5. `agenda_items`
+Compromissos manuais e integrados (Mãe + Filhos).
+- `id` (PK), `user_id` (FK), `title`, `time`, `date`, `participant_ids` (array), `completed`.
+
+### 6. `mood_logs`
+Histórico emocional detalhado com fotos e relatos.
+- `id` (PK), `user_id` (FK), `child_id` (FK, opcional), `date`, `sentiment_ids` (array), `note`, `photo_url`.
+
+### 7. `local_support_posts`
+Mural de caronas e ajuda local.
+- `id` (PK), `user_id` (FK), `type` (offer/request), `category`, `destination`, `date_time`, `status`.
+
+### 8. `channel_messages`
+Mensagens em tempo real dos canais temáticos.
+- `id` (PK), `channel_id` (texto), `user_id` (FK), `text`, `user_name`, `user_avatar`.
+
+### 9. `app_notifications`
+Alertas de sistema e interações no mural.
+- `id` (PK), `user_id` (FK), `sender_name`, `type`, `data` (jsonb), `read`.
 
 ---
-*Nota: Este arquivo serve como referência para a integridade do estado global da aplicação.*
+*Status: Todas as tabelas migradas e políticas RLS configuradas.*

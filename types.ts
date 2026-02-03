@@ -8,6 +8,7 @@ export type ViewState =
   | 'self_care_selection' 
   | 'mood_diary'
   | 'mood_selection'
+  | 'mom_mood_challenge'
   | 'mood_result'
   | 'mom_self_care' 
   | 'mom_agenda' 
@@ -37,7 +38,9 @@ export type ViewState =
   | 'care_instances_intensity'
   | 'care_instances_tasks'
   | 'subscription_plans'
-  | 'payment_selection';
+  | 'payment_selection'
+  | 'local_support_mural'
+  | 'notifications_list';
 
 export interface UserProfile {
   name: string;
@@ -66,7 +69,31 @@ export interface Activity {
   category?: string;
   reminder?: boolean;
   repetition?: string;
-  customDays?: number[]; // 0-6 (Sun-Sat)
+  customDays?: number[]; 
+}
+
+export interface Child {
+  id: string;
+  name: string;
+  birthDate: string;
+  age: string;
+  avatar: string;
+  hasDiagnosis: boolean;
+  diagnosisStatus: string;
+}
+
+export interface AgendaItem {
+  id: string;
+  time: string;
+  title: string;
+  date: string;
+  category: string;
+  owner: 'mãe' | 'filho';
+  childId?: string;
+  participantIds?: string[];
+  completed?: boolean;
+  reminder?: boolean;
+  description?: string;
 }
 
 export interface Routine {
@@ -78,50 +105,55 @@ export interface Routine {
   habits: Activity[];
 }
 
-export interface AgendaItem {
-  id: string;
-  time: string;
-  title: string;
-  date: string; // YYYY-MM-DD
-  category: 'Terapêutico' | 'Sensorial' | 'Funcional' | 'Lúdico' | 'Relacional' | 'Cuidado' | 'Outros';
-  owner: 'mãe' | 'filho';
-  childId?: string;
-  participantIds: string[]; // ['mom', 'childId1', ...]
-  description?: string;
-  completed?: boolean;
-  days?: string[];
-  reminder?: boolean;
-}
-
-export interface Child {
-  id: string;
-  name: string;
-  birthDate: string; // DD/MM/AAAA
-  age: string;
-  avatar: string;
-  hasDiagnosis: boolean;
-  diagnosisStatus: string;
-}
-
-export interface DailyMission {
-  text: string;
-  completed: boolean;
-  date: string;
-  moodAtTime: string;
-}
-
-export interface ChatMessage {
-  role: 'user' | 'model' | 'system';
-  text: string;
-  timestamp: string;
-  senderName?: string;
-  senderAvatar?: string;
-}
-
 export interface CareTask {
   id: string;
   text: string;
   completed: boolean;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+  timestamp: string;
+}
+
+export interface DailyMission {
+  id: string;
+  title: string;
+  reward: string;
+  completed: boolean;
+}
+
+export interface LocalSupportPost {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  type: 'offer' | 'request';
+  category: 'carona' | 'apoio_geral';
+  locationCity: string;
+  locationNeighborhood: string;
+  destination: string;
+  dateTime: string;
+  status: 'open' | 'matched' | 'completed';
+  latitude?: number;
+  longitude?: number;
+  createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  user_id: string;
+  sender_id: string;
+  sender_name: string;
+  type: 'support_interest' | 'system';
+  data: {
+    postId?: string;
+    postTitle?: string;
+    message?: string;
+  };
+  read: boolean;
+  created_at: string;
 }
 
 export interface AppState {
@@ -130,7 +162,7 @@ export interface AppState {
   isAuthenticated: boolean;
   currentPage: ViewState;
   navigationStack: string[];
-  selectedDate: string; // YYYY-MM-DD
+  selectedDate: string;
   selectedMood: MoodType | null;
   lastMoodSelectedDate: string | null;
   children: Child[];
@@ -141,15 +173,16 @@ export interface AppState {
   manualMomAgenda: AgendaItem[];
   manualChildAgenda: AgendaItem[];
   routines: Routine[];
-  customHabitTemplates: Activity[]; 
-  customCategories: string[]; 
-  habitCompletions: Record<string, string[]>; 
-  moodHistory: Record<string, string[]>; 
-  childMoodHistory: Record<string, Record<string, string[]>>; 
-  tempMoodSelection: string[]; 
-  tempMoodNote: string; 
-  selectedRoutineId: null | string;
-  selectedChannelId: null | string;
+  customHabitTemplates: Activity[];
+  customCategories: string[];
+  habitCompletions: Record<string, string[]>;
+  moodHistory: Record<string, string[]>;
+  childMoodHistory: Record<string, Record<string, string[]>>;
+  tempMoodSelection: string[];
+  tempMoodNote: string;
+  tempMoodPhotoUrl: string;
+  selectedRoutineId: string | null;
+  selectedChannelId: string | null;
   completedRewards: string[];
   dailyMission: DailyMission | null;
   chatHistory: ChatMessage[];
@@ -159,4 +192,6 @@ export interface AppState {
   selectedCareCategoryId: string | null;
   selectedCareIntensity: 'light' | 'strong' | null;
   careTasks: CareTask[];
+  localSupportPosts: LocalSupportPost[];
+  notifications: AppNotification[];
 }

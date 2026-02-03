@@ -9,23 +9,23 @@ interface AppContextProps {
   goBack: () => void;
   setSelectedDate: (date: string) => void;
   setMood: (mood: MoodType) => void;
-  addChild: (child: Child) => void;
+  addChild: (child: Child) => Promise<boolean>;
   selectChild: (id: string | null) => void;
   toggleBreathing: (active: boolean) => void;
-  addAgendaItem: (item: AgendaItem) => void;
-  updateAgendaItem: (item: AgendaItem) => void;
-  deleteAgendaItem: (id: string) => void;
-  toggleAgendaItemCompletion: (id: string, owner: 'mãe' | 'filho') => void;
+  addAgendaItem: (item: AgendaItem) => Promise<boolean>;
+  updateAgendaItem: (item: AgendaItem) => Promise<boolean>;
+  deleteAgendaItem: (id: string) => Promise<boolean>;
+  toggleAgendaItemCompletion: (id: string, owner: 'mãe' | 'filho') => Promise<void>;
   updateMomSelfCare: (activities: Activity[]) => void;
-  addRoutine: (routine: Routine) => void;
-  deleteRoutine: (id: string) => void;
+  addRoutine: (routine: Routine) => Promise<boolean>;
+  deleteRoutine: (id: string) => Promise<boolean>;
   selectRoutine: (id: string | null) => void;
-  addHabitToRoutine: (routineId: string, habit: Activity) => void;
-  updateHabitInRoutine: (routineId: string, habit: Activity) => void;
+  addHabitToRoutine: (routineId: string, habit: Activity) => Promise<boolean>;
+  updateHabitInRoutine: (routineId: string, habit: Activity) => Promise<boolean>;
   registerHabitTemplate: (habit: Activity) => void;
   deleteCategory: (oldCategory: string, migrateToCategory: string) => void;
-  toggleHabitCompletion: (routineId: string, habitId: string, date: string) => void;
-  deleteHabitFromRoutine: (routineId: string, habitId: string) => void;
+  toggleHabitCompletion: (routineId: string, habitId: string, date: string) => Promise<void>;
+  deleteHabitFromRoutine: (routineId: string, habitId: string) => Promise<boolean>;
   setDailyMission: (mission: DailyMission) => void;
   completeDailyMission: () => void;
   addReward: (reward: string) => void;
@@ -33,13 +33,17 @@ interface AppContextProps {
   addChatMessage: (msg: ChatMessage) => void;
   addChannelMessage: (channelId: string, msg: ChatMessage) => void;
   clearChatHistory: () => void;
-  setVoice: (voice: string) => void;
+  setVoice: (voice: string) => Promise<void>;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
   persistUserProfile: (profile: Partial<UserProfile>) => Promise<boolean>;
   uploadAvatar: (file: File) => Promise<string | null>;
   saveMoodRecord: (date: string, sentimentIds: string[], note?: string) => Promise<boolean>;
   saveChildMoodRecord: (childId: string, date: string, sentimentIds: string[], note?: string) => Promise<boolean>;
   fetchMoodLogs: () => Promise<void>;
+  fetchChildren: () => Promise<void>;
+  fetchAgendaItems: () => Promise<void>;
+  fetchRoutines: () => Promise<void>;
+  fetchHabitCompletions: () => Promise<void>;
   setTempMoodSelection: (ids: string[]) => void;
   setTempMoodNote: (note: string) => void;
   setSelectedChannel: (id: string | null) => void;
@@ -48,10 +52,10 @@ interface AppContextProps {
   setCareTasks: (tasks: CareTask[]) => void;
   toggleCareTask: (taskId: string) => void;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<boolean>;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v28';
-
+const STORAGE_KEY = 'super_mae_app_state_v31';
 const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
 
 const INITIAL_STATE: AppState = {
@@ -70,10 +74,7 @@ const INITIAL_STATE: AppState = {
   momSelfCareAgenda: [],
   manualMomAgenda: [],
   manualChildAgenda: [],
-  routines: [
-    { id: 'r1', name: 'Rotina Acolhedora', subtitle: 'Abraço de Mãe', image: '/images/frame1.png', habits: [] },
-    { id: 'r2', name: 'Rotina Enérgica', subtitle: 'Super Mãe em Movimento!', image: '/images/frame2.png', habits: [] }
-  ],
+  routines: [],
   customHabitTemplates: [],
   customCategories: [],
   habitCompletions: {},
@@ -94,7 +95,7 @@ const INITIAL_STATE: AppState = {
     phone: '',
     state: '',
     city: '',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
+    avatar: 'https://images.icon-icons.com/2859/PNG/512/avatar_face_girl_female_woman_profile_smiley_happy_people_icon_181665.png',
     onboardingCompleted: false,
     hasSeenWelcomeModal: false
   },
@@ -116,10 +117,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!user) return;
     const { data: logs } = await supabase.from('mood_logs').select('*').eq('user_id', user.id);
     if (!logs) return;
-
     const newMoodHistory: Record<string, string[]> = {};
     const newChildMoodHistory: Record<string, Record<string, string[]>> = {};
-
     logs.forEach(log => {
       if (log.child_id) {
         if (!newChildMoodHistory[log.child_id]) newChildMoodHistory[log.child_id] = {};
@@ -128,23 +127,94 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         newMoodHistory[log.date] = log.sentiment_ids;
       }
     });
-
     setState(prev => ({ ...prev, moodHistory: newMoodHistory, childMoodHistory: newChildMoodHistory }));
+  }, []);
+
+  const fetchChildren = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('children').select('*').eq('parent_id', user.id);
+    if (data) {
+      setState(prev => ({ ...prev, children: data.map(c => ({
+        id: c.id,
+        name: c.name,
+        birthDate: c.birth_date,
+        age: c.birth_date ? `${new Date().getFullYear() - new Date(c.birth_date).getFullYear()} anos` : '?',
+        avatar: c.avatar_url || '',
+        hasDiagnosis: c.has_diagnosis,
+        diagnosis_status: c.diagnosis_status
+      })) }));
+    }
+  }, []);
+
+  const fetchAgendaItems = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('agenda_items').select('*').eq('user_id', user.id);
+    if (data) {
+      const momItems: AgendaItem[] = [];
+      const childItems: AgendaItem[] = [];
+      data.forEach(item => {
+        const base = { id: item.id, time: item.time.substring(0, 5), title: item.title, date: item.date, category: item.category, participantIds: item.participant_ids, description: item.description, completed: item.completed, reminder: item.reminder };
+        if (item.participant_ids.includes('mom')) momItems.push({ ...base, owner: 'mãe' } as AgendaItem);
+        item.participant_ids.filter((id: string) => id !== 'mom').forEach((cid: string) => {
+          childItems.push({ ...base, owner: 'filho', childId: cid } as AgendaItem);
+        });
+      });
+      setState(prev => ({ ...prev, manualMomAgenda: momItems, manualChildAgenda: childItems }));
+    }
+  }, []);
+
+  const fetchRoutines = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data: routinesData } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
+    if (routinesData) {
+      const mapped: Routine[] = routinesData.map(r => ({
+        id: r.id,
+        name: r.name,
+        subtitle: r.subtitle,
+        image: r.image_url,
+        icon: r.icon,
+        habits: r.habits.map((h: any) => ({
+          id: h.id,
+          title: h.title,
+          description: h.description,
+          category: h.category,
+          period: h.period,
+          reminder: h.reminder,
+          repetition: h.repetition,
+          customDays: h.custom_days,
+          completed: false
+        }))
+      }));
+      setState(prev => ({ ...prev, routines: mapped }));
+    }
+  }, []);
+
+  const fetchHabitCompletions = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data } = await supabase.from('habit_logs').select('*').eq('user_id', user.id);
+    if (data) {
+      const completions: Record<string, string[]> = {};
+      data.forEach(log => {
+        if (!completions[log.date]) completions[log.date] = [];
+        completions[log.date].push(log.habit_id);
+      });
+      setState(prev => ({ ...prev, habitCompletions: completions }));
+    }
   }, []);
 
   const fetchFullProfile = useCallback(async (userId: string) => {
     setState(prev => ({ ...prev, isProfileLoading: true }));
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (profile) {
         setState(prev => ({
           ...prev,
           isProfileLoading: false,
+          selectedVoice: profile.selected_voice || prev.selectedVoice,
           userProfile: {
             ...prev.userProfile,
             name: profile.name || prev.userProfile.name,
@@ -159,48 +229,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             onboardingCompleted: !!profile.welcoming_goal
           }
         }));
-        fetchMoodLogs();
+        await Promise.all([fetchMoodLogs(), fetchChildren(), fetchAgendaItems(), fetchRoutines(), fetchHabitCompletions()]);
       }
     } catch (e) {
-      console.error("Erro ao carregar perfil (Background):", e);
+      console.error(e);
     } finally {
       setState(prev => ({ ...prev, isProfileLoading: false }));
     }
-  }, [fetchMoodLogs]);
+  }, [fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions]);
 
   useEffect(() => {
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        setState(prev => ({ 
-          ...prev, 
-          isAuthenticated: true, 
-          isAuthLoading: false,
-          currentPage: prev.currentPage === 'welcome' ? 'home' : prev.currentPage 
-        }));
+        setState(prev => ({ ...prev, isAuthenticated: true, isAuthLoading: false, currentPage: prev.currentPage === 'welcome' ? 'home' : prev.currentPage }));
         fetchFullProfile(session.user.id);
       } else {
         setState(prev => ({ ...prev, isAuthLoading: false, isAuthenticated: false }));
       }
     };
-
     initAuth();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        setState(prev => ({ 
-          ...prev, 
-          isAuthenticated: true, 
-          isAuthLoading: false,
-          currentPage: 'home' 
-        }));
+        setState(prev => ({ ...prev, isAuthenticated: true, isAuthLoading: false, currentPage: 'home' }));
         fetchFullProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setState({ ...INITIAL_STATE, isAuthLoading: false });
         localStorage.removeItem(STORAGE_KEY);
       }
     });
-
     return () => subscription.unsubscribe();
   }, [fetchFullProfile]);
 
@@ -208,149 +265,126 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
-  const navigate = useCallback((page: ViewState) => {
-    setState(prev => ({
-      ...prev,
-      currentPage: page,
-      navigationStack: [...prev.navigationStack, page]
-    }));
-  }, []);
-
-  const goBack = useCallback(() => {
-    setState(prev => {
-      if (prev.navigationStack.length <= 1) return prev;
-      const newStack = [...prev.navigationStack];
-      newStack.pop();
-      return { ...prev, navigationStack: newStack, currentPage: newStack[newStack.length - 1] as ViewState };
-    });
-  }, []);
+  const navigate = useCallback((page: ViewState) => setState(prev => ({ ...prev, currentPage: page, navigationStack: [...prev.navigationStack, page] })), []);
+  const goBack = useCallback(() => setState(prev => {
+    if (prev.navigationStack.length <= 1) return prev;
+    const newStack = [...prev.navigationStack];
+    newStack.pop();
+    return { ...prev, navigationStack: newStack, currentPage: newStack[newStack.length - 1] as ViewState };
+  }), []);
 
   const setSelectedDate = (date: string) => setState(prev => ({ ...prev, selectedDate: date }));
+  const setMood = useCallback((mood: MoodType) => setState(prev => ({ ...prev, selectedMood: mood, lastMoodSelectedDate: getTodayStr() })), []);
 
-  const setMood = useCallback((mood: MoodType) => {
-    const today = getTodayStr();
-    setState(prev => ({ 
-      ...prev, 
-      selectedMood: mood, 
-      lastMoodSelectedDate: today,
-      momSelfCareAgenda: prev.selectedMood !== mood ? [] : prev.momSelfCareAgenda 
-    }));
-  }, []);
+  const addChild = async (child: Child) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data, error } = await supabase.from('children').insert({ parent_id: user.id, name: child.name, birth_date: child.birthDate, avatar_url: child.avatar, has_diagnosis: child.hasDiagnosis, diagnosis_status: child.diagnosisStatus }).select().single();
+    if (error) return false;
+    setState(prev => ({ ...prev, children: [...prev.children, { ...child, id: data.id }] }));
+    return true;
+  };
 
-  const addChild = (child: Child) => setState(prev => ({ ...prev, children: [...prev.children, child] }));
   const selectChild = (id: string | null) => setState(prev => ({ ...prev, selectedChildId: id }));
   const toggleBreathing = (active: boolean) => setState(prev => ({ ...prev, isBreathingActive: active }));
 
-  const addAgendaItem = (item: AgendaItem) => {
-    setState(prev => {
-      const newState = { ...prev };
-      const participants = item.participantIds || [];
-      if (participants.includes('mom')) newState.manualMomAgenda = [...newState.manualMomAgenda, { ...item, owner: 'mãe' }];
-      participants.filter(p => p !== 'mom').forEach(cid => {
-        newState.manualChildAgenda = [...newState.manualChildAgenda, { ...item, owner: 'filho', childId: cid }];
-      });
-      return newState;
-    });
+  const addAgendaItem = async (item: AgendaItem) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds, reminder: item.reminder, description: item.description });
+    if (error) return false;
+    await fetchAgendaItems();
+    return true;
   };
 
-  const updateAgendaItem = (item: AgendaItem) => {
-    setState(prev => ({
-      ...prev,
-      manualMomAgenda: prev.manualMomAgenda.map(i => i.id === item.id ? { ...item, owner: 'mãe' } : i),
-      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === item.id ? { ...item, owner: 'filho' } : i)
-    }));
+  const updateAgendaItem = async (item: AgendaItem) => {
+    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds, reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
+    if (error) return false;
+    await fetchAgendaItems();
+    return true;
   };
 
-  const deleteAgendaItem = (id: string) => {
-    setState(prev => ({
-      ...prev,
-      manualMomAgenda: prev.manualMomAgenda.filter(i => i.id !== id),
-      manualChildAgenda: prev.manualChildAgenda.filter(i => i.id !== id)
-    }));
+  const deleteAgendaItem = async (id: string) => {
+    const { error } = await supabase.from('agenda_items').delete().eq('id', id);
+    if (error) return false;
+    await fetchAgendaItems();
+    return true;
   };
 
-  const toggleAgendaItemCompletion = (id: string, owner: 'mãe' | 'filho') => {
+  const toggleAgendaItemCompletion = async (id: string, owner: 'mãe' | 'filho') => {
+    const task = [...state.manualMomAgenda, ...state.manualChildAgenda].find(t => t.id === id);
+    if (!task) return;
+    const newCompleted = !task.completed;
     setState(prev => ({
       ...prev,
-      manualMomAgenda: prev.manualMomAgenda.map(i => i.id === id ? { ...i, completed: !i.completed } : i),
-      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === id ? { ...i, completed: !i.completed } : i)
+      manualMomAgenda: prev.manualMomAgenda.map(i => i.id === id ? { ...i, completed: newCompleted } : i),
+      manualChildAgenda: prev.manualChildAgenda.map(i => i.id === id ? { ...i, completed: newCompleted } : i)
     }));
+    await supabase.from('agenda_items').update({ completed: newCompleted }).eq('id', id);
   };
 
   const updateMomSelfCare = (activities: Activity[]) => setState(prev => ({ ...prev, momSelfCareAgenda: activities }));
-  
-  const addRoutine = (routine: Routine) => setState(prev => ({ ...prev, routines: [...prev.routines, routine] }));
-  const deleteRoutine = (id: string) => setState(prev => ({ ...prev, routines: prev.routines.filter(r => r.id !== id) }));
+
+  const addRoutine = async (routine: Routine) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data, error } = await supabase.from('routines').insert({ user_id: user.id, name: routine.name, subtitle: routine.subtitle, icon: routine.icon, image_url: routine.image }).select().single();
+    if (error) return false;
+    await fetchRoutines();
+    return true;
+  };
+
+  const deleteRoutine = async (id: string) => {
+    const { error } = await supabase.from('routines').delete().eq('id', id);
+    if (error) return false;
+    await fetchRoutines();
+    return true;
+  };
+
   const selectRoutine = (id: string | null) => setState(prev => ({ ...prev, selectedRoutineId: id }));
 
-  const addHabitToRoutine = (routineId: string, habit: Activity) => {
-    setState(prev => ({
-      ...prev,
-      routines: prev.routines.map(r => r.id === routineId ? { ...r, habits: [...r.habits, habit] } : r)
-    }));
+  const addHabitToRoutine = async (routineId: string, habit: Activity) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays });
+    if (error) return false;
+    await fetchRoutines();
+    return true;
   };
 
-  const updateHabitInRoutine = (routineId: string, habit: Activity) => {
-    setState(prev => ({
-      ...prev,
-      routines: prev.routines.map(r => r.id === routineId 
-        ? { ...r, habits: r.habits.map(h => h.id === habit.id ? habit : h) } 
-        : r)
-    }));
+  const updateHabitInRoutine = async (routineId: string, habit: Activity) => {
+    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays }).eq('id', habit.id);
+    if (error) return false;
+    await fetchRoutines();
+    return true;
   };
 
-  const registerHabitTemplate = (habit: Activity) => {
-    setState(prev => {
-      const isAlreadyIn = prev.customHabitTemplates.some(h => h.title === habit.title && h.category === habit.category);
-      if (isAlreadyIn) return prev;
-      const updatedCategories = habit.category && !prev.customCategories.includes(habit.category)
-        ? [...prev.customCategories, habit.category]
-        : prev.customCategories;
-      return {
-        ...prev,
-        customHabitTemplates: [...prev.customHabitTemplates, habit],
-        customCategories: updatedCategories
-      };
-    });
-  };
+  const registerHabitTemplate = (habit: Activity) => setState(prev => ({ ...prev, customHabitTemplates: [...prev.customHabitTemplates, habit] }));
+  const deleteCategory = (oldCategory: string, migrateToCategory: string) => {};
 
-  const deleteCategory = (oldCategory: string, migrateToCategory: string) => {
-    setState(prev => {
-      const updatedTemplates = prev.customHabitTemplates.map(h => 
-        h.category === oldCategory ? { ...h, category: migrateToCategory } : h
-      );
-      const updatedRoutines = prev.routines.map(r => ({
-        ...r,
-        habits: r.habits.map(h => h.category === oldCategory ? { ...h, category: migrateToCategory } : h)
-      }));
-      const updatedCustomCategories = prev.customCategories.filter(c => c !== oldCategory);
-      return {
-        ...prev,
-        customHabitTemplates: updatedTemplates,
-        routines: updatedRoutines,
-        customCategories: updatedCustomCategories
-      };
-    });
-  };
-
-  const toggleHabitCompletion = (routineId: string, habitId: string, date: string) => {
+  const toggleHabitCompletion = async (routineId: string, habitId: string, date: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const dateCompletions = state.habitCompletions[date] || [];
+    const isCompleted = dateCompletions.includes(habitId);
     setState(prev => {
       const completions = { ...prev.habitCompletions };
-      const dateCompletions = [...(completions[date] || [])];
-      if (dateCompletions.includes(habitId)) {
-        completions[date] = dateCompletions.filter(id => id !== habitId);
-      } else {
-        completions[date] = [...dateCompletions, habitId];
-      }
+      if (isCompleted) completions[date] = dateCompletions.filter(id => id !== habitId);
+      else completions[date] = [...dateCompletions, habitId];
       return { ...prev, habitCompletions: completions };
     });
+    if (isCompleted) {
+      await supabase.from('habit_logs').delete().eq('user_id', user.id).eq('habit_id', habitId).eq('date', date);
+    } else {
+      await supabase.from('habit_logs').insert({ user_id: user.id, habit_id: habitId, date });
+    }
   };
 
-  const deleteHabitFromRoutine = (routineId: string, habitId: string) => {
-    setState(prev => ({
-      ...prev,
-      routines: prev.routines.map(r => r.id === routineId ? { ...r, habits: r.habits.filter(h => h.id !== habitId) } : r)
-    }));
+  const deleteHabitFromRoutine = async (routineId: string, habitId: string) => {
+    const { error } = await supabase.from('habits').delete().eq('id', habitId);
+    if (error) return false;
+    await fetchRoutines();
+    return true;
   };
 
   const setDailyMission = (mission: DailyMission) => setState(prev => ({ ...prev, dailyMission: mission }));
@@ -358,24 +392,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addReward = (reward: string) => setState(prev => ({ ...prev, completedRewards: [...prev.completedRewards, reward] }));
   const resetState = () => setState(INITIAL_STATE);
   const addChatMessage = (msg: ChatMessage) => setState(prev => ({ ...prev, chatHistory: [...prev.chatHistory, msg] }));
-  const addChannelMessage = (channelId: string, msg: ChatMessage) => setState(prev => ({
-    ...prev,
-    channelMessages: {
-      ...prev.channelMessages,
-      [channelId]: [...(prev.channelMessages[channelId] || []), msg]
-    }
-  }));
+  const addChannelMessage = (channelId: string, msg: ChatMessage) => setState(prev => ({ ...prev, channelMessages: { ...prev.channelMessages, [channelId]: [...(prev.channelMessages[channelId] || []), msg] } }));
   const clearChatHistory = () => setState(prev => ({ ...prev, chatHistory: [] }));
-  const setVoice = (voice: string) => setState(prev => ({ ...prev, selectedVoice: voice }));
   
-  const updateUserProfile = (profile: Partial<UserProfile>) => {
-    setState(prev => ({ ...prev, userProfile: { ...prev.userProfile, ...profile } }));
+  const setVoice = async (voice: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({ selected_voice: voice }).eq('id', user.id);
+    }
+    setState(prev => ({ ...prev, selectedVoice: voice }));
   };
+
+  const updateUserProfile = (profile: Partial<UserProfile>) => setState(prev => ({ ...prev, userProfile: { ...prev.userProfile, ...profile } }));
 
   const persistUserProfile = async (profile: Partial<UserProfile>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-
     const updateData: any = {};
     if (profile.name !== undefined) updateData.name = profile.name;
     if (profile.state !== undefined) updateData.state = profile.state;
@@ -385,10 +417,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (profile.appInterests !== undefined) updateData.app_interests = profile.appInterests;
     if (profile.phone !== undefined) updateData.phone = profile.phone;
     if (profile.hasSeenWelcomeModal !== undefined) updateData.has_seen_welcome_modal = profile.hasSeenWelcomeModal;
-
     const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
     if (error) return false;
-
     updateUserProfile(profile);
     return true;
   };
@@ -407,52 +437,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const saveMoodRecord = async (date: string, sentimentIds: string[], note: string = ''): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-
-    // Atualização Otimista local
     setState(prev => ({ ...prev, moodHistory: { ...prev.moodHistory, [date]: sentimentIds } }));
-
-    // Tentativa de upsert no banco
-    // Removemos o 'onConflict' explícito para deixar o Supabase usar o índice UNIQUE (SQL)
-    const { error } = await supabase.from('mood_logs').upsert({
-        user_id: user.id, 
-        date, 
-        sentiment_ids: sentimentIds, 
-        note,
-        child_id: null 
-      });
-    
-    if (error) {
-      console.error("Erro ao salvar no banco:", error);
-      return false;
-    }
-    return true;
+    const { error } = await supabase.from('mood_logs').upsert({ user_id: user.id, date, sentiment_ids: sentimentIds, note, child_id: null });
+    return !error;
   };
 
   const saveChildMoodRecord = async (childId: string, date: string, sentimentIds: string[], note: string = ''): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-
-    // Atualização Otimista local
     setState(prev => {
       const childHistory = { ...prev.childMoodHistory };
       if (!childHistory[childId]) childHistory[childId] = {};
       childHistory[childId][date] = sentimentIds;
       return { ...prev, childMoodHistory: childHistory };
     });
-
-    const { error } = await supabase.from('mood_logs').upsert({
-        user_id: user.id, 
-        child_id: childId, 
-        date, 
-        sentiment_ids: sentimentIds, 
-        note
-      });
-    
-    if (error) {
-      console.error("Erro ao salvar humor da criança no banco:", error);
-      return false;
-    }
-    return true;
+    const { error } = await supabase.from('mood_logs').upsert({ user_id: user.id, child_id: childId, date, sentiment_ids: sentimentIds, note });
+    return !error;
   };
 
   const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
@@ -461,13 +461,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setSelectedCareCategory = (id: string | null) => setState(prev => ({ ...prev, selectedCareCategoryId: id }));
   const setSelectedCareIntensity = (intensity: 'light' | 'strong' | null) => setState(prev => ({ ...prev, selectedCareIntensity: intensity }));
   const setCareTasks = (tasks: CareTask[]) => setState(prev => ({ ...prev, careTasks: tasks }));
-  const toggleCareTask = (taskId: string) => setState(prev => ({
-    ...prev,
-    careTasks: prev.careTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
-  }));
+  const toggleCareTask = (taskId: string) => setState(prev => ({ ...prev, careTasks: prev.careTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t) }));
 
-  const logout = async () => {
-    await supabase.auth.signOut();
+  const logout = async () => { await supabase.auth.signOut(); };
+
+  const deleteAccount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    // Remove o perfil (o CASCADE no Postgres limpa o resto)
+    const { error } = await supabase.from('profiles').delete().eq('id', user.id);
+    if (error) return false;
+    await logout();
+    return true;
   };
 
   return (
@@ -476,8 +481,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
       updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
-      addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, setTempMoodSelection, setTempMoodNote,
-      setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout
+      addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote,
+      setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount
     }}>
       {children}
     </AppContext.Provider>
