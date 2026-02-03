@@ -138,7 +138,11 @@
     </style>
     <script src="https://cdn.lordicon.com/lordicon.js"></script>
     <script>
-        window.process = window.process || { env: { API_KEY: '' } };
+        // Shim robusto para suportar GEMINI_API_KEY no browser se estiver disponível
+        window.process = window.process || { env: {} };
+        window.process.env = window.process.env || {};
+        // Tenta capturar a chave de qualquer nome comum usado no deploy
+        window.process.env.API_KEY = window.process.env.API_KEY || window.process.env.GEMINI_API_KEY || '';
     </script>
 <script type="importmap">
 {

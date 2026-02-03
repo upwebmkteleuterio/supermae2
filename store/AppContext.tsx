@@ -67,7 +67,7 @@ interface AppContextProps {
   markNotificationAsRead: (id: string) => Promise<void>;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v31';
+const STORAGE_KEY = 'super_mae_app_state_v32';
 const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
 
 const INITIAL_STATE: AppState = {
@@ -124,7 +124,23 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? { ...JSON.parse(saved), isAuthLoading: true, isProfileLoading: false } : INITIAL_STATE;
+    if (!saved) return INITIAL_STATE;
+    try {
+      const parsed = JSON.parse(saved);
+      // Mescla com INITIAL_STATE para garantir que campos novos nunca sejam undefined
+      return { 
+        ...INITIAL_STATE, 
+        ...parsed, 
+        isAuthLoading: true, 
+        isProfileLoading: false,
+        notifications: parsed.notifications ?? [],
+        localSupportPosts: parsed.localSupportPosts ?? [],
+        careTasks: parsed.careTasks ?? [],
+        routines: parsed.routines ?? []
+      };
+    } catch (e) {
+      return INITIAL_STATE;
+    }
   });
 
   const fetchMoodLogs = useCallback(async () => {
@@ -135,11 +151,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const newMoodHistory: Record<string, string[]> = {};
     const newChildMoodHistory: Record<string, Record<string, string[]>> = {};
     logs.forEach(log => {
+      const sIds = log.sentiment_ids ?? [];
       if (log.child_id) {
         if (!newChildMoodHistory[log.child_id]) newChildMoodHistory[log.child_id] = {};
-        newChildMoodHistory[log.child_id][log.date] = log.sentiment_ids;
+        newChildMoodHistory[log.child_id][log.date] = sIds;
       } else {
-        newMoodHistory[log.date] = log.sentiment_ids;
+        newMoodHistory[log.date] = sIds;
       }
     });
     setState(prev => ({ ...prev, moodHistory: newMoodHistory, childMoodHistory: newChildMoodHistory }));
@@ -157,7 +174,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         age: c.birth_date ? `${new Date().getFullYear() - new Date(c.birth_date).getFullYear()} anos` : '?',
         avatar: c.avatar_url || '',
         hasDiagnosis: c.has_diagnosis,
-        // Fix: Use diagnosisStatus instead of diagnosis_status (interface vs mapping mismatch)
         diagnosisStatus: c.diagnosis_status
       })) }));
     }
@@ -171,10 +187,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const momItems: AgendaItem[] = [];
       const childItems: AgendaItem[] = [];
       data.forEach(item => {
-        // Fix: Use participantIds instead of participant_ids (interface vs mapping mismatch)
-        const base = { id: item.id, time: item.time.substring(0, 5), title: item.title, date: item.date, category: item.category, participantIds: item.participant_ids, description: item.description, completed: item.completed, reminder: item.reminder };
-        if (item.participant_ids.includes('mom')) momItems.push({ ...base, owner: 'mãe' } as AgendaItem);
-        item.participant_ids.filter((id: string) => id !== 'mom').forEach((cid: string) => {
+        const pIds = item.participant_ids ?? [];
+        const base = { 
+          id: item.id, 
+          time: (item.time || '00:00').substring(0, 5), 
+          title: item.title, 
+          date: item.date, 
+          category: item.category, 
+          participantIds: pIds, 
+          description: item.description, 
+          completed: item.completed, 
+          reminder: item.reminder 
+        };
+        if (pIds.includes('mom')) momItems.push({ ...base, owner: 'mãe' } as AgendaItem);
+        pIds.filter((id: string) => id !== 'mom').forEach((cid: string) => {
           childItems.push({ ...base, owner: 'filho', childId: cid } as AgendaItem);
         });
       });
@@ -183,41 +209,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const fetchRoutines = useCallback(async () => {
-    console.log("[AppContext] Buscando rotinas...");
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.warn("[AppContext] Usuário não autenticado ao buscar rotinas.");
-      return;
-    }
+    if (!user) return;
     const { data: routinesData, error } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
     
-    if (error) {
-      console.error("[AppContext] Erro ao buscar rotinas:", error);
-      return;
-    }
+    if (error || !routinesData) return;
 
-    if (routinesData) {
-      console.log("[AppContext] Rotinas encontradas no Supabase:", routinesData);
-      const mapped: Routine[] = routinesData.map(r => ({
-        id: r.id,
-        name: r.name,
-        subtitle: r.subtitle,
-        image: r.image_url,
-        icon: r.icon,
-        habits: r.habits ? r.habits.map((h: any) => ({
-          id: h.id,
-          title: h.title,
-          description: h.description,
-          category: h.category,
-          period: h.period,
-          reminder: h.reminder,
-          repetition: h.repetition,
-          customDays: h.custom_days,
-          completed: false
-        })) : []
-      }));
-      setState(prev => ({ ...prev, routines: mapped }));
-    }
+    const mapped: Routine[] = routinesData.map(r => ({
+      id: r.id,
+      name: r.name,
+      subtitle: r.subtitle,
+      image: r.image_url,
+      icon: r.icon,
+      habits: (r.habits ?? []).map((h: any) => ({
+        id: h.id,
+        title: h.title,
+        description: h.description,
+        category: h.category,
+        period: h.period,
+        reminder: h.reminder,
+        repetition: h.repetition,
+        customDays: h.custom_days ?? [],
+        completed: false
+      }))
+    }));
+    setState(prev => ({ ...prev, routines: mapped }));
   }, []);
 
   const fetchHabitCompletions = useCallback(async () => {
@@ -269,7 +285,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     if (data) {
-      setState(prev => ({ ...prev, notifications: data }));
+      setState(prev => ({ ...prev, notifications: data ?? [] }));
     }
   }, []);
 
@@ -291,7 +307,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             city: profile.city || prev.userProfile.city,
             avatar: profile.avatar_url || prev.userProfile.avatar,
             welcomingGoal: profile.welcoming_goal || prev.userProfile.welcomingGoal,
-            appInterests: profile.app_interests || prev.userProfile.appInterests,
+            appInterests: profile.app_interests ?? [],
             hasSeenWelcomeModal: profile.has_seen_welcome_modal || false,
             onboardingCompleted: !!profile.welcoming_goal
           }
@@ -317,7 +333,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        setState(prev => ({ ...prev, isAuthenticated: true, isAuthLoading: false, currentPage: prev.currentPage === 'welcome' ? 'home' : prev.currentPage }));
+        setState(prev => ({ ...prev, isAuthenticated: true, isAuthLoading: false }));
         fetchFullProfile(session.user.id);
         
         const channel = supabase.channel('app_realtime_v1')
@@ -373,16 +389,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addAgendaItem = async (item: AgendaItem) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    // Fix: Corrected property access to item.participantIds
-    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds, reminder: item.reminder, description: item.description });
+    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description });
     if (error) return false;
     await fetchAgendaItems();
     return true;
   };
 
   const updateAgendaItem = async (item: AgendaItem) => {
-    // Fix: Corrected property access to item.participantIds
-    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds, reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
+    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
     if (error) return false;
     await fetchAgendaItems();
     return true;
@@ -410,12 +424,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateMomSelfCare = (activities: Activity[]) => setState(prev => ({ ...prev, momSelfCareAgenda: activities }));
 
   const addRoutine = async (routine: Routine) => {
-    console.log("[AppContext] Iniciando addRoutine:", routine);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error("[AppContext] Usuário não encontrado no addRoutine.");
-      return false;
-    }
+    if (!user) return false;
     
     const { data, error } = await supabase.from('routines').insert({ 
       user_id: user.id, 
@@ -425,12 +435,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       image_url: routine.image 
     }).select().single();
 
-    if (error) {
-      console.error("[AppContext] Erro ao inserir rotina no Supabase:", error);
-      return false;
-    }
-
-    console.log("[AppContext] Rotina inserida com sucesso:", data);
+    if (error) return false;
     await fetchRoutines();
     return true;
   };
@@ -447,16 +452,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addHabitToRoutine = async (routineId: string, habit: Activity) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    // Fix: Corrected property access to habit.customDays
-    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays });
+    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] });
     if (error) return false;
     await fetchRoutines();
     return true;
   };
 
   const updateHabitInRoutine = async (routineId: string, habit: Activity) => {
-    // Fix: Corrected property access to habit.customDays
-    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays }).eq('id', habit.id);
+    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] }).eq('id', habit.id);
     if (error) return false;
     await fetchRoutines();
     return true;
@@ -574,7 +577,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return !error;
   };
 
-  // Logística Comunitária
   const createLocalSupportPost = async (post: Partial<LocalSupportPost>) => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) return false;
