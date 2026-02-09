@@ -14,7 +14,6 @@ export const SelfCareSelection: React.FC = () => {
     if (mood === 'breathe') {
       navigate('breathing_exercise');
     } else {
-      // FIX: Agora redireciona corretamente para MomSelfCare (IA)
       navigate('mom_self_care');
     }
   };
@@ -51,14 +50,11 @@ export const SelfCareSelection: React.FC = () => {
           })}
 
           <button 
-            className="w-full flex items-center justify-center gap-2 py-5 text-purple-600 font-bold hover:bg-purple-100 rounded-full transition-colors mt-6 border-2 border-dashed border-purple-200"
-            onClick={() => {
-              const moods: MoodType[] = ['light', 'strong', 'breathe'];
-              handleSelectMood(moods[Math.floor(Math.random() * moods.length)]);
-            }}
+            className="w-full flex items-center justify-center gap-2 py-5 text-purple-600 font-bold hover:bg-purple-100 rounded-full transition-colors mt-6 border-2 border-dashed border-purple-200 active:scale-95 shadow-sm"
+            onClick={() => navigate('shuffle_suggestions')}
           >
             <Dices className="w-5 h-5" />
-            Embaralhar Sugestões
+            Embaralhar Sugestões Inteligentes
           </button>
         </div>
       </div>

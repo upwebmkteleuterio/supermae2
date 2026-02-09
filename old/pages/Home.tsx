@@ -3,6 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
+import { NotificationBell } from '../components/NotificationBell';
 import { WeeklyCalendar } from '../components/WeeklyCalendar';
 import { AnimatedCalendarIcon } from '../components/AnimatedCalendarIcon';
 import { BorderBeam } from '../components/BorderBeam';
@@ -15,29 +16,30 @@ import {
   Sparkles,
   LogOut,
   User as UserIcon,
-  Loader2
+  Loader2,
+  Truck
 } from 'lucide-react';
 
 export const Home: React.FC = () => {
-  const { navigate, state, persistUserProfile, fetchChildren, fetchMoodLogs, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, logout } = useApp();
+  const { navigate, state, persistUserProfile, fetchChildren, fetchMoodLogs, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, logout, fetchNotifications } = useApp();
   const { userProfile, routines, habitCompletions, selectedDate, isProfileLoading } = state;
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialSync, setIsInitialSync] = useState(true);
 
   useEffect(() => {
     const sync = async () => {
-      // Sincronização centralizada profissional
       await Promise.all([
         fetchChildren(), 
         fetchMoodLogs(), 
         fetchAgendaItems(),
         fetchRoutines(),
-        fetchHabitCompletions()
+        fetchHabitCompletions(),
+        fetchNotifications()
       ]);
       setIsInitialSync(false);
     };
     sync();
-  }, [fetchChildren, fetchMoodLogs, fetchAgendaItems, fetchRoutines, fetchHabitCompletions]);
+  }, [fetchChildren, fetchMoodLogs, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, fetchNotifications]);
 
   useEffect(() => {
     if (userProfile.onboardingCompleted && !userProfile.hasSeenWelcomeModal) {
@@ -113,13 +115,8 @@ export const Home: React.FC = () => {
             )}
           </div>
         </button>
-        <div className="flex gap-2 shrink-0">
-          <button 
-            onClick={() => navigate('self_care_selection')}
-            className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-purple-200 border border-slate-100 shadow-sm active:scale-95 transition-transform"
-          >
-            <Heart className="w-6 h-6" />
-          </button>
+        <div className="flex gap-2 shrink-0 items-center">
+          <NotificationBell />
           <SOSButton />
         </div>
       </div>
@@ -167,6 +164,7 @@ export const Home: React.FC = () => {
         <h3 className="text-xl font-bold text-slate-800 mb-6">Explorar</h3>
         <div className="space-y-4">
           <ExploreItem onClick={() => navigate('sentiment_analysis')} icon={<MessageCircle className="w-7 h-7" />} title="Análise de sentimentos" subtitle="Precisa de ajuda em algo?" color="bg-[#F3F0FF]" iconColor="text-purple-300" />
+          <ExploreItem onClick={() => navigate('local_support_mural')} icon={<Truck className="w-7 h-7" />} title="Mural de Apoio Local" subtitle="Caronas e ajuda mútua" color="bg-[#E0F2FE]" iconColor="text-blue-400" />
           <ExploreItem onClick={() => navigate('care_agenda')} icon={<Calendar className="w-7 h-7" />} title="Agenda de cuidados" subtitle="Planeje momentos para você" color="bg-[#F3F0FF]" iconColor="text-purple-300" />
           <ExploreItem onClick={() => navigate('channels_list')} icon={<Users className="w-7 h-7" />} title="Canais temáticos" subtitle="Conecte-se com outras mães" color="bg-[#F3F0FF]" iconColor="text-purple-300" />
         </div>

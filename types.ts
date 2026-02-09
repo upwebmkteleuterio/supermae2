@@ -40,7 +40,8 @@ export type ViewState =
   | 'subscription_plans'
   | 'payment_selection'
   | 'local_support_mural'
-  | 'notifications_list';
+  | 'notifications_list'
+  | 'shuffle_suggestions';
 
 export interface UserProfile {
   name: string;
@@ -190,7 +191,7 @@ export interface AppState {
   selectedVoice: string;
   userProfile: UserProfile;
   selectedCareCategoryId: string | null;
-  selectedCareIntensity: 'light' | 'strong' | null;
+  selectedCareIntensity: 'light' | 'strong' | 'breathe' | null;
   careTasks: CareTask[];
   localSupportPosts: LocalSupportPost[];
   notifications: AppNotification[];

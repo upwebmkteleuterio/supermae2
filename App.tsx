@@ -39,6 +39,7 @@ import { CareInstancesTasks } from './pages/CareInstancesTasks';
 import { SubscriptionPlans } from './pages/SubscriptionPlans';
 import { LocalSupportMural } from './pages/LocalSupportMural';
 import { NotificationsList } from './pages/NotificationsList';
+import { ShuffleSuggestions } from './pages/ShuffleSuggestions';
 import { BottomNav } from './components/BottomNav';
 import { Loader2 } from 'lucide-react';
 
@@ -103,6 +104,7 @@ const AppRouter: React.FC = () => {
     case 'care_instances_tasks': return <CareInstancesTasks />;
     case 'local_support_mural': return <LocalSupportMural />;
     case 'notifications_list': return <NotificationsList />;
+    case 'shuffle_suggestions': return <ShuffleSuggestions />;
     case 'subscription_plans':
     case 'payment_selection':
       return <SubscriptionPlans />;

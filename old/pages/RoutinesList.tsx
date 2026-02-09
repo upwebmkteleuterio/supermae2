@@ -16,6 +16,7 @@ export const RoutinesList: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      console.log("[RoutinesList] Carregando rotinas...");
       await fetchRoutines();
       setLoading(false);
     };
@@ -24,7 +25,9 @@ export const RoutinesList: React.FC = () => {
 
   const handleSaveNewRoutine = async (routine: Routine) => {
     setLoading(true);
-    await addRoutine(routine);
+    console.log("[RoutinesList] Solicitando salvamento de nova rotina:", routine);
+    const success = await addRoutine(routine);
+    console.log("[RoutinesList] Resultado do salvamento:", success ? "Sucesso" : "Falha");
     setShowModal(false);
     setLoading(false);
   };

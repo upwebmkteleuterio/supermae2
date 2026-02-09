@@ -5,15 +5,15 @@ import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
 import { SENTIMENTS } from '../constants';
 import { MoodCircle } from '../components/MoodCircle';
-import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile, Info, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, X, Edit2, Smile, Info, Loader2, Camera, MessageSquare } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export const MoodDiary: React.FC = () => {
   const { state, navigate, setSelectedDate, fetchMoodLogs } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDayDetail, setSelectedDayDetail] = useState<string | null>(null);
+  const [selectedDayDetail, setSelectedDayDetail] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Carrega os logs do Supabase ao entrar na tela para garantir dados atualizados
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -46,10 +46,12 @@ export const MoodDiary: React.FC = () => {
     return sentimentsIds.map(id => SENTIMENTS.find(s => s.id === id)?.color).filter(Boolean) as string[];
   };
 
-  const handleDayClick = (date: Date) => {
+  const handleDayClick = async (date: Date) => {
     const dateStr = date.toLocaleDateString('sv-SE');
     if (state.moodHistory[dateStr]) {
-      setSelectedDayDetail(dateStr);
+      // Buscar dados completos do log (incluindo nota e foto) do Supabase
+      const { data } = await supabase.from('mood_logs').select('*').eq('date', dateStr).is('child_id', null).single();
+      setSelectedDayDetail(data || { date: dateStr, sentiment_ids: state.moodHistory[dateStr] });
     } else {
       setSelectedDate(dateStr);
       navigate('mood_selection');
@@ -162,20 +164,21 @@ export const MoodDiary: React.FC = () => {
 
       {selectedDayDetail && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
-          <div className="w-full max-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+          <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Registro de humor</h3>
               <button onClick={() => setSelectedDayDetail(null)} className="p-1 text-slate-300"><X className="w-6 h-6" /></button>
             </div>
             
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <span className="text-purple-600 font-bold text-lg">
-                {new Date(selectedDayDetail + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+                {new Date(selectedDayDetail.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
               </span>
             </div>
 
-            <div className="flex justify-center gap-4 mb-10">
-              {state.moodHistory[selectedDayDetail].map(id => {
+            {/* Galeria de Sentimentos */}
+            <div className="flex justify-center gap-4 mb-8">
+              {(selectedDayDetail.sentiment_ids || []).map((id: string) => {
                 const sentiment = SENTIMENTS.find(s => s.id === id);
                 return (
                   <div key={id} className="flex flex-col items-center gap-2">
@@ -188,9 +191,35 @@ export const MoodDiary: React.FC = () => {
               })}
             </div>
 
+            {/* Exibição da Foto do Dia */}
+            {selectedDayDetail.photo_url && (
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3 ml-2">
+                   <Camera className="w-3 h-3 text-purple-400" />
+                   <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Foto do registro</span>
+                </div>
+                <div className="w-full aspect-video rounded-[2rem] overflow-hidden border border-slate-100 shadow-inner">
+                   <img src={selectedDayDetail.photo_url} className="w-full h-full object-cover" alt="Momento do dia" />
+                </div>
+              </div>
+            )}
+
+            {/* Exibição do Relato/Nota */}
+            {selectedDayDetail.note && (
+              <div className="mb-10 bg-slate-50 rounded-[2rem] p-6 border border-slate-100">
+                <div className="flex items-center gap-2 mb-3">
+                   <MessageSquare className="w-3 h-3 text-purple-400" />
+                   <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Seu desabafo</span>
+                </div>
+                <p className="text-slate-600 text-sm font-medium italic leading-relaxed">
+                  "{selectedDayDetail.note}"
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3">
               <button 
-                onClick={() => { setSelectedDate(selectedDayDetail); navigate('mood_selection'); }}
+                onClick={() => { setSelectedDate(selectedDayDetail.date); navigate('mood_selection'); }}
                 className="w-full bg-purple-600 text-white py-4 rounded-full font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
               >
                 <Edit2 className="w-4 h-4" /> Alterar Registro

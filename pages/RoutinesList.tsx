@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
-import { Plus, ChevronRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { Plus, ChevronRight, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { RoutineCard } from '../components/RoutineCard';
 import { CreateRoutineModal } from '../components/CreateRoutineModal';
 import { Routine } from '../types';
@@ -16,7 +16,6 @@ export const RoutinesList: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      console.log("[RoutinesList] Carregando rotinas...");
       await fetchRoutines();
       setLoading(false);
     };
@@ -25,9 +24,7 @@ export const RoutinesList: React.FC = () => {
 
   const handleSaveNewRoutine = async (routine: Routine) => {
     setLoading(true);
-    console.log("[RoutinesList] Solicitando salvamento de nova rotina:", routine);
-    const success = await addRoutine(routine);
-    console.log("[RoutinesList] Resultado do salvamento:", success ? "Sucesso" : "Falha");
+    await addRoutine(routine);
     setShowModal(false);
     setLoading(false);
   };
@@ -50,6 +47,23 @@ export const RoutinesList: React.FC = () => {
       </div>
 
       <div className="px-6 pb-32">
+        {/* Item Unificado: Instâncias de Cuidado agora dentro de Ver Rotina */}
+        <button 
+          onClick={() => navigate('care_instances_target')}
+          className="w-full bg-indigo-50 rounded-[1.8rem] p-5 flex items-center justify-between border border-indigo-100 shadow-sm active:scale-[0.98] transition-all mb-4 group"
+        >
+          <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-indigo-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:scale-105 transition-transform">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div className="text-left">
+              <span className="text-indigo-900 font-bold text-sm block">Sugerir atividades</span>
+              <span className="text-indigo-400 text-[10px] font-medium">Baseado no seu humor do dia</span>
+            </div>
+          </div>
+          <ChevronRight className="w-6 h-6 text-indigo-300" />
+        </button>
+
         <button 
           onClick={() => setShowModal(true)}
           disabled={loading}

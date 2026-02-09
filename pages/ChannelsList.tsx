@@ -15,7 +15,9 @@ import {
   Stethoscope,
   ShieldCheck,
   Star,
-  Lock
+  Lock,
+  Flower,
+  BrainCircuit
 } from 'lucide-react';
 
 export const CHANNELS = [
@@ -23,7 +25,7 @@ export const CHANNELS = [
   { 
     id: 'atipica_desabafa', 
     icon: <HeartHandshake className="w-8 h-8" />, 
-    title: "Desabafa, Mãe Atípica", 
+    title: "Desabafa, Mãe!", 
     description: "Espaço exclusivo para compartilhar dores e lutas da jornada atípica.",
     color: "bg-rose-500",
     isAI: false,
@@ -32,9 +34,27 @@ export const CHANNELS = [
   { 
     id: 'atipica_indica', 
     icon: <SearchCheck className="w-8 h-8" />, 
-    title: "Indicações entre Mães", 
+    title: "Indica Aí, Mãe!", 
     description: "Encontre especialistas e serviços recomendados pela comunidade.",
     color: "bg-teal-600",
+    isAI: false,
+    category: 'atipica'
+  },
+  { 
+    id: 'atipica_ia_comportamento', 
+    icon: <BrainCircuit className="w-8 h-8" />, 
+    title: "Dúvidas: Desenv. e Comportamento", 
+    description: "Mentoria IA especialista em comportamento e marcos do desenvolvimento atípico.",
+    color: "bg-indigo-700",
+    isAI: true,
+    category: 'atipica'
+  },
+  { 
+    id: 'atipica_levezas', 
+    icon: <Flower className="w-8 h-8" />, 
+    title: "Levezas do Dia", 
+    description: "Espaço para compartilhar momentos leves e pequenas alegrias da rotina materna.",
+    color: "bg-purple-400",
     isAI: false,
     category: 'atipica'
   },
@@ -237,6 +257,11 @@ const ChannelCard: React.FC<{
           <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
              <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
              <span className="text-[7px] font-black text-slate-400 uppercase">Mães Online</span>
+          </div>
+        )}
+        {isAI && (
+          <div className="bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+             <span className="text-[7px] font-black text-indigo-500 uppercase">IA Ativa</span>
           </div>
         )}
       </div>
