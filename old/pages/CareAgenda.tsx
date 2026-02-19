@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -7,7 +8,6 @@ import {
   CalendarCheck, 
   Book, 
   BookOpen, 
-  Sparkles, 
   ChevronRight,
   ArrowLeft
 } from 'lucide-react';
@@ -51,12 +51,6 @@ export const CareAgenda: React.FC = () => {
           label="Ver agenda integrada" 
           description="Visão unificada das agendas para evitar conflitos."
           onClick={() => navigate('integrated_agenda')} 
-        />
-        <AgendaListItem 
-          icon={<Sparkles className="w-6 h-6" />} 
-          label="Instâncias de cuidados" 
-          description="Sugestões de tarefas baseadas no seu estado emocional."
-          onClick={() => navigate('care_instances_target')} 
         />
       </div>
     </Layout>

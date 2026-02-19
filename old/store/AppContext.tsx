@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { AppState, ViewState, MoodType, Child, Activity, AgendaItem, DailyMission, ChatMessage, UserProfile, Routine, CareTask, LocalSupportPost, AppNotification } from '../types';
 import { supabase } from '../lib/supabase';
@@ -50,7 +49,7 @@ interface AppContextProps {
   setTempMoodPhotoUrl: (url: string) => void;
   setSelectedChannel: (id: string | null) => void;
   setSelectedCareCategory: (id: string | null) => void;
-  setSelectedCareIntensity: (intensity: 'light' | 'strong' | null) => void;
+  setSelectedCareIntensity: (intensity: 'light' | 'strong' | 'breathe' | null) => void;
   setCareTasks: (tasks: CareTask[]) => void;
   toggleCareTask: (taskId: string) => void;
   logout: () => Promise<void>;
@@ -127,7 +126,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!saved) return INITIAL_STATE;
     try {
       const parsed = JSON.parse(saved);
-      // Mescla com INITIAL_STATE para garantir que campos novos nunca sejam undefined
       return { 
         ...INITIAL_STATE, 
         ...parsed, 
@@ -377,7 +375,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addChild = async (child: Child) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { data, error } = await supabase.from('children').insert({ parent_id: user.id, name: child.name, birth_date: child.birthDate, avatar_url: child.avatar, has_diagnosis: child.hasDiagnosis, diagnosis_status: child.diagnosisStatus }).select().single();
+    const { data, error } = await supabase.from('children').insert({ 
+      parent_id: user.id, 
+      name: child.name, 
+      birth_date: child.birthDate, 
+      avatar_url: child.avatar, 
+      has_diagnosis: child.hasDiagnosis, 
+      diagnosis_status: child.diagnosisStatus 
+    }).select().single();
     if (error) return false;
     setState(prev => ({ ...prev, children: [...prev.children, { ...child, id: data.id }] }));
     return true;
@@ -389,14 +394,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addAgendaItem = async (item: AgendaItem) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description });
+    const { error } = await supabase.from('agenda_items').insert({ 
+      user_id: user.id, 
+      title: item.title, 
+      time: item.time, 
+      date: item.date, 
+      category: item.category, 
+      participant_ids: item.participantIds ?? [], 
+      reminder: item.reminder, 
+      description: item.description 
+    });
     if (error) return false;
     await fetchAgendaItems();
     return true;
   };
 
   const updateAgendaItem = async (item: AgendaItem) => {
-    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
+    const { error } = await supabase.from('agenda_items').update({ 
+      title: item.title, 
+      time: item.time, 
+      date: item.date, 
+      category: item.category, 
+      participant_ids: item.participantIds ?? [], 
+      reminder: item.reminder, 
+      description: item.description, 
+      completed: item.completed 
+    }).eq('id', item.id);
     if (error) return false;
     await fetchAgendaItems();
     return true;
@@ -452,14 +475,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addHabitToRoutine = async (routineId: string, habit: Activity) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] });
+    const { error } = await supabase.from('habits').insert({ 
+      routine_id: routineId, 
+      user_id: user.id, 
+      title: habit.title, 
+      description: habit.description, 
+      category: habit.category, 
+      period: habit.period, 
+      reminder: habit.reminder, 
+      repetition: habit.repetition, 
+      custom_days: habit.customDays ?? [] 
+    });
     if (error) return false;
     await fetchRoutines();
     return true;
   };
 
   const updateHabitInRoutine = async (routineId: string, habit: Activity) => {
-    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] }).eq('id', habit.id);
+    const { error } = await supabase.from('habits').update({ 
+      title: habit.title, 
+      description: habit.description, 
+      category: habit.category, 
+      period: habit.period, 
+      reminder: habit.reminder, 
+      repetition: habit.repetition, 
+      custom_days: habit.customDays ?? [] 
+    }).eq('id', habit.id);
     if (error) return false;
     await fetchRoutines();
     return true;
@@ -665,7 +706,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setTempMoodPhotoUrl = (url: string) => setState(prev => ({ ...prev, tempMoodPhotoUrl: url }));
   const setSelectedChannel = (id: string | null) => setState(prev => ({ ...prev, selectedChannelId: id }));
   const setSelectedCareCategory = (id: string | null) => setState(prev => ({ ...prev, selectedCareCategoryId: id }));
-  const setSelectedCareIntensity = (intensity: 'light' | 'strong' | null) => setState(prev => ({ ...prev, selectedCareIntensity: intensity }));
+  const setSelectedCareIntensity = (intensity: 'light' | 'strong' | 'breathe' | null) => setState(prev => ({ ...prev, selectedCareIntensity: intensity }));
   const setCareTasks = (tasks: CareTask[]) => setState(prev => ({ ...prev, careTasks: tasks }));
   const toggleCareTask = (taskId: string) => setState(prev => ({ ...prev, careTasks: prev.careTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t) }));
 

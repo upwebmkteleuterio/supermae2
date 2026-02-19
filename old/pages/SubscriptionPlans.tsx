@@ -1,4 +1,5 @@
-// Build: Force Refresh 1.0.1
+
+// Build: Force Refresh 1.0.2
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -35,7 +36,7 @@ const PLANS: Plan[] = [
     description: 'Ideal para: todas as mães, como porta de entrada.',
     color: 'bg-slate-50 border-slate-100',
     icon: <Heart className="w-6 h-6 text-slate-400" />,
-    features: ['Check-in emocional diário', '1 rotina pré-definida', 'Canal Desabafo WhatsApp', 'Botão SOS limitado']
+    features: ['Check-in emocional diário', '1 rotina pré-definida', 'Canal Desabafo comunitário', 'Botão Respiro limitado']
   },
   {
     id: 'conexao',
@@ -44,7 +45,7 @@ const PLANS: Plan[] = [
     description: 'Ideal para mães que buscam ampliar sua rede.',
     color: 'bg-purple-50 border-purple-100',
     icon: <Zap className="w-6 h-6 text-purple-500" />,
-    features: ['Tudo do Essencial', 'Todos os canais WhatsApp', 'Rotinas personalizadas', 'SOS completo', 'Alertas de sobrecarga']
+    features: ['Tudo do Essencial', 'Todos os canais comunitários', 'Rotinas personalizadas', 'Respiro completo', 'Alertas de sobrecarga']
   },
   {
     id: 'atípica',

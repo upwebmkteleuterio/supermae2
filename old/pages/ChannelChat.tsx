@@ -12,7 +12,8 @@ import {
   Check,
   Truck,
   ChevronRight,
-  CalendarCheck
+  CalendarCheck,
+  BrainCircuit
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { GoogleGenAI } from "@google/genai";
@@ -35,8 +36,9 @@ export const ChannelChat: React.FC = () => {
   const user = state.userProfile;
 
   const getRoomId = (userId: string) => {
-    if (state.selectedChannelId === 'ia_duvidas') {
-      return `ia_private_${userId}`;
+    // Canais de IA são privados
+    if (state.selectedChannelId === 'ia_duvidas' || state.selectedChannelId === 'atipica_ia_comportamento') {
+      return `${state.selectedChannelId}_private_${userId}`;
     }
     return state.selectedChannelId;
   };
@@ -124,21 +126,35 @@ export const ChannelChat: React.FC = () => {
       setMessages(prev => [...prev, data]);
     }
 
-    if (state.selectedChannelId === 'ia_duvidas') {
+    // Lógica da IA baseada no canal selecionado
+    if (channelInfo?.isAI) {
       setLoadingIA(true);
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+        
+        // Define as instruções do sistema baseadas no canal
+        let systemInstruction = `Você é a Mentora IA do app Super Mãe. Sua usuária se chama ${user.name}. Dê respostas curtas, acolhedoras e muito práticas.`;
+        
+        if (state.selectedChannelId === 'atipica_ia_comportamento') {
+          systemInstruction = `Você é a Especialista em Desenvolvimento e Comportamento do app Super Mãe Atípica. 
+          Sua usuária se chama ${user.name}. 
+          SUA MISSÃO: Ajudar mães de crianças atípicas (TEA, TDAH, Síndromes, etc) a entenderem marcos do desenvolvimento, 
+          lidarem com crises sensoriais, comportamentos desafiadores e rotinas de intervenção.
+          TOM: Científico porém muito empático, sem julgamentos, prático e acolhedor. 
+          DIRETRIZ: Sempre valide o cansaço da mãe antes de sugerir uma estratégia técnica.`;
+        }
+
         const res = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
           contents: finalMsg,
-          config: { systemInstruction: `Você é a Mentora IA do app Super Mãe. Sua usuária se chama ${user.name}. Ela é uma mãe atípica. Dê respostas curtas, acolhedoras e muito práticas.` }
+          config: { systemInstruction }
         });
         
         const aiResponse = {
           channel_id: roomId,
           user_id: AI_USER_ID,
-          user_name: "Mentora IA",
-          text: res.text || "Estou aqui para ajudar."
+          user_name: state.selectedChannelId === 'atipica_ia_comportamento' ? "Especialista IA" : "Mentora IA",
+          text: res.text || "Estou aqui para ajudar.",
         };
 
         const { data: aiData } = await supabase.from('channel_messages').insert(aiResponse).select().single();
@@ -183,7 +199,7 @@ export const ChannelChat: React.FC = () => {
         className="flex-1 overflow-y-auto pt-24 pb-40 px-6 space-y-6 no-scrollbar h-screen bg-[#FDFCFE]"
       >
         {/* Banner do Mural de Apoio (Carona e Desabafo) */}
-        {(channelInfo.id === 'carona' || channelInfo.id === 'desabafa' || channelInfo.id === 'atipica_desabafa') && (
+        {(channelInfo.id === 'carona' || channelInfo.id === 'atipica_desabafa') && (
           <button 
             onClick={() => navigate('local_support_mural')}
             className="w-full bg-blue-50 rounded-2xl p-4 flex items-center justify-between border border-blue-100 shadow-sm animate-in fade-in zoom-in-95 duration-500 mb-2"
@@ -198,6 +214,25 @@ export const ChannelChat: React.FC = () => {
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-blue-300" />
+          </button>
+        )}
+
+        {/* Novo Banner: Desenvolvimento e Comportamento -> Registro Diário */}
+        {channelInfo.id === 'atipica_ia_comportamento' && (
+          <button 
+            onClick={() => navigate('care_agenda')}
+            className="w-full bg-indigo-50 rounded-2xl p-4 flex items-center justify-between border border-indigo-100 shadow-sm animate-in fade-in zoom-in-95 duration-500 mb-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md">
+                <BrainCircuit className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Monitoramento</p>
+                <h4 className="text-xs font-bold text-indigo-700">Registrar Marcos e Evoluções</h4>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-indigo-300" />
           </button>
         )}
 
