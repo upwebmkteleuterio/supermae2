@@ -1,273 +1,223 @@
+"use client";
 
-import React, { useMemo } from 'react';
-import { Layout } from '../components/Layout';
-import { useApp } from '../store/AppContext';
-import { SOSButton } from '../components/SOSButton';
+import React from 'react';
 import { 
-  Bot, 
+  Heart, 
+  MessageCircle, 
+  Lightbulb, 
+  Users, 
+  ShieldCheck, 
   Sparkles, 
-  Truck, 
-  ShoppingCart,
-  ArrowLeft,
-  HeartHandshake,
-  SearchCheck,
-  Trophy,
+  Trophy, 
   Stethoscope,
-  ShieldCheck,
-  Star,
-  Lock,
-  Flower,
-  BrainCircuit
+  ArrowRight,
+  ChevronRight,
+  Car,
+  Search,
+  ShoppingBag,
+  Flower2
 } from 'lucide-react';
+import { useApp } from '../store/AppContext';
 
 export const CHANNELS = [
-  // Canais Atípica
-  { 
-    id: 'atipica_desabafa', 
-    icon: <HeartHandshake className="w-8 h-8" />, 
-    title: "Desabafa, Mãe!", 
-    description: "Espaço exclusivo para compartilhar dores e lutas da jornada atípica.",
-    color: "bg-rose-500",
-    isAI: false,
-    category: 'atipica'
-  },
-  { 
-    id: 'atipica_indica', 
-    icon: <SearchCheck className="w-8 h-8" />, 
-    title: "Indica Aí, Mãe!", 
-    description: "Encontre especialistas e serviços recomendados pela comunidade.",
-    color: "bg-teal-600",
-    isAI: false,
-    category: 'atipica'
-  },
+  // --- ESPAÇOS SUPER MÃE ATÍPICA ---
   { 
     id: 'atipica_ia_comportamento', 
-    icon: <BrainCircuit className="w-8 h-8" />, 
-    title: "Dúvidas: Desenv. e Comportamento", 
+    name: 'Dúvidas: Desenv. e Comportamento', 
+    category: 'atipica',
+    tag: 'IA Ativa',
+    badge: 'Exclusivo Atípica',
+    icon: <MessageCircle className="w-5 h-5" />,
     description: "Mentoria IA especialista em comportamento e marcos do desenvolvimento atípico.",
-    color: "bg-indigo-700",
-    isAI: true,
-    category: 'atipica'
-  },
-  { 
-    id: 'atipica_levezas', 
-    icon: <Flower className="w-8 h-8" />, 
-    title: "Levezas do Dia", 
-    description: "Espaço para compartilhar momentos leves e pequenas alegrias da rotina materna.",
-    color: "bg-purple-400",
-    isAI: false,
-    category: 'atipica'
+    color: "bg-purple-600"
   },
   { 
     id: 'atipica_vitorias', 
-    icon: <Trophy className="w-8 h-8" />, 
-    title: "Pequenas Vitórias", 
+    name: 'Pequenas Vitórias', 
+    category: 'atipica',
+    tag: 'Mães Online',
+    badge: 'Exclusivo Atípica',
+    icon: <Trophy className="w-5 h-5" />,
     description: "Celebre cada conquista do seu filho e da sua jornada conosco!",
-    color: "bg-amber-500",
-    isAI: false,
-    category: 'atipica'
+    color: "bg-orange-500"
   },
   { 
     id: 'atipica_terapias', 
-    icon: <Stethoscope className="w-8 h-8" />, 
-    title: "Terapias e Rotinas", 
+    name: 'Terapias e Rotinas', 
+    category: 'atipica',
+    tag: 'Mães Online',
+    badge: 'Exclusivo Atípica',
+    icon: <Stethoscope className="w-5 h-5" />,
     description: "Troca de experiências sobre protocolos, clínicas e gestão diária.",
-    color: "bg-indigo-600",
-    isAI: false,
-    category: 'atipica'
+    color: "bg-cyan-600"
   },
   { 
     id: 'atipica_direitos', 
-    icon: <ShieldCheck className="w-8 h-8" />, 
-    title: "Auxílio, Direitos e Leis", 
+    name: 'Auxílio, Direitos e Leis', 
+    category: 'atipica',
+    tag: 'Mães Online',
+    badge: 'Exclusivo Atípica',
+    icon: <ShieldCheck className="w-5 h-5" />,
     description: "Informações sobre BPC, planos de saúde e suporte jurídico.",
-    color: "bg-blue-700",
-    isAI: false,
-    category: 'atipica'
+    color: "bg-slate-700"
   },
-  // Canais Gerais
+
+  // --- COMUNIDADE GERAL ---
   { 
     id: 'ia_duvidas', 
-    icon: <Bot className="w-8 h-8" />, 
-    title: "Tire dúvidas com IA", 
+    name: 'Tire dúvidas com IA', 
+    category: 'geral',
+    tag: 'IA Ativa',
+    badge: 'Prioritário',
+    icon: <Lightbulb className="w-5 h-5" />,
     description: "Sua mentora particular disponível 24h para suporte imediato.",
-    color: "bg-indigo-500",
-    isAI: true,
-    category: 'geral'
+    color: "bg-indigo-600"
   },
   { 
-    id: 'autocuidado', 
-    icon: <Sparkles className="w-8 h-8" />, 
-    title: "Autocuidado Possível", 
+    id: 'geral_desabafa', 
+    name: 'Desabafa, Mãe!', 
+    category: 'geral',
+    tag: 'Mães Online',
+    badge: 'Prioritário',
+    icon: <Heart className="w-5 h-5" />,
+    description: "Espaço exclusivo para compartilhar dores e lutas da jornada atípica.",
+    color: "bg-rose-500"
+  },
+  { 
+    id: 'geral_indica', 
+    name: 'Indica Aí, Mãe!', 
+    category: 'geral',
+    tag: 'Mães Online',
+    badge: 'Exclusivo Atípica',
+    icon: <Search className="w-5 h-5" />,
+    description: "Encontre especialistas e serviços recomendados pela comunidade.",
+    color: "bg-amber-500"
+  },
+  { 
+    id: 'geral_levezas', 
+    name: 'Levezas do Dia', 
+    category: 'geral',
+    tag: 'Mães Online',
+    badge: 'Exclusivo Atípica',
+    icon: <Sparkles className="w-5 h-5" />,
+    description: "Espaço para compartilhar momentos leves e pequenas alegrias da rotina materna.",
+    color: "bg-teal-500"
+  },
+  { 
+    id: 'geral_autocuidado', 
+    name: 'Autocuidado Possível', 
+    category: 'geral',
+    tag: 'Mães Online',
+    badge: '',
+    icon: <Flower2 className="w-5 h-5" />,
     description: "Ideias práticas para se cuidar no meio do furacão.",
-    color: "bg-purple-500",
-    isAI: false,
-    category: 'geral'
+    color: "bg-pink-400"
   },
   { 
     id: 'carona', 
-    icon: <Truck className="w-8 h-8" />, 
-    title: "Carona e Apoio Local", 
+    name: 'Carona e Apoio Local', 
+    category: 'geral',
+    tag: 'Mães Online',
+    badge: '',
+    icon: <Car className="w-5 h-5" />,
     description: "Mães da mesma região se ajudando na logística.",
-    color: "bg-blue-500",
-    isAI: false,
-    category: 'geral'
+    color: "bg-blue-500"
   },
   { 
-    id: 'venda_troca', 
-    icon: <ShoppingCart className="w-8 h-8" />, 
-    title: "Venda e Troca", 
+    id: 'geral_venda', 
+    name: 'Venda e Troca', 
+    category: 'geral',
+    tag: 'Mães Online',
+    badge: '',
+    icon: <ShoppingBag className="w-5 h-5" />,
     description: "Desapegos e trocas de itens que seus filhos não usam mais.",
-    color: "bg-emerald-500",
-    isAI: false,
-    category: 'geral'
+    color: "bg-emerald-500"
   }
 ];
 
-export const ChannelsList: React.FC = () => {
-  const { state, navigate, setSelectedChannel } = useApp();
+const ChannelsList: React.FC = () => {
+  const { navigate, setSelectedChannel } = useApp();
 
-  const handleOpenChannel = (id: string) => {
+  const handleChannelClick = (id: string) => {
     setSelectedChannel(id);
-    navigate('channel_chat');
+    navigate('channelChat');
   };
 
-  const isAtypical = state.userProfile.welcomingGoal?.toLowerCase().includes('atípico');
+  const renderSection = (title: string, subtitle: string, category: string) => {
+    const filtered = CHANNELS.filter(c => c.category === category);
+    if (filtered.length === 0) return null;
 
-  const atypicalChannels = useMemo(() => CHANNELS.filter(c => c.category === 'atipica'), []);
-  const generalChannels = useMemo(() => CHANNELS.filter(c => c.category === 'geral'), []);
+    return (
+      <div className="mb-8">
+        <h2 className="font-black text-lg text-slate-900 mb-1">{title}</h2>
+        <p className="text-slate-500 text-xs mb-4 font-medium">{subtitle}</p>
+        
+        <div className="space-y-3">
+          {filtered.map((channel) => (
+            <button
+              key={channel.id}
+              onClick={() => handleChannelClick(channel.id)}
+              className="w-full flex items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm active:scale-[0.98] transition-all text-left relative overflow-hidden group"
+            >
+              <div className={`w-12 h-12 rounded-xl ${channel.color} flex items-center justify-center text-white shadow-lg shrink-0 mr-4 group-hover:scale-110 transition-transform`}>
+                {channel.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  {channel.badge && (
+                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight">
+                      {channel.badge}
+                    </span>
+                  )}
+                  {channel.badge && <span className="w-1 h-1 rounded-full bg-slate-300" />}
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{channel.tag}</span>
+                </div>
+                <h3 className="font-bold text-slate-800 text-base mb-0.5 truncate">{channel.name}</h3>
+                <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
+                  {channel.description}
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-300 ml-2" />
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      <div className="pt-12 px-6 flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('home')} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold text-slate-800">Canais Temáticos</h1>
-        </div>
-        <SOSButton />
+    <div className="flex flex-col min-h-screen bg-slate-50 pb-24">
+      <div className="bg-white px-6 pt-12 pb-6 border-b border-slate-100">
+        <h1 className="text-2xl font-black text-slate-900 mb-2 text-center">Canais Temáticos</h1>
+        <p className="text-slate-500 text-sm leading-relaxed text-center">
+          Conecte-se e compartilhe sua jornada.
+        </p>
       </div>
 
-      <div className="px-6 space-y-10 pb-40">
-        {/* Seção Canais Atípica */}
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center justify-between mb-5 ml-1">
-            <div className="flex flex-col">
-              <h2 className={`font-black text-xs uppercase tracking-[0.2em] ${isAtypical ? 'text-purple-600' : 'text-slate-400'}`}>
-                {isAtypical ? 'Espaços Super Mãe Atípica' : 'Apoio Especializado'}
-              </h2>
-              <p className="text-[10px] text-slate-400 font-medium">Grupos focados na jornada atípica</p>
+      <div className="p-6">
+        {renderSection("Espaços Super Mãe Atípica", "Grupos focados na jornada atípica", "atipica")}
+        {renderSection("Comunidade Geral", "Rede de troca entre todas as mães", "geral")}
+
+        <div className="mt-4 p-5 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl text-white shadow-xl">
+          <div className="flex items-start justify-between mb-3">
+            <div className="bg-white/20 p-2 rounded-lg">
+              <Users className="w-5 h-5" />
             </div>
-            {isAtypical && (
-              <div className="bg-purple-100 px-3 py-1 rounded-full flex items-center gap-1.5 border border-purple-200">
-                <Star className="w-3 h-3 text-purple-600 fill-current" />
-                <span className="text-[8px] font-black text-purple-600 uppercase">Prioritário</span>
-              </div>
-            )}
+            <span className="bg-white/20 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+              Colabore
+            </span>
           </div>
-
-          <div className="space-y-4">
-            {atypicalChannels.map((channel) => (
-              <ChannelCard 
-                key={channel.id}
-                icon={channel.icon}
-                title={channel.title}
-                description={channel.description}
-                color={channel.color}
-                isAI={channel.isAI}
-                tag={isAtypical ? "Exclusivo Atípica" : "Acesso Aberto"}
-                highlight={isAtypical}
-                onClick={() => handleOpenChannel(channel.id)}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Seção Canais Comunidade */}
-        <section className="animate-in fade-in slide-in-from-bottom-6 duration-700">
-          <div className="flex flex-col mb-5 ml-1">
-            <h2 className="font-black text-xs uppercase tracking-[0.2em] text-slate-400">Comunidade Geral</h2>
-            <p className="text-[10px] text-slate-400 font-medium">Rede de troca entre todas as mães</p>
-          </div>
-
-          <div className="space-y-4">
-            {generalChannels.map((channel) => (
-              <ChannelCard 
-                key={channel.id}
-                icon={channel.icon}
-                title={channel.title}
-                description={channel.description}
-                color={channel.color}
-                isAI={channel.isAI}
-                onClick={() => handleOpenChannel(channel.id)}
-              />
-            ))}
-          </div>
-        </section>
+          <h3 className="font-bold text-lg mb-1 text-white">Novo canal em mente?</h3>
+          <p className="text-white/80 text-xs mb-4">
+            Estamos sempre ouvindo nossa comunidade. Sugira novos temas.
+          </p>
+          <button className="w-full py-3 bg-white text-indigo-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+            Sugerir Tema <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 
-const ChannelCard: React.FC<{ 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string;
-  color: string;
-  isAI?: boolean;
-  tag?: string;
-  highlight?: boolean;
-  onClick: () => void;
-}> = ({ icon, title, description, color, isAI, tag, highlight, onClick }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full bg-white rounded-[24px] flex overflow-hidden border transition-all text-left min-h-[110px] group relative ${
-      highlight 
-      ? 'border-purple-100 shadow-lg shadow-purple-50 ring-1 ring-purple-50' 
-      : 'border-slate-50 shadow-sm'
-    } active:scale-[0.98]`}
-  >
-    {/* Faixa de Destaque para Atípica */}
-    {highlight && (
-      <div className="absolute top-0 left-0 bottom-0 w-1 bg-purple-500"></div>
-    )}
-
-    <div className={`w-[90px] ${color} flex items-center justify-center shrink-0 transition-all duration-500 group-hover:scale-105 relative`}>
-      <div className="text-white relative z-10">
-        {icon}
-      </div>
-      {/* Overlay sutil para profundidade */}
-      <div className="absolute inset-0 bg-black/5"></div>
-    </div>
-    
-    <div className="flex-1 p-5 flex flex-col justify-center">
-      <div className="flex items-center justify-between mb-1.5">
-        <div className="flex flex-col">
-          {tag && (
-            <span className={`text-[7px] font-black uppercase tracking-[0.2em] mb-0.5 ${
-              highlight ? 'text-purple-500' : 'text-slate-400'
-            }`}>
-              {tag}
-            </span>
-          )}
-          <h3 className="font-bold text-slate-800 text-sm">{title}</h3>
-        </div>
-        {!isAI && (
-          <div className="flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
-             <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></div>
-             <span className="text-[7px] font-black text-slate-400 uppercase">Mães Online</span>
-          </div>
-        )}
-        {isAI && (
-          <div className="bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
-             <span className="text-[7px] font-black text-indigo-500 uppercase">IA Ativa</span>
-          </div>
-        )}
-      </div>
-      <p className="text-[#6B7280] text-[10px] leading-relaxed font-medium line-clamp-2">
-        {description}
-      </p>
-    </div>
-  </button>
-);
+export default ChannelsList;
