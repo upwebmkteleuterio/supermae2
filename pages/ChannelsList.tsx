@@ -68,7 +68,7 @@ export const CHANNELS = [
     name: 'Tire dúvidas com IA', 
     category: 'geral',
     tag: 'IA Ativa',
-    badge: 'Prioritário',
+    badge: 'Apoio IA',
     icon: <Lightbulb className="w-5 h-5" />,
     description: "Sua mentora particular disponível 24h para suporte imediato.",
     color: "bg-indigo-600"
@@ -80,7 +80,7 @@ export const CHANNELS = [
     tag: 'Mães Online',
     badge: 'Prioritário',
     icon: <Heart className="w-5 h-5" />,
-    description: "Espaço exclusivo para compartilhar dores e lutas da jornada atípica.",
+    description: "Espaço para compartilhar dores e lutas da jornada materna.",
     color: "bg-rose-500"
   },
   { 
@@ -88,7 +88,7 @@ export const CHANNELS = [
     name: 'Indica Aí, Mãe!', 
     category: 'geral',
     tag: 'Mães Online',
-    badge: 'Exclusivo Atípica',
+    badge: 'Comunidade',
     icon: <Search className="w-5 h-5" />,
     description: "Encontre especialistas e serviços recomendados pela comunidade.",
     color: "bg-amber-500"
@@ -98,9 +98,9 @@ export const CHANNELS = [
     name: 'Levezas do Dia', 
     category: 'geral',
     tag: 'Mães Online',
-    badge: 'Exclusivo Atípica',
+    badge: 'Bem-estar',
     icon: <Sparkles className="w-5 h-5" />,
-    description: "Espaço para compartilhar momentos leves e pequenas alegrias da rotina materna.",
+    description: "Espaço para compartilhar momentos leves e pequenas alegrias.",
     color: "bg-teal-500"
   },
   { 
@@ -135,12 +135,12 @@ export const CHANNELS = [
   }
 ];
 
-const ChannelsList: React.FC = () => {
+export const ChannelsList: React.FC = () => {
   const { navigate, setSelectedChannel } = useApp();
 
   const handleChannelClick = (id: string) => {
     setSelectedChannel(id);
-    navigate('channelChat');
+    navigate('channel_chat');
   };
 
   const renderSection = (title: string, subtitle: string, category: string) => {
@@ -188,7 +188,7 @@ const ChannelsList: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 pb-24">
       <div className="bg-white px-6 pt-12 pb-6 border-b border-slate-100">
-        <h1 className="text-2xl font-black text-slate-900 mb-2 text-center">Canais Temáticos</h1>
+        <h1 className="text-2xl font-black text-slate-900 mb-2 text-center">Comunidade</h1>
         <p className="text-slate-500 text-sm leading-relaxed text-center">
           Conecte-se e compartilhe sua jornada.
         </p>
@@ -219,5 +219,3 @@ const ChannelsList: React.FC = () => {
     </div>
   );
 };
-
-export default ChannelsList;
