@@ -114,7 +114,7 @@ const ChannelChat: React.FC = () => {
 
       if (error) throw error;
 
-      // Se for canal de IA, disparar resposta simulada (no mundo real chamaria uma Edge Function)
+      // Se for canal de IA, disparar resposta simulada
       if (state.selectedChannelId === 'ia_duvidas' || state.selectedChannelId === 'atipica_ia_comportamento') {
         setTimeout(async () => {
           await supabase.from('channel_messages').insert({
@@ -159,7 +159,7 @@ const ChannelChat: React.FC = () => {
         </button>
       </div>
 
-      {/* Banner de Contexto (Opcional por canal) */}
+      {/* Banner de Contexto */}
       {(channelInfo.id === 'carona' || channelInfo.id === 'geral_desabafa') && (
         <div className="bg-white mx-4 mt-4 p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center shrink-0">

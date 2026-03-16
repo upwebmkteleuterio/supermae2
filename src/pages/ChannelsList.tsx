@@ -52,7 +52,7 @@ export const CHANNELS = [
     color: "bg-teal-500"
   },
   
-  // CANAIS ATÍPICOS
+  // CANAIS IA
   { 
     id: 'ia_duvidas', 
     name: 'Dúvidas Gerais (IA)', 
