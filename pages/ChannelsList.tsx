@@ -1,23 +1,24 @@
 "use client";
 
 import React from 'react';
+import { Layout } from '../components/Layout';
+import { useApp } from '../store/AppContext';
+import { SOSButton } from '../components/SOSButton';
 import { 
   Heart, 
   MessageCircle, 
   Lightbulb, 
-  Users, 
   ShieldCheck, 
   Sparkles, 
   Trophy, 
   Stethoscope,
-  ArrowRight,
   ChevronRight,
   Car,
   Search,
   ShoppingBag,
-  Flower2
+  Flower2,
+  ArrowLeft
 } from 'lucide-react';
-import { useApp } from '../store/AppContext';
 
 export const CHANNELS = [
   // --- ESPAÇOS SUPER MÃE ATÍPICA ---
@@ -136,7 +137,7 @@ export const CHANNELS = [
 ];
 
 export const ChannelsList: React.FC = () => {
-  const { navigate, setSelectedChannel } = useApp();
+  const { navigate, setSelectedChannel, goBack } = useApp();
 
   const handleChannelClick = (id: string) => {
     setSelectedChannel(id);
@@ -148,36 +149,36 @@ export const ChannelsList: React.FC = () => {
     if (filtered.length === 0) return null;
 
     return (
-      <div className="mb-8">
+      <div className="mb-10 last:mb-0">
         <h2 className="font-black text-lg text-slate-900 mb-1">{title}</h2>
-        <p className="text-slate-500 text-xs mb-4 font-medium">{subtitle}</p>
+        <p className="text-slate-400 text-xs mb-5 font-medium">{subtitle}</p>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filtered.map((channel) => (
             <button
               key={channel.id}
               onClick={() => handleChannelClick(channel.id)}
-              className="w-full flex items-center p-4 bg-white rounded-2xl border border-slate-100 shadow-sm active:scale-[0.98] transition-all text-left relative overflow-hidden group"
+              className="w-full flex items-center p-4 bg-white rounded-[2rem] border border-slate-50 shadow-sm active:scale-[0.98] transition-all text-left relative group"
             >
-              <div className={`w-12 h-12 rounded-xl ${channel.color} flex items-center justify-center text-white shadow-lg shrink-0 mr-4 group-hover:scale-110 transition-transform`}>
+              <div className={`w-12 h-12 rounded-2xl ${channel.color} flex items-center justify-center text-white shadow-lg shrink-0 mr-4 group-hover:scale-105 transition-transform`}>
                 {channel.icon}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   {channel.badge && (
-                    <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-tight">
+                    <span className="text-[9px] font-black text-indigo-600 uppercase tracking-tight">
                       {channel.badge}
                     </span>
                   )}
-                  {channel.badge && <span className="w-1 h-1 rounded-full bg-slate-300" />}
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{channel.tag}</span>
+                  {channel.badge && <span className="w-1 h-1 rounded-full bg-slate-200" />}
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-tight">{channel.tag}</span>
                 </div>
-                <h3 className="font-bold text-slate-800 text-base mb-0.5 truncate">{channel.name}</h3>
-                <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
+                <h3 className="font-bold text-slate-800 text-sm mb-0.5 truncate">{channel.name}</h3>
+                <p className="text-slate-500 text-[11px] line-clamp-2 leading-snug font-medium opacity-80">
                   {channel.description}
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-slate-300 ml-2" />
+              <ChevronRight className="w-5 h-5 text-purple-200 ml-2 shrink-0" />
             </button>
           ))}
         </div>
@@ -186,36 +187,22 @@ export const ChannelsList: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 pb-24">
-      <div className="bg-white px-6 pt-12 pb-6 border-b border-slate-100">
-        <h1 className="text-2xl font-black text-slate-900 mb-2 text-center">Comunidade</h1>
-        <p className="text-slate-500 text-sm leading-relaxed text-center">
-          Conecte-se e compartilhe sua jornada.
-        </p>
-      </div>
-
-      <div className="p-6">
-        {renderSection("Espaços Super Mãe Atípica", "Grupos focados na jornada atípica", "atipica")}
-        {renderSection("Comunidade Geral", "Rede de troca entre todas as mães", "geral")}
-
-        <div className="mt-4 p-5 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl text-white shadow-xl">
-          <div className="flex items-start justify-between mb-3">
-            <div className="bg-white/20 p-2 rounded-lg">
-              <Users className="w-5 h-5" />
-            </div>
-            <span className="bg-white/20 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
-              Colabore
-            </span>
-          </div>
-          <h3 className="font-bold text-lg mb-1 text-white">Novo canal em mente?</h3>
-          <p className="text-white/80 text-xs mb-4">
-            Estamos sempre ouvindo nossa comunidade. Sugira novos temas.
-          </p>
-          <button className="w-full py-3 bg-white text-indigo-700 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-            Sugerir Tema <ArrowRight className="w-4 h-4" />
+    <Layout headerTransparent themeColor="bg-[#FDFCFE]">
+      <div className="pt-12 px-6 flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
+            <ArrowLeft className="w-6 h-6" />
           </button>
+          <h1 className="text-xl font-bold text-slate-800">Canais Temáticos</h1>
         </div>
+        <SOSButton />
       </div>
-    </div>
+
+      <div className="px-6 pb-32">
+        {renderSection("Espaços Super Mãe Atípica", "Grupos focados na jornada atípica", "atipica")}
+        <div className="my-8 border-t border-slate-100" />
+        {renderSection("Comunidade Geral", "Rede de troca entre todas as mães", "geral")}
+      </div>
+    </Layout>
   );
 };
