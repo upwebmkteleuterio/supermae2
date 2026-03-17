@@ -1,8 +1,11 @@
+"use client";
+
 import React, { useState, useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
-import { Plus, ArrowLeft, ChevronRight, Check, X, Bell, Clock, Calendar as CalendarIcon, ChevronDown, Tag, Trash2, AlertCircle } from 'lucide-react';
+import { CustomHabitModal } from '../components/CustomHabitModal';
+import { Plus, ArrowLeft, ChevronRight, Check, X, Bell, Clock, Calendar as CalendarIcon, ChevronDown, Tag, AlertCircle } from 'lucide-react';
 import { Activity } from '../types';
 
 const PRESET_CATEGORIES = [
@@ -35,134 +38,38 @@ const PRESET_HABITS: Activity[] = [
   { id: 'se1', title: 'Fazer check-in emocional no app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
   { id: 'se2', title: 'Escolher uma frase de acolhimento para o dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
   { id: 'se3', title: 'Respirar fundo três vezes com presença', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se4', title: 'Registrar uma emoção no diário do app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se5', title: 'Nomear o que está sentindo sem tentar resolver', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se6', title: 'Escrever livremente por dois minutos sobre como foi o dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se7', title: 'Usar o recurso “Respiro” quando se sentir sobrecarregada', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se8', title: 'Ouvir um áudio afetivo do app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se9', title: 'Fazer uma pausa consciente antes de reagir', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se10', title: 'Validar a própria emoção dizendo: “faz sentido eu me sentir assim”', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se11', title: 'Praticar autocompaixão com uma mensagem para si mesma', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se12', title: 'Identificar um gatilho emocional do dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se13', title: 'Escolher uma ação pequena de autocuidado emocional', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-
-  // Corpo e Bem-estar Físico
   { id: 'cb1', title: 'Beber um copo de água com intenção', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb2', title: 'Alongar pescoço e ombros por alguns minutos', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb3', title: 'Fazer uma caminhada ou atividade física preferida', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb4', title: 'Dormir um pouco mais cedo ou tirar um cochilo sem culpa', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb5', title: 'Comer algo nutritivo com calma', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb6', title: 'Passar um hidratante como gesto de carinho em si', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb7', title: 'Tomar um banho relaxante e consciente', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb8', title: 'Respirar ao ar livre por alguns minutos', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb9', title: 'Cuidar do cabelo ou da pele com atenção', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb10', title: 'Fazer uma pausa para descansar o corpo', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb11', title: 'Reduzir um pouco o tempo de tela antes de dormir', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb12', title: 'Sentar-se com postura confortável e relaxar a mandíbula', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-
-  // Relações e Rede de Apoio
-  { id: 'rr1', title: 'Enviar um “oi” para uma amiga de confiança', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr2', title: 'Desabafar anonimamente em canal seguro do app', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr3', title: 'Aceitar ajuda em algo simples', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr4', title: 'Pedir uma troca ou ajuda a outra mãe', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr5', title: 'Agendar atendimento com psicóloga', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr6', title: 'Dizer “não” a algo que te sobrecarregaria', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr7', title: 'Conversar com alguém sobre como você está', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr8', title: 'Agradecer alguém que te ajudou', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr9', title: 'Fazer um convite para um café ou conversa', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr10', title: 'Participar de um grupo de apoio no app', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr11', title: 'Permitir que alguém cuide de você por alguns minutos', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-
-  // Organização e Vida Prática
-  { id: 'ov1', title: 'Tirar uma tarefa da lista do dia sem culpa', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov2', title: 'Planejar apenas três prioridades reais', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov3', title: 'Criar uma lista de “não precisa ser hoje”', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov4', title: 'Organizar um pequeno canto que te acalma', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov5', title: 'Preparar algo simples para facilitar o dia seguinte', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov6', title: 'Delegar uma tarefa possível', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov7', title: 'Desistir de uma cobrança desnecessária', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov8', title: 'Organizar documentos ou agenda por poucos minutos', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov9', title: 'Ajustar expectativas do dia para algo mais leve', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-
-  // Criatividade e Leveza
-  { id: 'cl1', title: 'Ouvir uma música que gosta enquanto faz algo', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl2', title: 'Escrever por alguns minutos só por expressão', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl3', title: 'Desenhar ou brincar com os filhos sem se preocupar com resultado', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl4', title: 'Dançar sozinha por uma música', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl5', title: 'Assistir a algo leve e divertido', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl6', title: 'Tirar uma foto de algo bonito do dia', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl7', title: 'Fazer um hobby por alguns minutos', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl8', title: 'Colorir, rabiscar ou criar algo simples', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl9', title: 'Rir de propósito com algo que te diverte', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-
-  // Espiritualidade e auto conexão
-  { id: 'ea1', title: 'Ficar em silêncio por alguns minutos', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea2', title: 'Fazer uma oração ou gesto simbólico', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea3', title: 'Olhar para o céu e agradecer por algo', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea4', title: 'Repetir um mantra acolhedor', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea5', title: 'Escrever uma intenção para o dia no app', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea6', title: 'Meditar ou ouvir uma meditação guiada', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea7', title: 'Acender uma vela ou criar um momento ritual', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea8', title: 'Respirar com as mãos no coração', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea9', title: 'Conectar-se com algo que te dê esperança', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-
-  // Propósito e realização pessoal
-  { id: 'pr1', title: 'Lembrar de um sonho antigo sem cobrança', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr2', title: 'Dar um pequeno passo em algo que deseja', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr3', title: 'Celebrar uma pequena conquista do dia', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr4', title: 'Ler uma página de um livro inspirador', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr5', title: 'Dizer a si mesma: “eu também sou alguém além de mãe”', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr6', title: 'Escrever uma carta para si no futuro', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr7', title: 'Aprender algo novo, mesmo que por minutos', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr8', title: 'Pensar em um projeto pessoal com carinho', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr9', title: 'Registrar no app algo que te fez sentir orgulho', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-
-  // Tempo para si
   { id: 'ts1', title: 'Fazer um combinado com os filhos para ter um momento só seu', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts2', title: 'Encontrar alguém que te faz bem', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts3', title: 'Tomar café ou chá sem fazer nada ao mesmo tempo', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts4', title: 'Não fazer nada por um minuto inteiro', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts5', title: 'Escolher algo que VOCÊ quer fazer hoje', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts6', title: 'Deixar uma tarefa para amanhã e respirar', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts7', title: 'Assistir algo sozinha e sem culpa', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts8', title: 'Ficar em silêncio sem precisar produzir', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts9', title: 'Criar um pequeno ritual só seu', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts10', title: 'Dizer “agora é meu momento” e se permitir', description: '', duration: '', completed: false, category: 'Tempo para si' },
 ];
 
 export const HabitSelection: React.FC = () => {
-  const { state, goBack, addHabitToRoutine, registerHabitTemplate, deleteCategory } = useApp();
+  const { state, goBack, addHabitToRoutine, registerHabitTemplate } = useApp();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [showConfigModal, setShowConfigModal] = useState<Activity | null>(null);
   const [showCustomModal, setShowCustomModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
-  const [migrateTo, setMigrateTo] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState(false);
 
+  // Configurações do novo hábito sendo adicionado
+  const [habitPeriod, setHabitPeriod] = useState<'Manhã' | 'Tarde' | 'Noite' | 'A qualquer momento'>('A qualquer momento');
+  const [habitReminder, setHabitReminder] = useState(false);
+  const [repetition, setRepetition] = useState("Todos os dias");
+  const [customDays, setCustomDays] = useState<number[]>([]);
+
   const dynamicCategories = useMemo(() => {
-    const set = new Set([...PRESET_CATEGORIES, ...state.customCategories]);
-    return ["Todos", ...Array.from(set)];
+    const allCats = [...PRESET_CATEGORIES, ...state.customCategories];
+    const uniqueCats = Array.from(new Set(allCats));
+    return ["Todos", ...uniqueCats];
   }, [state.customCategories]);
 
   const allAvailableHabits = useMemo(() => {
     return [...PRESET_HABITS, ...state.customHabitTemplates];
   }, [state.customHabitTemplates]);
 
-  const [habitPeriod, setHabitPeriod] = useState<'Manhã' | 'Tarde' | 'Noite' | 'A qualquer momento'>('A qualquer momento');
-  const [habitReminder, setHabitReminder] = useState(false);
-  const [repetition, setRepetition] = useState("Todos os dias");
-  const [customDays, setCustomDays] = useState<number[]>([]);
-
-  const [customHabitName, setCustomHabitName] = useState('');
-  const [customHabitCat, setCustomHabitCat] = useState(PRESET_CATEGORIES[0]);
-  const [isNewCategory, setIsNewCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState('');
-
   const filteredHabits = selectedCategory === "Todos" 
     ? allAvailableHabits 
     : allAvailableHabits.filter(h => h.category === selectedCategory);
 
-  const handleAddHabit = () => {
+  const handleAddHabit = async () => {
     if (!showConfigModal || !state.selectedRoutineId) return;
 
     const newHabit: Activity = {
@@ -175,40 +82,25 @@ export const HabitSelection: React.FC = () => {
       completed: false
     };
 
-    addHabitToRoutine(state.selectedRoutineId, newHabit);
-    registerHabitTemplate(showConfigModal);
+    await addHabitToRoutine(state.selectedRoutineId, newHabit);
     setShowConfigModal(null);
     setSuccessMsg(true);
     setTimeout(() => setSuccessMsg(false), 2000);
   };
 
-  const handleCreateCustom = () => {
-    if (!customHabitName.trim()) return;
-    const finalCategory = isNewCategory ? newCategoryName : customHabitCat;
-    if (!finalCategory.trim()) return;
-
+  const handleCreateCustom = (data: { title: string; category: string }) => {
     const customHabit: Activity = {
       id: 'custom-' + Math.random(),
-      title: customHabitName,
+      title: data.title,
       description: '',
       duration: '',
       completed: false,
-      category: finalCategory
+      category: data.category
     };
     
+    registerHabitTemplate(customHabit); // Salva no banco de templates personalizados
     setShowCustomModal(false);
-    setShowConfigModal(customHabit);
-    setCustomHabitName('');
-    setNewCategoryName('');
-    setIsNewCategory(false);
-  };
-
-  const handleDeleteCategory = () => {
-    if (!showDeleteModal || !migrateTo) return;
-    deleteCategory(showDeleteModal, migrateTo);
-    if (selectedCategory === showDeleteModal) setSelectedCategory("Todos");
-    setShowDeleteModal(null);
-    setMigrateTo('');
+    setShowConfigModal(customHabit); // Abre modal de configuração (Quando/Repetição)
   };
 
   const toggleDay = (dayIdx: number) => {
@@ -233,50 +125,35 @@ export const HabitSelection: React.FC = () => {
             <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform">
               <Plus className="w-6 h-6" />
             </div>
-            <span className="text-slate-700 font-bold text-sm">Criar um hábito personalizado</span>
+            <span className="text-slate-700 font-bold text-sm">Criar minha própria tarefa</span>
           </div>
           <ChevronRight className="w-5 h-5 text-purple-300" />
         </button>
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 -mx-6 px-6">
-          {dynamicCategories.map(cat => {
-            const isCustom = !PRESET_CATEGORIES.includes(cat) && cat !== "Todos";
-            return (
-              <div key={cat} className="relative group/pill">
-                <button
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                    selectedCategory === cat 
-                    ? 'bg-purple-600 text-white shadow-md border-transparent' 
-                    : 'bg-white text-slate-400 border border-slate-100'
-                  }`}
-                >
-                  {cat}
-                </button>
-                {isCustom && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setShowDeleteModal(cat); }}
-                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm opacity-0 group-hover/pill:opacity-100 transition-opacity"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
+          {dynamicCategories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-5 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === cat 
+                ? 'bg-purple-600 text-white shadow-md border-transparent' 
+                : 'bg-white text-slate-400 border border-slate-100'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         <div className="space-y-6">
           {dynamicCategories.filter(c => c !== "Todos").map(cat => {
             const habits = filteredHabits.filter(h => h.category === cat);
-            if (habits.length === 0 && selectedCategory !== "Todos" && selectedCategory !== cat) return null;
-            if (habits.length === 0 && selectedCategory === "Todos") return null;
+            if (habits.length === 0) return null;
 
             return (
               <div key={cat} className="space-y-3">
-                <div className="flex items-center justify-between ml-2">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{cat}</h4>
-                </div>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">{cat}</h4>
                 <div className="space-y-3">
                   {habits.map(h => (
                     <div 
@@ -301,59 +178,23 @@ export const HabitSelection: React.FC = () => {
 
       {successMsg && (
         <div className="fixed top-12 left-1/2 -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-xl z-[200] flex items-center gap-2 animate-in slide-in-from-top-4">
-          <Check className="w-4 h-4" /> <span className="text-xs font-bold">Hábito adicionado!</span>
+          <Check className="w-4 h-4" /> <span className="text-xs font-bold">Tarefa adicionada!</span>
         </div>
       )}
 
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-6 animate-in fade-in duration-300">
-          <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="w-8 h-8" />
-            </div>
-            <h3 className="text-lg font-bold text-center text-slate-800 mb-2">Excluir Categoria?</h3>
-            <p className="text-sm text-slate-500 text-center mb-6 px-2">
-              Para não perdermos seus hábitos de <span className="font-bold text-red-500">"{showDeleteModal}"</span>, selecione uma nova categoria para migrá-los:
-            </p>
-
-            <div className="space-y-4">
-              <div className="relative">
-                <select 
-                  value={migrateTo}
-                  onChange={(e) => setMigrateTo(e.target.value)}
-                  className="w-full appearance-none bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-600 focus:ring-2 ring-purple-500/20 outline-none shadow-sm"
-                >
-                  <option value="">Selecionar destino...</option>
-                  {dynamicCategories.filter(c => c !== "Todos" && c !== showDeleteModal).map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
-              </div>
-
-              <button 
-                disabled={!migrateTo}
-                onClick={handleDeleteCategory}
-                className="w-full bg-red-500 text-white py-4 rounded-full font-bold shadow-lg shadow-red-100 active:scale-95 transition-all text-xs uppercase tracking-widest disabled:opacity-30"
-              >
-                Migrar e Excluir
-              </button>
-              <button 
-                onClick={() => setShowDeleteModal(null)}
-                className="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
+      {showCustomModal && (
+        <CustomHabitModal 
+          onClose={() => setShowCustomModal(false)}
+          onSave={handleCreateCustom}
+          existingCategories={PRESET_CATEGORIES}
+        />
       )}
 
       {showConfigModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 overflow-y-auto no-scrollbar max-h-[90vh]">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Configurar Hábito</h3>
+              <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Configurar Tarefa</h3>
               <button onClick={() => setShowConfigModal(null)} className="p-1 text-slate-300"><X className="w-6 h-6" /></button>
             </div>
             <div className="bg-slate-50 rounded-[2rem] p-6 text-center mb-8 border border-slate-100">
@@ -399,48 +240,6 @@ export const HabitSelection: React.FC = () => {
               </div>
             </div>
             <button onClick={handleAddHabit} className="w-full bg-[#A855F7] text-white py-5 rounded-[2rem] font-black shadow-xl shadow-purple-100 mt-12 active:scale-95 transition-all text-xs uppercase tracking-widest">Adicionar ao dia</button>
-          </div>
-        </div>
-      )}
-
-      {showCustomModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-6 animate-in fade-in duration-300">
-          <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto no-scrollbar">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-slate-800">Hábito Personalizado</h3>
-              <button onClick={() => setShowCustomModal(false)} className="p-1 text-slate-300"><X className="w-6 h-6" /></button>
-            </div>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome do Hábito</label>
-                <input type="text" autoFocus value={customHabitName} onChange={(e) => setCustomHabitName(e.target.value)} placeholder="Ex: Meditação Guiada" className="w-full bg-slate-50 border border-slate-100 rounded-[1.5rem] p-5 focus:ring-2 ring-purple-500/20 outline-none font-bold text-slate-700 text-sm placeholder:text-slate-300" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria</label>
-                <div className="flex flex-col gap-3">
-                  {!isNewCategory ? (
-                    <div className="space-y-3">
-                      <div className="relative">
-                        <select value={customHabitCat} onChange={(e) => setCustomHabitCat(e.target.value)} className="w-full appearance-none bg-white border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-600 focus:ring-2 ring-purple-500/20 outline-none shadow-sm">
-                          {dynamicCategories.filter(c => c !== "Todos").map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
-                      </div>
-                      <button onClick={() => setIsNewCategory(true)} className="text-xs font-black text-purple-600 uppercase tracking-widest flex items-center gap-2 hover:opacity-70 transition-opacity"><Plus className="w-3 h-3" /> Criar nova categoria</button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <div className="relative">
-                        <input type="text" autoFocus value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} placeholder="Nome da categoria..." className="w-full bg-white border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-600 focus:ring-2 ring-purple-500/20 outline-none shadow-sm pr-10" />
-                        <Tag className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
-                      </div>
-                      <button onClick={() => setIsNewCategory(false)} className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 hover:opacity-70 transition-opacity"><X className="w-3 h-3" /> Usar categoria existente</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button disabled={!customHabitName.trim() || (isNewCategory && !newCategoryName.trim())} onClick={handleCreateCustom} className="w-full bg-purple-600 text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-100 mt-4 active:scale-95 transition-all text-sm uppercase tracking-widest disabled:opacity-30">Continuar</button>
-            </div>
           </div>
         </div>
       )}
