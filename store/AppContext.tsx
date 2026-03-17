@@ -67,45 +67,8 @@ interface AppContextProps {
   applyRoutineTemplate: (templateId: string) => Promise<void>;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v34';
+const STORAGE_KEY = 'super_mae_state_v100_final'; // Mudei radicalmente a chave
 const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
-
-const getInitialRoutines = (): Routine[] => {
-  return [
-    {
-      id: 'acolhedora',
-      name: ROUTINE_TEMPLATES.acolhedora.name,
-      subtitle: ROUTINE_TEMPLATES.acolhedora.duration,
-      icon: 'Heart',
-      image: 'https://images.unsplash.com/photo-1544126592-807daa2b562b?auto=format&fit=crop&q=80&w=400',
-      habits: ROUTINE_TEMPLATES.acolhedora.tasks.map((t, i) => ({
-        id: `h-aco-${i}`,
-        title: t.title,
-        description: '',
-        category: t.category === 'emocional' ? 'Saúde emocional' : 'Tempo para si',
-        period: 'Manhã',
-        reminder: false,
-        completed: false
-      }))
-    },
-    {
-      id: 'energetica',
-      name: ROUTINE_TEMPLATES.energetica.name,
-      subtitle: ROUTINE_TEMPLATES.energetica.duration,
-      icon: 'Zap',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=400',
-      habits: ROUTINE_TEMPLATES.energetica.tasks.map((t, i) => ({
-        id: `h-ene-${i}`,
-        title: t.title,
-        description: '',
-        category: t.category === 'fisico' ? 'Corpo e bem-estar físico' : 'Organização e vida prática',
-        period: 'Manhã',
-        reminder: false,
-        completed: false
-      }))
-    }
-  ];
-};
 
 const INITIAL_STATE: AppState = {
   isAuthLoading: true,
@@ -123,7 +86,7 @@ const INITIAL_STATE: AppState = {
   momSelfCareAgenda: [],
   manualMomAgenda: [],
   manualChildAgenda: [],
-  routines: getInitialRoutines(),
+  routines: [], // Começa vazio e o fetchRoutines povoa
   customHabitTemplates: [],
   customCategories: [],
   habitCompletions: {},
@@ -160,11 +123,15 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(() => {
+    // Tenta limpar caches antigos
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('super_mae_app_state')) localStorage.removeItem(key);
+    });
+
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return INITIAL_STATE;
     try {
-      const parsed = JSON.parse(saved);
-      return { ...INITIAL_STATE, ...parsed, isAuthLoading: true, isProfileLoading: false };
+      return { ...INITIAL_STATE, ...JSON.parse(saved), isAuthLoading: true, isProfileLoading: false };
     } catch (e) {
       return INITIAL_STATE;
     }
@@ -174,26 +141,75 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    const { data: routinesData, error } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
-    if (error || !routinesData) return;
+    console.log('[AppContext] FetchRoutines iniciado');
+    const { data: routinesData } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
     
-    // Filtrar rotinas "lixo" (nomes antigos ou vazias)
-    const validRoutines = routinesData.filter(r => 
-      r.name !== "Rotina A" && 
-      r.name !== "Rotina Matinal" && 
-      r.name !== "A" &&
-      r.name !== ""
-    );
+    const officialNames = [ROUTINE_TEMPLATES.acolhedora.name, ROUTINE_TEMPLATES.energetica.name];
+    
+    // Filtro agressivo
+    const validRoutines = (routinesData || []).filter(r => officialNames.includes(r.name));
 
-    // Se o banco tiver rotinas lixo, deletamos elas do banco para limpar
-    const trashIds = routinesData.filter(r => !validRoutines.includes(r)).map(r => r.id);
-    if (trashIds.length > 0) {
-      await supabase.from('routines').delete().in('id', trashIds);
-    }
+    if (validRoutines.length < 2) {
+        console.log('[AppContext] Criando rotinas oficiais faltantes...');
+        
+        // Criar Abraço de Mãe
+        if (!validRoutines.some(r => r.name === officialNames[0])) {
+            const { data: r } = await supabase.from('routines').insert({
+                user_id: user.id,
+                name: officialNames[0],
+                subtitle: ROUTINE_TEMPLATES.acolhedora.duration,
+                icon: 'Heart',
+                image_url: 'https://images.unsplash.com/photo-1544126592-807daa2b562b?auto=format&fit=crop&q=80&w=400'
+            }).select().single();
+            if (r) {
+                await supabase.from('habits').insert(ROUTINE_TEMPLATES.acolhedora.tasks.map(t => ({
+                    routine_id: r.id,
+                    user_id: user.id,
+                    title: t.title,
+                    category: 'Saúde emocional',
+                    period: 'A qualquer momento'
+                })));
+            }
+        }
 
-    // Se não sobrar nenhuma rotina válida no banco, forçamos as iniciais
-    if (validRoutines.length === 0) {
-        setState(prev => ({ ...prev, routines: getInitialRoutines() }));
+        // Criar Super Mãe em Movimento
+        if (!validRoutines.some(r => r.name === officialNames[1])) {
+            const { data: r } = await supabase.from('routines').insert({
+                user_id: user.id,
+                name: officialNames[1],
+                subtitle: ROUTINE_TEMPLATES.energetica.duration,
+                icon: 'Zap',
+                image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=400'
+            }).select().single();
+            if (r) {
+                await supabase.from('habits').insert(ROUTINE_TEMPLATES.energetica.tasks.map(t => ({
+                    routine_id: r.id,
+                    user_id: user.id,
+                    title: t.title,
+                    category: 'Corpo e bem-estar físico',
+                    period: 'Manhã'
+                })));
+            }
+        }
+
+        // Recarrega
+        const { data: fresh } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
+        const mapped = (fresh || []).filter(r => officialNames.includes(r.name)).map(r => ({
+            id: r.id,
+            name: r.name,
+            subtitle: r.subtitle,
+            image: r.image_url,
+            icon: r.icon,
+            habits: (r.habits ?? []).map((h: any) => ({
+              id: h.id,
+              title: h.title,
+              description: h.description,
+              category: h.category,
+              period: h.period,
+              completed: false
+            }))
+        }));
+        setState(prev => ({ ...prev, routines: mapped }));
         return;
     }
 
@@ -209,9 +225,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         description: h.description,
         category: h.category,
         period: h.period,
-        reminder: h.reminder,
-        repetition: h.repetition,
-        customDays: h.custom_days ?? [],
         completed: false
       }))
     }));
