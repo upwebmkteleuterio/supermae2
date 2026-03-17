@@ -37,7 +37,7 @@ export const CareAgenda: React.FC = () => {
 
       <div className="px-6 space-y-4 pb-32">
         
-        {/* OPÇÃO 1: ESCOLHER ROTINA PRONTA */}
+        {/* 1. ESCOLHER ROTINA PRONTA */}
         <div className="space-y-3">
           <button 
             onClick={() => setShowTemplates(!showTemplates)} 
@@ -61,7 +61,7 @@ export const CareAgenda: React.FC = () => {
           )}
         </div>
 
-        {/* OPÇÃO 2: MONTAR MINHA ROTINA */}
+        {/* 2. MONTAR MINHA ROTINA */}
         <button 
           onClick={() => navigate('routines_list')}
           className="w-full bg-white p-5 rounded-[1.8rem] flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all"
@@ -75,7 +75,7 @@ export const CareAgenda: React.FC = () => {
           <ChevronRight className="w-5 h-5 text-slate-300" />
         </button>
 
-        {/* OPÇÃO 3: REPETIR DIA ANTERIOR */}
+        {/* 3. REPETIR DIA ANTERIOR */}
         <button 
           onClick={() => {
             repeatPreviousDayRoutine();
@@ -92,7 +92,7 @@ export const CareAgenda: React.FC = () => {
           <ChevronRight className="w-5 h-5 text-slate-300" />
         </button>
 
-        <div className="py-4 border-t border-slate-100 mt-6">
+        <div className="py-6 border-t border-slate-100 mt-8">
            <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4 ml-2">Agendas Individuais</p>
            <div className="space-y-3">
               <AgendaListItem 
