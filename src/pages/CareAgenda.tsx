@@ -29,9 +29,9 @@ const CareAgenda = () => {
       <div className="bg-white p-6 rounded-b-3xl shadow-sm mb-6 border-b border-rose-100">
         <h1 className="text-2xl font-bold text-rose-900 flex items-center gap-2">
           <Heart className="text-rose-500 fill-rose-500" size={24} />
-          Minha Rotina e Agenda
+          Cuidados e Rotina
         </h1>
-        <p className="text-rose-600 mt-1">Como você quer organizar o seu dia?</p>
+        <p className="text-rose-600 mt-1">Escolha como organizar o seu dia</p>
       </div>
 
       <div className="px-4 space-y-4">
@@ -50,7 +50,7 @@ const CareAgenda = () => {
               </div>
               <div>
                 <h3 className={`font-bold ${showTemplates ? 'text-white' : 'text-rose-900'}`}>Escolher Rotina Pronta</h3>
-                <p className={`text-xs ${showTemplates ? 'text-rose-100' : 'text-rose-500'}`}>Modelos como "Abraço de Mãe"</p>
+                <p className={`text-xs ${showTemplates ? 'text-rose-100' : 'text-rose-500'}`}>Abraço de Mãe e Super Mãe</p>
               </div>
             </div>
             <ChevronDown className={`transition-transform duration-300 ${showTemplates ? 'rotate-180 text-white' : 'text-rose-300'}`} size={20} />
@@ -102,7 +102,7 @@ const CareAgenda = () => {
 
         {/* SEÇÃO SECUNDÁRIA: AGENDAS */}
         <div className="pt-6 border-t border-rose-100 mt-4">
-          <p className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-4 ml-2">Visualização por Agenda</p>
+          <p className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-4 ml-2">Agendas Individuais</p>
           <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={() => navigate('mom-agenda')}
@@ -124,13 +124,6 @@ const CareAgenda = () => {
               <span className="text-xs font-bold text-rose-900">Agenda do Filho</span>
             </button>
           </div>
-        </div>
-
-        <div className="bg-rose-50/50 rounded-2xl p-4 mt-4 border border-rose-100 flex items-start gap-3">
-          <Info className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-          <p className="text-rose-600 text-[10px] leading-relaxed font-medium">
-            Escolha uma rotina pronta para preencher seu dia automaticamente ou personalize seus hábitos em "Montar Minha Rotina".
-          </p>
         </div>
       </div>
     </div>
