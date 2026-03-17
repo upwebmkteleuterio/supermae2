@@ -1,14 +1,15 @@
+
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { CalendarHeader } from '../components/CalendarHeader';
 import { TaskModal } from '../components/TaskModal';
 import { AgendaList } from '../components/AgendaList';
-import { Plus, BookOpen, ChevronRight } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { AgendaItem } from '../types';
 
 export const ChildAgenda: React.FC = () => {
-  const { state, addAgendaItem, deleteAgendaItem, updateAgendaItem, goBack, navigate } = useApp();
+  const { state, addAgendaItem, deleteAgendaItem, updateAgendaItem, goBack } = useApp();
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<AgendaItem | undefined>(undefined);
 
@@ -39,23 +40,6 @@ export const ChildAgenda: React.FC = () => {
             <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{selectedChild.diagnosisStatus}</p>
           </div>
         </div>
-
-        {/* NOVO: Botão para o Diário Especializado (Passo 3) */}
-        <button 
-          onClick={() => navigate('child_mood_diary')}
-          className="w-full bg-white rounded-3xl p-5 mb-8 flex items-center justify-between border border-purple-100 shadow-sm active:scale-95 transition-all group"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <div className="text-left">
-              <h4 className="font-bold text-slate-800 text-sm">Diário de Evolução</h4>
-              <p className="text-[10px] text-slate-400 font-medium">Registrar conquistas, medicação e alertas</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-purple-300" />
-        </button>
 
         <CalendarHeader />
 
