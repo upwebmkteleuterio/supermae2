@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { AppState, ViewState, MoodType, Child, Activity, AgendaItem, DailyMission, ChatMessage, UserProfile, Routine, CareTask, LocalSupportPost, AppNotification } from '../types';
 import { supabase } from '../lib/supabase';
+import { ROUTINE_TEMPLATES } from '../constants/routines';
+import toast from 'react-hot-toast';
 
 interface AppContextProps {
   state: AppState;
@@ -54,8 +56,6 @@ interface AppContextProps {
   toggleCareTask: (taskId: string) => void;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<boolean>;
-  
-  // Logística Comunitária
   fetchLocalSupportPosts: () => Promise<void>;
   createLocalSupportPost: (post: Partial<LocalSupportPost>) => Promise<boolean>;
   updateLocalSupportPost: (postId: string, post: Partial<LocalSupportPost>) => Promise<boolean>;
@@ -64,6 +64,7 @@ interface AppContextProps {
   markPostAsCompleted: (postId: string) => Promise<void>;
   fetchNotifications: () => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
+  applyRoutineTemplate: (templateId: string) => Promise<void>;
 }
 
 const STORAGE_KEY = 'super_mae_app_state_v32';
@@ -131,10 +132,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ...parsed, 
         isAuthLoading: true, 
         isProfileLoading: false,
-        notifications: parsed.notifications ?? [],
-        localSupportPosts: parsed.localSupportPosts ?? [],
-        careTasks: parsed.careTasks ?? [],
-        routines: parsed.routines ?? []
       };
     } catch (e) {
       return INITIAL_STATE;
@@ -172,7 +169,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         age: c.birth_date ? `${new Date().getFullYear() - new Date(c.birth_date).getFullYear()} anos` : '?',
         avatar: c.avatar_url || '',
         hasDiagnosis: c.has_diagnosis,
-        diagnosisStatus: c.diagnosis_status
+        diagnosis_status: c.diagnosis_status
       })) }));
     }
   }, []);
@@ -210,9 +207,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data: routinesData, error } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
-    
     if (error || !routinesData) return;
-
     const mapped: Routine[] = routinesData.map(r => ({
       id: r.id,
       name: r.name,
@@ -249,11 +244,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const fetchLocalSupportPosts = useCallback(async () => {
-    const { data } = await supabase
-      .from('local_support_posts')
-      .select('*')
-      .eq('status', 'open')
-      .order('date_time', { ascending: true });
+    const { data } = await supabase.from('local_support_posts').select('*').eq('status', 'open').order('date_time', { ascending: true });
     if (data) {
       setState(prev => ({ ...prev, localSupportPosts: data.map(p => ({
         id: p.id,
@@ -277,15 +268,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const fetchNotifications = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase
-      .from('app_notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (data) {
-      setState(prev => ({ ...prev, notifications: data ?? [] }));
-    }
+    const { data } = await supabase.from('app_notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (data) setState(prev => ({ ...prev, notifications: data ?? [] }));
   }, []);
+
+  const applyRoutineTemplate = async (templateId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const template = ROUTINE_TEMPLATES[templateId];
+    if (!template) return;
+
+    const itemsToInsert = template.tasks.map(task => ({
+      user_id: user.id,
+      title: task.title,
+      category: task.category,
+      date: state.selectedDate,
+      participant_ids: ['mom'],
+      completed: false,
+      owner: 'mãe'
+    }));
+
+    const { error } = await supabase.from('agenda_items').insert(itemsToInsert);
+    if (error) {
+      toast.error("Erro ao aplicar rotina.");
+    } else {
+      toast.success(`Rotina "${template.name}" iniciada!`);
+      await fetchAgendaItems();
+    }
+  };
 
   const fetchFullProfile = useCallback(async (userId: string) => {
     setState(prev => ({ ...prev, isProfileLoading: true }));
@@ -310,15 +320,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             onboardingCompleted: !!profile.welcoming_goal
           }
         }));
-        await Promise.all([
-          fetchMoodLogs(), 
-          fetchChildren(), 
-          fetchAgendaItems(), 
-          fetchRoutines(), 
-          fetchHabitCompletions(),
-          fetchLocalSupportPosts(),
-          fetchNotifications()
-        ]);
+        await Promise.all([fetchMoodLogs(), fetchChildren(), fetchAgendaItems(), fetchRoutines(), fetchHabitCompletions(), fetchLocalSupportPosts(), fetchNotifications()]);
       }
     } catch (e) {
       console.error(e);
@@ -333,13 +335,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (session?.user) {
         setState(prev => ({ ...prev, isAuthenticated: true, isAuthLoading: false }));
         fetchFullProfile(session.user.id);
-        
-        const channel = supabase.channel('app_realtime_v1')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'local_support_posts' }, () => fetchLocalSupportPosts())
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'app_notifications', filter: `user_id=eq.${session.user.id}` }, () => fetchNotifications())
-          .subscribe();
-          
-        return () => { supabase.removeChannel(channel); };
       } else {
         setState(prev => ({ ...prev, isAuthLoading: false, isAuthenticated: false }));
       }
@@ -355,7 +350,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
     return () => subscription.unsubscribe();
-  }, [fetchFullProfile, fetchLocalSupportPosts, fetchNotifications]);
+  }, [fetchFullProfile]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -375,14 +370,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addChild = async (child: Child) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { data, error } = await supabase.from('children').insert({ 
-      parent_id: user.id, 
-      name: child.name, 
-      birth_date: child.birthDate, 
-      avatar_url: child.avatar, 
-      has_diagnosis: child.hasDiagnosis, 
-      diagnosis_status: child.diagnosisStatus 
-    }).select().single();
+    const { data, error } = await supabase.from('children').insert({ parent_id: user.id, name: child.name, birth_date: child.birthDate, avatar_url: child.avatar, has_diagnosis: child.hasDiagnosis, diagnosis_status: child.diagnosisStatus }).select().single();
     if (error) return false;
     setState(prev => ({ ...prev, children: [...prev.children, { ...child, id: data.id }] }));
     return true;
@@ -394,32 +382,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addAgendaItem = async (item: AgendaItem) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('agenda_items').insert({ 
-      user_id: user.id, 
-      title: item.title, 
-      time: item.time, 
-      date: item.date, 
-      category: item.category, 
-      participant_ids: item.participantIds ?? [], 
-      reminder: item.reminder, 
-      description: item.description 
-    });
+    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description });
     if (error) return false;
     await fetchAgendaItems();
     return true;
   };
 
   const updateAgendaItem = async (item: AgendaItem) => {
-    const { error } = await supabase.from('agenda_items').update({ 
-      title: item.title, 
-      time: item.time, 
-      date: item.date, 
-      category: item.category, 
-      participant_ids: item.participantIds ?? [], 
-      reminder: item.reminder, 
-      description: item.description, 
-      completed: item.completed 
-    }).eq('id', item.id);
+    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
     if (error) return false;
     await fetchAgendaItems();
     return true;
@@ -445,70 +415,37 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateMomSelfCare = (activities: Activity[]) => setState(prev => ({ ...prev, momSelfCareAgenda: activities }));
-
   const addRoutine = async (routine: Routine) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    
-    const { data, error } = await supabase.from('routines').insert({ 
-      user_id: user.id, 
-      name: routine.name, 
-      subtitle: routine.subtitle, 
-      icon: routine.icon, 
-      image_url: routine.image 
-    }).select().single();
-
+    const { data, error } = await supabase.from('routines').insert({ user_id: user.id, name: routine.name, subtitle: routine.subtitle, icon: routine.icon, image_url: routine.image }).select().single();
     if (error) return false;
     await fetchRoutines();
     return true;
   };
-
   const deleteRoutine = async (id: string) => {
     const { error } = await supabase.from('routines').delete().eq('id', id);
     if (error) return false;
     await fetchRoutines();
     return true;
   };
-
   const selectRoutine = (id: string | null) => setState(prev => ({ ...prev, selectedRoutineId: id }));
-
   const addHabitToRoutine = async (routineId: string, habit: Activity) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('habits').insert({ 
-      routine_id: routineId, 
-      user_id: user.id, 
-      title: habit.title, 
-      description: habit.description, 
-      category: habit.category, 
-      period: habit.period, 
-      reminder: habit.reminder, 
-      repetition: habit.repetition, 
-      custom_days: habit.customDays ?? [] 
-    });
+    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] });
     if (error) return false;
     await fetchRoutines();
     return true;
   };
-
   const updateHabitInRoutine = async (routineId: string, habit: Activity) => {
-    const { error } = await supabase.from('habits').update({ 
-      title: habit.title, 
-      description: habit.description, 
-      category: habit.category, 
-      period: habit.period, 
-      reminder: habit.reminder, 
-      repetition: habit.repetition, 
-      custom_days: habit.customDays ?? [] 
-    }).eq('id', habit.id);
+    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] }).eq('id', habit.id);
     if (error) return false;
     await fetchRoutines();
     return true;
   };
-
   const registerHabitTemplate = (habit: Activity) => setState(prev => ({ ...prev, customHabitTemplates: [...prev.customHabitTemplates, habit] }));
   const deleteCategory = (oldCategory: string, migrateToCategory: string) => {};
-
   const toggleHabitCompletion = async (routineId: string, habitId: string, date: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -520,13 +457,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       else completions[date] = [...dateCompletions, habitId];
       return { ...prev, habitCompletions: completions };
     });
-    if (isCompleted) {
-      await supabase.from('habit_logs').delete().eq('user_id', user.id).eq('habit_id', habitId).eq('date', date);
-    } else {
-      await supabase.from('habit_logs').insert({ user_id: user.id, habit_id: habitId, date });
-    }
+    if (isCompleted) await supabase.from('habit_logs').delete().eq('user_id', user.id).eq('habit_id', habitId).eq('date', date);
+    else await supabase.from('habit_logs').insert({ user_id: user.id, habit_id: habitId, date });
   };
-
   const deleteHabitFromRoutine = async (routineId: string, habitId: string) => {
     const { error } = await supabase.from('habits').delete().eq('id', habitId);
     if (error) return false;
@@ -541,17 +474,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addChatMessage = (msg: ChatMessage) => setState(prev => ({ ...prev, chatHistory: [...prev.chatHistory, msg] }));
   const addChannelMessage = (channelId: string, msg: ChatMessage) => setState(prev => ({ ...prev, channelMessages: { ...prev.channelMessages, [channelId]: [...(prev.channelMessages[channelId] || []), msg] } }));
   const clearChatHistory = () => setState(prev => ({ ...prev, chatHistory: [] }));
-  
   const setVoice = async (voice: string) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('profiles').update({ selected_voice: voice }).eq('id', user.id);
-    }
+    if (user) await supabase.from('profiles').update({ selected_voice: voice }).eq('id', user.id);
     setState(prev => ({ ...prev, selectedVoice: voice }));
   };
-
   const updateUserProfile = (profile: Partial<UserProfile>) => setState(prev => ({ ...prev, userProfile: { ...prev.userProfile, ...profile } }));
-
   const persistUserProfile = async (profile: Partial<UserProfile>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
@@ -569,7 +497,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     updateUserProfile(profile);
     return true;
   };
-
   const uploadAvatar = async (file: File): Promise<string | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -580,7 +507,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
     return publicUrl;
   };
-
   const uploadMoodPhoto = async (file: File): Promise<string | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -591,20 +517,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { publicUrl } } = supabase.storage.from('mood_entries').getPublicUrl(fileName);
     return publicUrl;
   };
-
   const saveMoodRecord = async (date: string, sentimentIds: string[], note: string = '', photoUrl: string = ''): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    setState(prev => ({ 
-      ...prev, 
-      moodHistory: { ...prev.moodHistory, [date]: sentimentIds },
-      tempMoodNote: '',
-      tempMoodPhotoUrl: ''
-    }));
+    setState(prev => ({ ...prev, moodHistory: { ...prev.moodHistory, [date]: sentimentIds }, tempMoodNote: '', tempMoodPhotoUrl: '' }));
     const { error } = await supabase.from('mood_logs').upsert({ user_id: user.id, date, sentiment_ids: sentimentIds, note, photo_url: photoUrl, child_id: null });
     return !error;
   };
-
   const saveChildMoodRecord = async (childId: string, date: string, sentimentIds: string[], note: string = ''): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
@@ -617,89 +536,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { error } = await supabase.from('mood_logs').upsert({ user_id: user.id, child_id: childId, date, sentiment_ids: sentimentIds, note });
     return !error;
   };
-
   const createLocalSupportPost = async (post: Partial<LocalSupportPost>) => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) return false;
-    
     let coords = { lat: null as number | null, lng: null as number | null };
-    try {
-      const pos = await new Promise<GeolocationPosition>((res, rej) => {
-        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 });
-      });
-      coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    } catch (e) {
-      console.warn("Geolocalização indisponível");
-    }
-
-    const { error } = await supabase.from('local_support_posts').insert({
-      user_id: authUser.id,
-      user_name: state.userProfile.name.split(' ')[0],
-      user_avatar: state.userProfile.avatar,
-      type: post.type,
-      category: post.category,
-      location_city: state.userProfile.city,
-      location_neighborhood: post.locationNeighborhood || 'Centro',
-      destination: post.destination,
-      date_time: post.dateTime,
-      latitude: coords.lat,
-      longitude: coords.lng,
-      status: 'open'
-    });
-
+    try { const pos = await new Promise<GeolocationPosition>((res, rej) => { navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 }); }); coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }; } catch (e) { console.warn("Geolocalização indisponível"); }
+    const { error } = await supabase.from('local_support_posts').insert({ user_id: authUser.id, user_name: state.userProfile.name.split(' ')[0], user_avatar: state.userProfile.avatar, type: post.type, category: post.category, location_city: state.userProfile.city, location_neighborhood: post.locationNeighborhood || 'Centro', destination: post.destination, date_time: post.dateTime, latitude: coords.lat, longitude: coords.lng, status: 'open' });
     if (error) return false;
     await fetchLocalSupportPosts();
     return true;
   };
-
   const updateLocalSupportPost = async (postId: string, post: Partial<LocalSupportPost>) => {
-    const { error } = await supabase.from('local_support_posts').update({
-      type: post.type,
-      category: post.category,
-      location_neighborhood: post.locationNeighborhood,
-      destination: post.destination,
-      date_time: post.dateTime
-    }).eq('id', postId);
+    const { error } = await supabase.from('local_support_posts').update({ type: post.type, category: post.category, location_neighborhood: post.locationNeighborhood, destination: post.destination, date_time: post.dateTime }).eq('id', postId);
     if (error) return false;
     await fetchLocalSupportPosts();
     return true;
   };
-
   const deleteLocalSupportPost = async (postId: string) => {
     const { error } = await supabase.from('local_support_posts').delete().eq('id', postId);
     if (error) return false;
     await fetchLocalSupportPosts();
     return true;
   };
-
   const markInterestInPost = async (post: LocalSupportPost) => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) return false;
-
-    const { error: notifError } = await supabase.from('app_notifications').insert({
-      user_id: post.userId,
-      sender_id: authUser.id,
-      sender_name: state.userProfile.name.split(' ')[0],
-      type: 'support_interest',
-      data: { postId: post.id, postTitle: post.destination }
-    });
-
+    const { error: notifError } = await supabase.from('app_notifications').insert({ user_id: post.userId, sender_id: authUser.id, sender_name: state.userProfile.name.split(' ')[0], type: 'support_interest', data: { postId: post.id, postTitle: post.destination } });
     if (notifError) return false;
-
     await supabase.from('local_support_posts').update({ status: 'matched' }).eq('id', post.id);
     await fetchLocalSupportPosts();
     return true;
   };
-
-  const markPostAsCompleted = async (postId: string) => {
-    await supabase.from('local_support_posts').update({ status: 'completed' }).eq('id', postId);
-    await fetchLocalSupportPosts();
-  };
-
-  const markNotificationAsRead = async (id: string) => {
-    await supabase.from('app_notifications').update({ read: true }).eq('id', id);
-    await fetchNotifications();
-  };
+  const markPostAsCompleted = async (postId: string) => { await supabase.from('local_support_posts').update({ status: 'completed' }).eq('id', postId); await fetchLocalSupportPosts(); };
+  const markNotificationAsRead = async (id: string) => { await supabase.from('app_notifications').update({ read: true }).eq('id', id); await fetchNotifications(); };
 
   const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
   const setTempMoodNote = (note: string) => setState(prev => ({ ...prev, tempMoodNote: note }));
@@ -709,9 +578,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setSelectedCareIntensity = (intensity: 'light' | 'strong' | 'breathe' | null) => setState(prev => ({ ...prev, selectedCareIntensity: intensity }));
   const setCareTasks = (tasks: CareTask[]) => setState(prev => ({ ...prev, careTasks: tasks }));
   const toggleCareTask = (taskId: string) => setState(prev => ({ ...prev, careTasks: prev.careTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t) }));
-
   const logout = async () => { await supabase.auth.signOut(); };
-
   const deleteAccount = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
@@ -723,13 +590,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
-      toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
-      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
-      setDailyMission, completeDailyMission, addReward, resetState,
-      addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, uploadMoodPhoto, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote, setTempMoodPhotoUrl,
-      setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount,
-      fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead
+      state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild, toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion, updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine, setDailyMission, completeDailyMission, addReward, resetState, addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, uploadMoodPhoto, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote, setTempMoodPhotoUrl, setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount, fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead, applyRoutineTemplate
     }}>
       {children}
     </AppContext.Provider>
