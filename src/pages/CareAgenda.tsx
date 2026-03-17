@@ -1,6 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
+import { Layout } from '../components/Layout';
+import { useApp } from '../store/AppContext';
+import { SOSButton } from '../components/SOSButton';
+import { RoutineSelectionCards } from '../components/RoutineSelectionCards';
 import { 
   Sparkles, 
   LayoutGrid, 
@@ -9,55 +13,49 @@ import {
   Baby, 
   BookOpen, 
   ChevronRight,
-  Info,
-  Heart,
+  ArrowLeft,
   ChevronDown
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { RoutineSelectionCards } from '../components/RoutineSelectionCards';
 import { Toaster } from 'react-hot-toast';
 
-const CareAgenda = () => {
+export const CareAgenda: React.FC = () => {
   const { navigate, repeatPreviousDayRoutine } = useApp();
   const [showTemplates, setShowTemplates] = useState(false);
 
   return (
-    <div className="flex flex-col h-full bg-[#FFF5F5] pb-20 overflow-y-auto">
+    <Layout headerTransparent themeColor="bg-[#FDFCFE]">
       <Toaster position="top-center" />
-      
-      {/* Header */}
-      <div className="bg-white p-6 rounded-b-3xl shadow-sm mb-6 border-b border-rose-100">
-        <h1 className="text-2xl font-bold text-rose-900 flex items-center gap-2">
-          <Heart className="text-rose-500 fill-rose-500" size={24} />
-          Cuidados e Rotina
-        </h1>
-        <p className="text-rose-600 mt-1">Escolha como organizar o seu dia</p>
+      <div className="pt-12 px-6 flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('home')} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-xl font-bold text-slate-800">Cuidado e Rotina</h1>
+        </div>
+        <SOSButton />
       </div>
 
-      <div className="px-4 space-y-4">
+      <div className="px-6 space-y-4 pb-32">
         
         {/* OPÇÃO 1: ESCOLHER ROTINA PRONTA */}
         <div className="space-y-3">
           <button 
             onClick={() => setShowTemplates(!showTemplates)} 
-            className={`w-full p-5 rounded-2xl shadow-sm border transition-all text-left flex items-center justify-between group ${
-              showTemplates ? 'bg-rose-600 border-transparent' : 'bg-white border-rose-100 hover:bg-rose-50'
+            className={`w-full p-5 rounded-[1.8rem] flex items-center justify-between border transition-all active:scale-[0.98] ${
+              showTemplates ? 'bg-purple-600 text-white border-transparent shadow-lg' : 'bg-white text-slate-700 border-slate-50 shadow-sm'
             }`}
           >
             <div className="flex items-center gap-4">
-              <div className={`${showTemplates ? 'bg-white/20' : 'bg-rose-100'} p-3 rounded-xl transition-colors`}>
-                <Sparkles className={showTemplates ? 'text-white' : 'text-rose-600'} size={24} />
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${showTemplates ? 'bg-white/20' : 'bg-purple-50 text-purple-600'}`}>
+                <Sparkles size={20} />
               </div>
-              <div>
-                <h3 className={`font-bold ${showTemplates ? 'text-white' : 'text-rose-900'}`}>Escolher Rotina Pronta</h3>
-                <p className={`text-xs ${showTemplates ? 'text-rose-100' : 'text-rose-500'}`}>Abraço de Mãe e Super Mãe</p>
-              </div>
+              <span className="font-bold text-sm">Escolher Rotina Pronta</span>
             </div>
-            <ChevronDown className={`transition-transform duration-300 ${showTemplates ? 'rotate-180 text-white' : 'text-rose-300'}`} size={20} />
+            <ChevronDown className={`w-5 h-5 transition-transform ${showTemplates ? 'rotate-180 text-white' : 'text-slate-300'}`} size={20} />
           </button>
-
+          
           {showTemplates && (
-            <div className="animate-in slide-in-from-top-4 duration-300 pb-2">
+            <div className="animate-in slide-in-from-top-4 duration-300">
                <RoutineSelectionCards />
             </div>
           )}
@@ -65,69 +63,66 @@ const CareAgenda = () => {
 
         {/* OPÇÃO 2: MONTAR MINHA ROTINA */}
         <button 
-          onClick={() => navigate('routines')} 
-          className="w-full bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex items-center justify-between hover:bg-rose-50 transition-colors text-left group"
+          onClick={() => navigate('routines_list')}
+          className="w-full bg-white p-5 rounded-[1.8rem] flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all"
         >
           <div className="flex items-center gap-4">
-            <div className="bg-rose-100 p-3 rounded-xl group-hover:bg-rose-200 transition-colors">
-              <LayoutGrid className="text-rose-600" size={24} />
+            <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
+              <LayoutGrid size={20} />
             </div>
-            <div>
-              <h3 className="font-bold text-rose-900">Montar Minha Rotina</h3>
-              <p className="text-xs text-rose-500">Personalize seus próprios hábitos</p>
-            </div>
+            <span className="font-bold text-sm">Montar Minha Rotina</span>
           </div>
-          <ChevronRight className="text-rose-300" size={20} />
+          <ChevronRight className="w-5 h-5 text-slate-300" />
         </button>
 
         {/* OPÇÃO 3: REPETIR DIA ANTERIOR */}
         <button 
-          onClick={async () => {
-            await repeatPreviousDayRoutine();
-            navigate('mom-agenda');
+          onClick={() => {
+            repeatPreviousDayRoutine();
+            navigate('mom_agenda');
           }}
-          className="w-full bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex items-center justify-between hover:bg-rose-50 transition-colors text-left group"
+          className="w-full bg-white p-5 rounded-[1.8rem] flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all"
         >
           <div className="flex items-center gap-4">
-            <div className="bg-rose-100 p-3 rounded-xl group-hover:bg-rose-200 transition-colors">
-              <RefreshCw className="text-rose-600" size={24} />
+            <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center">
+              <RefreshCw size={20} />
             </div>
-            <div>
-              <h3 className="font-bold text-rose-900">Repetir dia anterior</h3>
-              <p className="text-xs text-rose-500">Copia as tarefas de ontem</p>
-            </div>
+            <span className="font-bold text-sm">Repetir dia anterior</span>
           </div>
-          <ChevronRight className="text-rose-300" size={20} />
+          <ChevronRight className="w-5 h-5 text-slate-300" />
         </button>
 
-        {/* SEÇÃO SECUNDÁRIA: AGENDAS */}
-        <div className="pt-6 border-t border-rose-100 mt-4">
-          <p className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-4 ml-2">Agendas Individuais</p>
-          <div className="grid grid-cols-2 gap-3">
-            <button 
-              onClick={() => navigate('mom-agenda')}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50 flex flex-col items-center gap-2 text-center hover:bg-rose-50 transition-colors"
-            >
-              <div className="bg-rose-50 p-2 rounded-lg text-rose-500">
-                <Calendar size={20} />
-              </div>
-              <span className="text-xs font-bold text-rose-900">Minha Agenda</span>
-            </button>
-
-            <button 
-              onClick={() => navigate('child-agenda')}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50 flex flex-col items-center gap-2 text-center hover:bg-rose-50 transition-colors"
-            >
-              <div className="bg-rose-50 p-2 rounded-lg text-rose-500">
-                <Baby size={20} />
-              </div>
-              <span className="text-xs font-bold text-rose-900">Agenda do Filho</span>
-            </button>
-          </div>
+        <div className="py-4 border-t border-slate-100 mt-6">
+           <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-4 ml-2">Agendas Individuais</p>
+           <div className="space-y-3">
+              <AgendaListItem 
+                icon={<Calendar className="w-5 h-5" />} 
+                label="Minha Agenda" 
+                onClick={() => navigate('mom_agenda')} 
+              />
+              <AgendaListItem 
+                icon={<Baby className="w-5 h-5" />} 
+                label="Agenda do meu filho" 
+                onClick={() => navigate('children_selection')} 
+              />
+              <AgendaListItem 
+                icon={<BookOpen className="w-5 h-5" />} 
+                label="Ver agenda integrada" 
+                onClick={() => navigate('integrated_agenda')} 
+              />
+           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 
-export default CareAgenda;
+const AgendaListItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; }> = ({ icon, label, onClick }) => (
+  <button onClick={onClick} className="w-full bg-white rounded-[1.5rem] p-4 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all group">
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center shrink-0">{icon}</div>
+      <span className="text-slate-600 font-bold text-sm">{label}</span>
+    </div>
+    <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+  </button>
+);
