@@ -19,6 +19,7 @@ const PRESET_CATEGORIES = [
 const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const REPETITION_OPTIONS = ["Todos os dias", "Segunda a sexta", "Sábado e Domingo", "Personalizar"];
 
+// Cores mapeadas para as novas categorias
 const CATEGORY_COLORS: Record<string, string> = {
   "Saúde emocional": "bg-pink-50/50",
   "Corpo e bem-estar físico": "bg-green-50/50",
@@ -31,103 +32,15 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const PRESET_HABITS: Activity[] = [
-  // Saúde Emocional
-  { id: 'se1', title: 'Fazer check-in emocional no app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se2', title: 'Escolher uma frase de acolhimento para o dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se3', title: 'Respirar fundo três vezes com presença', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se4', title: 'Registrar uma emoção no diário do app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se5', title: 'Nomear o que está sentindo sem tentar resolver', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se6', title: 'Escrever livremente por dois minutos sobre como foi o dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se7', title: 'Usar o recurso “Respiro” quando se sentir sobrecarregada', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se8', title: 'Ouvir um áudio afetivo do app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se9', title: 'Fazer uma pausa consciente antes de reagir', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se10', title: 'Validar a própria emoção dizendo: “faz sentido eu me sentir assim”', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se11', title: 'Praticar autocompaixão com uma mensagem para si mesma', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se12', title: 'Identificar um gatilho emocional do dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-  { id: 'se13', title: 'Escolher uma ação pequena de autocuidado emocional', description: '', duration: '', completed: false, category: 'Saúde emocional' },
-
-  // Corpo e Bem-estar Físico
-  { id: 'cb1', title: 'Beber um copo de água com intenção', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb2', title: 'Alongar pescoço e ombros por alguns minutos', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb3', title: 'Fazer uma caminhada ou atividade física preferida', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb4', title: 'Dormir um pouco mais cedo ou tirar um cochilo sem culpa', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb5', title: 'Comer algo nutritivo com calma', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb6', title: 'Passar um hidratante como gesto de carinho em si', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb7', title: 'Tomar um banho relaxante e consciente', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb8', title: 'Respirar ao ar livre por alguns minutos', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb9', title: 'Cuidar do cabelo ou da pele com atenção', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb10', title: 'Fazer uma pausa para descansar o corpo', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb11', title: 'Reduzir um pouco o tempo de tela antes de dormir', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-  { id: 'cb12', title: 'Sentar-se com postura confortável e relaxar a mandíbula', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
-
-  // Relações e Rede de Apoio
-  { id: 'rr1', title: 'Enviar um “oi” para uma amiga de confiança', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr2', title: 'Desabafar anonimamente em canal seguro do app', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr3', title: 'Aceitar ajuda em algo simples', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr4', title: 'Pedir uma troca ou ajuda a outra mãe', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr5', title: 'Agendar atendimento com psicóloga', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr6', title: 'Dizer “não” a algo que te sobrecarregaria', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr7', title: 'Conversar com alguém sobre como você está', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr8', title: 'Agradecer alguém que te ajudou', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr9', title: 'Fazer um convite para um café ou conversa', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr10', title: 'Participar de um grupo de apoio no app', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-  { id: 'rr11', title: 'Permitir que alguém cuide de você por alguns minutos', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
-
-  // Organização e Vida Prática
-  { id: 'ov1', title: 'Tirar uma tarefa da lista do dia sem culpa', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov2', title: 'Planejar apenas três prioridades reais', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov3', title: 'Criar uma lista de “não precisa ser hoje”', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov4', title: 'Organizar um pequeno canto que te acalma', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov5', title: 'Preparar algo simples para facilitar o dia seguinte', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov6', title: 'Delegar uma tarefa possível', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov7', title: 'Desistir de uma cobrança desnecessária', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov8', title: 'Organizar documentos ou agenda por poucos minutos', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-  { id: 'ov9', title: 'Ajustar expectativas do dia para algo mais leve', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
-
-  // Criatividade e Leveza
-  { id: 'cl1', title: 'Ouvir uma música que gosta enquanto faz algo', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl2', title: 'Escrever por alguns minutos só por expressão', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl3', title: 'Desenhar ou brincar com os filhos sem se preocupar com resultado', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl4', title: 'Dançar sozinha por uma música', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl5', title: 'Assistir a algo leve e divertido', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl6', title: 'Tirar uma foto de algo bonito do dia', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl7', title: 'Fazer um hobby por alguns minutos', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl8', title: 'Colorir, rabiscar ou criar algo simples', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-  { id: 'cl9', title: 'Rir de propósito com algo que te diverte', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
-
-  // Espiritualidade e auto conexão
-  { id: 'ea1', title: 'Ficar em silêncio por alguns minutos', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea2', title: 'Fazer uma oração ou gesto simbólico', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea3', title: 'Olhar para o céu e agradecer por algo', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea4', title: 'Repetir um mantra acolhedor', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea5', title: 'Escrever uma intenção para o dia no app', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea6', title: 'Meditar ou ouvir uma meditação guiada', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea7', title: 'Acender uma vela ou criar um momento ritual', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea8', title: 'Respirar com as mãos no coração', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea9', title: 'Conectar-se com algo que te dê esperança', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-
-  // Propósito e realização pessoal
-  { id: 'pr1', title: 'Lembrar de um sonho antigo sem cobrança', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr2', title: 'Dar um pequeno passo em algo que deseja', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr3', title: 'Celebrar uma pequena conquista do dia', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr4', title: 'Ler uma página de um livro inspirador', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr5', title: 'Dizer a si mesma: “eu também sou alguém além de mãe”', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr6', title: 'Escrever uma carta para si no futuro', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr7', title: 'Aprender algo novo, mesmo que por minutos', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr8', title: 'Pensar em um projeto pessoal com carinho', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-  { id: 'pr9', title: 'Registrar no app algo que te fez sentir orgulho', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
-
-  // Tempo para si
-  { id: 'ts1', title: 'Fazer um combinado com os filhos para ter um momento só seu', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts2', title: 'Encontrar alguém que te faz bem', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts3', title: 'Tomar café ou chá sem fazer nada ao mesmo tempo', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts4', title: 'Não fazer nada por um minuto inteiro', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts5', title: 'Escolher algo que VOCÊ quer fazer hoje', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts6', title: 'Deixar uma tarefa para amanhã e respirar', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts7', title: 'Assistir algo sozinha e sem culpa', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts8', title: 'Ficar em silêncio sem precisar produzir', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts9', title: 'Criar um pequeno ritual só seu', description: '', duration: '', completed: false, category: 'Tempo para si' },
-  { id: 'ts10', title: 'Dizer “agora é meu momento” e se permitir', description: '', duration: '', completed: false, category: 'Tempo para si' },
+  { id: 'h1', title: 'Fazer check-in emocional no app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
+  { id: 'h2', title: 'Meditação de 5 minutos', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
+  { id: 'h3', title: 'Beber 2L de água', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
+  { id: 'h4', title: 'Caminhada matinal', description: '', duration: '', completed: false, category: 'Corpo e bem-estar físico' },
+  { id: 'h5', title: 'Organizar a agenda do dia', description: '', duration: '', completed: false, category: 'Organização e vida prática' },
+  { id: 'h6', title: 'Ler 10 páginas de um livro', description: '', duration: '', completed: false, category: 'Tempo para si' },
+  { id: 'h7', title: 'Ligar para uma amiga/apoio', description: '', duration: '', completed: false, category: 'Relações e rede de apoio' },
+  { id: 'h8', title: 'Desenhar ou pintar algo livre', description: '', duration: '', completed: false, category: 'Criatividade e leveza' },
+  { id: 'h9', title: 'Revisar metas pessoais', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
 ];
 
 export const HabitSelection: React.FC = () => {
@@ -305,6 +218,7 @@ export const HabitSelection: React.FC = () => {
         </div>
       )}
 
+      {/* Modais de configuração e criação permanecem os mesmos, mas usando PRESET_CATEGORIES atualizado */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md px-6 animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300">

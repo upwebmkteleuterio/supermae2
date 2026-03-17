@@ -1,0 +1,10 @@
+{
+  "name": "Super Mãe - Cuidado e Rotina",
+  "version": "1.0.1",
+  "description": "Um aplicativo profissional para mães focarem no autocuidado e na gestão emocional, com agendas integradas para filhos atípicos e rotinas personalizadas.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ]
+}
