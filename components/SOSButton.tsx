@@ -1,34 +1,46 @@
 import React, { useState } from 'react';
-import { Bell, X, Shield, Heart, Phone, MessageCircle, ExternalLink, ArrowLeft, Wind, HelpCircle, Users } from 'lucide-react';
+import { Bell, X, Shield, Heart, Phone, MessageCircle, ExternalLink, ArrowLeft, Wind, HelpCircle, Users, Sparkles, BookOpen } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import toast from 'react-hot-toast';
 
 export const SOSButton: React.FC = () => {
   const { toggleBreathing, navigate, state } = useApp();
   const [showModal, setShowModal] = useState(false);
+  const [modalView, setModalView] = useState<'initial' | 'resources'>('initial');
 
   const handleCallCVV = () => {
     window.location.href = 'tel:188';
+    setModalView('resources');
   };
 
   const handleWhatsApp = () => {
-    const contact = state.userProfile?.phone; // Usando o telefone do perfil como fallback ou um campo específico se existir
+    const contact = state.userProfile?.phone;
     const message = encodeURIComponent("Oi, não tô bem agora. Só queria que você soubesse.");
     
-    // Se houver um campo específico para contato de apoio no futuro, usaríamos ele. 
-    // Por enquanto, se não houver lógica de busca de contato de confiança, abrimos o seletor do WhatsApp ou um número padrão se definido.
     if (contact && contact.trim() !== "") {
       const cleanNumber = contact.replace(/\D/g, '');
       window.open(`https://wa.me/${cleanNumber}?text=${message}`, '_blank');
     } else {
-      // Se não tem contato, abre o WhatsApp para escolher um contato (link genérico com mensagem)
       window.open(`https://wa.me/?text=${message}`, '_blank');
     }
+    setModalView('resources');
   };
 
   const closeModals = () => {
     setShowModal(false);
+    setTimeout(() => setModalView('initial'), 300);
   };
+
+  const ResourceItem = ({ icon, label, onClick, color }: { icon: React.ReactNode, label: string, onClick: () => void, color: string }) => (
+    <button 
+      onClick={onClick}
+      className="w-full h-[54px] flex items-center gap-4 px-5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-[14px] font-semibold rounded-2xl transition-all active:scale-95 group border border-slate-100/50"
+    >
+      <div className={`w-10 h-10 rounded-xl ${color} flex items-center justify-center group-hover:shadow-sm transition-all`}>
+        {icon}
+      </div>
+      <span className="flex-1 text-left">{label}</span>
+    </button>
+  );
 
   return (
     <>
@@ -52,79 +64,118 @@ export const SOSButton: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
 
-            <div className="flex flex-col items-center gap-6 w-full">
-              {/* Shield Icon Container */}
-              <div className="relative w-20 h-20 flex items-center justify-center mb-2">
-                <div className="absolute inset-0 bg-purple-50 rounded-full animate-pulse opacity-50"></div>
-                <div className="relative border-2 border-purple-400 rounded-2xl p-4 flex items-center justify-center bg-white shadow-sm">
-                  <Shield className="w-10 h-10 text-purple-400" />
-                  <Heart className="w-5 h-5 text-purple-600 absolute fill-purple-600" />
-                </div>
-              </div>
-
-              {/* Text Content Section */}
-              <div>
-                <h1 className="text-[22px] font-bold text-slate-900 leading-[1.2] mb-[10px]">
-                  Você não está sozinha
-                </h1>
-                <p className="text-[14px] text-slate-500 font-medium leading-[1.6] px-2">
-                  Estou aqui com você. Escolha como quer ser acolhida agora:
-                </p>
-              </div>
-
-              {/* Action Buttons Section (7.5 Função Contato de Apoio) */}
-              <div className="w-full space-y-3 mt-2">
-                
-                {/* Botões Principais solicitados pela cliente */}
-                <div className="flex flex-col gap-3">
-                  <button 
-                    onClick={handleCallCVV}
-                    className="w-full h-[58px] flex items-center justify-center gap-3 bg-red-50 border border-red-100 text-red-600 text-[15px] font-bold rounded-2xl transition-all active:scale-95 shadow-sm"
-                  >
-                    <Phone className="w-5 h-5" />
-                    Ligar 188
-                  </button>
-
-                  <button 
-                    onClick={handleWhatsApp}
-                    className="w-full h-[58px] flex items-center justify-center gap-3 bg-purple-600 text-white text-[14px] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-100"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    Enviar mensagem a alguém de confiança
-                  </button>
+            {modalView === 'initial' ? (
+              <div className="flex flex-col items-center gap-6 w-full">
+                <div className="relative w-20 h-20 flex items-center justify-center mb-2">
+                  <div className="absolute inset-0 bg-purple-50 rounded-full animate-pulse opacity-50"></div>
+                  <div className="relative border-2 border-purple-400 rounded-2xl p-4 flex items-center justify-center bg-white shadow-sm">
+                    <Shield className="w-10 h-10 text-purple-400" />
+                    <Heart className="w-5 h-5 text-purple-600 absolute fill-purple-600" />
+                  </div>
                 </div>
 
-                <div className="h-px bg-slate-100 my-4 w-full" />
+                <div>
+                  <h1 className="text-[22px] font-bold text-slate-900 leading-[1.2] mb-[10px]">
+                    Você não está sozinha
+                  </h1>
+                  <p className="text-[14px] text-slate-500 font-medium leading-[1.6] px-2">
+                    Estou aqui com você. Escolha como quer ser acolhida agora:
+                  </p>
+                </div>
 
-                {/* Outras Opções de Apoio */}
-                <button 
-                  onClick={() => { closeModals(); toggleBreathing(true); }}
-                  className="w-full h-[54px] flex items-center justify-center gap-3 bg-slate-50 text-slate-700 text-[14px] font-semibold rounded-2xl transition-all active:scale-95"
-                >
-                  <Wind className="w-5 h-5 text-blue-400" />
-                  Respirar e me acalmar
-                </button>
+                <div className="w-full space-y-3 mt-2">
+                  <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={handleCallCVV}
+                      className="w-full h-[58px] flex items-center justify-center gap-3 bg-red-50 border border-red-100 text-red-600 text-[15px] font-bold rounded-2xl transition-all active:scale-95 shadow-sm"
+                    >
+                      <Phone className="w-5 h-5" />
+                      Ligar 188
+                    </button>
 
-                <button 
-                  onClick={() => { closeModals(); navigate('sentiment_analysis'); }}
-                  className="w-full h-[54px] flex items-center justify-center gap-3 bg-slate-50 text-slate-700 text-[14px] font-semibold rounded-2xl transition-all active:scale-95"
-                >
-                  <HelpCircle className="w-5 h-5 text-purple-400" />
-                  Falar com sua mentora IA
-                </button>
+                    <button 
+                      onClick={handleWhatsApp}
+                      className="w-full h-[58px] flex items-center justify-center gap-3 bg-purple-600 text-white text-[14px] font-bold rounded-2xl transition-all active:scale-95 shadow-lg shadow-purple-100"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Enviar mensagem a alguém de confiança
+                    </button>
+                  </div>
 
+                  <div className="h-px bg-slate-100 my-4 w-full" />
+
+                  <ResourceItem 
+                    icon={<Wind className="w-5 h-5 text-blue-400" />} 
+                    label="Respirar e me acalmar" 
+                    onClick={() => { closeModals(); toggleBreathing(true); }}
+                    color="bg-white"
+                  />
+
+                  <ResourceItem 
+                    icon={<HelpCircle className="w-5 h-5 text-purple-400" />} 
+                    label="Falar com sua mentora IA" 
+                    onClick={() => { closeModals(); navigate('sentiment_analysis'); }}
+                    color="bg-white"
+                  />
+                </div>
+
+                <div className="mt-2">
+                  <button onClick={closeModals} className="text-slate-400 font-black text-[10px] uppercase tracking-widest py-2 px-4">Voltar</button>
+                </div>
               </div>
+            ) : (
+              /* 7.4 Integração com Recursos - Tela pós-uso */
+              <div className="flex flex-col items-center gap-6 w-full animate-in fade-in duration-500">
+                <div className="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center mb-2">
+                  <Sparkles className="w-8 h-8 text-purple-500 animate-pulse" />
+                </div>
 
-              {/* Footer Link */}
-              <div className="mt-2">
-                <button 
-                  onClick={closeModals}
-                  className="text-slate-400 font-black text-[10px] uppercase tracking-widest py-2 px-4"
-                >
-                  Voltar
-                </button>
+                <div>
+                  <h1 className="text-[20px] font-bold text-slate-900 leading-[1.2] mb-[10px]">
+                    Recursos que podem te ajudar agora:
+                  </h1>
+                  <p className="text-[13px] text-slate-500 font-medium leading-[1.5] px-4">
+                    Continue cuidando de você com essas ferramentas pensadas para o seu bem-estar.
+                  </p>
+                </div>
+
+                <div className="w-full space-y-3 mt-2">
+                  <ResourceItem 
+                    icon={<Wind className="w-5 h-5 text-blue-400" />} 
+                    label="Respiração Guiada" 
+                    onClick={() => { closeModals(); toggleBreathing(true); }}
+                    color="bg-white"
+                  />
+                  <ResourceItem 
+                    icon={<BookOpen className="w-5 h-5 text-emerald-400" />} 
+                    label="Diário Emocional" 
+                    onClick={() => { closeModals(); navigate('mood_selection'); }}
+                    color="bg-white"
+                  />
+                  <ResourceItem 
+                    icon={<Users className="w-5 h-5 text-purple-400" />} 
+                    label="Canal de Desabafo" 
+                    onClick={() => { closeModals(); navigate('channels_list'); }}
+                    color="bg-white"
+                  />
+                  <ResourceItem 
+                    icon={<Sparkles className="w-5 h-5 text-amber-400" />} 
+                    label="Áudio Afetivo por IA" 
+                    onClick={() => { closeModals(); navigate('sentiment_analysis'); }}
+                    color="bg-white"
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <button 
+                    onClick={closeModals} 
+                    className="w-full text-purple-600 font-bold text-sm bg-purple-50 py-3 rounded-full hover:bg-purple-100 transition-colors"
+                  >
+                    Agora estou bem, obrigada!
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </main>
           
         </div>
