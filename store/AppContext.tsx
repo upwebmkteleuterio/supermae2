@@ -146,39 +146,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
     const officialNames = [ROUTINE_TEMPLATES.acolhedora.name, ROUTINE_TEMPLATES.energetica.name];
     
-    // Identificar duplicatas e rotinas inválidas
+    // Filtro agressivo
     const validRoutines = (routinesData || []).filter(r => officialNames.includes(r.name));
-    
-    // Se houver mais de uma rotina com o mesmo nome oficial, removemos as extras
-    const uniqueRoutinesMap = new Map();
-    const duplicatesToRemove: string[] = [];
 
-    validRoutines.forEach(r => {
-        if (uniqueRoutinesMap.has(r.name)) {
-            duplicatesToRemove.push(r.id);
-        } else {
-            uniqueRoutinesMap.set(r.name, r);
-        }
-    });
-
-    if (duplicatesToRemove.length > 0) {
-        console.log('[AppContext] Removendo duplicatas:', duplicatesToRemove);
-        await supabase.from('routines').delete().in('id', duplicatesToRemove);
-        // Recarrega após deletar
-        return fetchRoutines();
-    }
-
-    if (uniqueRoutinesMap.size < 2) {
+    if (validRoutines.length < 2) {
         console.log('[AppContext] Criando rotinas oficiais faltantes...');
         
         // Criar Abraço de Mãe
-        if (!uniqueRoutinesMap.has(officialNames[0])) {
+        if (!validRoutines.some(r => r.name === officialNames[0])) {
             const { data: r } = await supabase.from('routines').insert({
                 user_id: user.id,
                 name: officialNames[0],
                 subtitle: ROUTINE_TEMPLATES.acolhedora.duration,
                 icon: 'Heart',
-                image_url: ''
+                image_url: 'https://images.unsplash.com/photo-1544126592-807daa2b562b?auto=format&fit=crop&q=80&w=400'
             }).select().single();
             if (r) {
                 await supabase.from('habits').insert(ROUTINE_TEMPLATES.acolhedora.tasks.map(t => ({
@@ -192,13 +173,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
 
         // Criar Super Mãe em Movimento
-        if (!uniqueRoutinesMap.has(officialNames[1])) {
+        if (!validRoutines.some(r => r.name === officialNames[1])) {
             const { data: r } = await supabase.from('routines').insert({
                 user_id: user.id,
                 name: officialNames[1],
                 subtitle: ROUTINE_TEMPLATES.energetica.duration,
                 icon: 'Zap',
-                image_url: ''
+                image_url: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=400'
             }).select().single();
             if (r) {
                 await supabase.from('habits').insert(ROUTINE_TEMPLATES.energetica.tasks.map(t => ({
@@ -211,7 +192,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
         }
 
-        // Recarrega para garantir que pegamos os IDs corretos e hábitos
+        // Recarrega
         const { data: fresh } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
         const mapped = (fresh || []).filter(r => officialNames.includes(r.name)).map(r => ({
             id: r.id,
@@ -232,7 +213,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
     }
 
-    const mapped: Routine[] = Array.from(uniqueRoutinesMap.values()).map(r => ({
+    const mapped: Routine[] = validRoutines.map(r => ({
       id: r.id,
       name: r.name,
       subtitle: r.subtitle,
@@ -468,14 +449,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addAgendaItem = async (item: AgendaItem) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description });
+    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participant_ids ?? [], reminder: item.reminder, description: item.description });
     if (error) return false;
     await fetchAgendaItems();
     return true;
   };
 
   const updateAgendaItem = async (item: AgendaItem) => {
-    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
+    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participant_ids ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
     if (error) return false;
     await fetchAgendaItems();
     return true;
@@ -519,13 +500,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addHabitToRoutine = async (routineId: string, habit: Activity) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] });
+    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.custom_days ?? [] });
     if (error) return false;
     await fetchRoutines();
     return true;
   };
   const updateHabitInRoutine = async (routineId: string, habit: Activity) => {
-    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] }).eq('id', habit.id);
+    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.custom_days ?? [] }).eq('id', habit.id);
     if (error) return false;
     await fetchRoutines();
     return true;
