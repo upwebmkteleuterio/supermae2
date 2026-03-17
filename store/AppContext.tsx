@@ -67,8 +67,46 @@ interface AppContextProps {
   applyRoutineTemplate: (templateId: string) => Promise<void>;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v32';
+const STORAGE_KEY = 'super_mae_app_state_v33';
 const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
+
+// Função auxiliar para transformar templates em objetos de Rotina reais
+const getInitialRoutines = (): Routine[] => {
+  return [
+    {
+      id: 'acolhedora',
+      name: ROUTINE_TEMPLATES.acolhedora.name,
+      subtitle: ROUTINE_TEMPLATES.acolhedora.duration,
+      icon: 'Heart',
+      image: 'https://images.unsplash.com/photo-1544126592-807daa2b562b?auto=format&fit=crop&q=80&w=400',
+      habits: ROUTINE_TEMPLATES.acolhedora.tasks.map((t, i) => ({
+        id: `h-aco-${i}`,
+        title: t.title,
+        description: '',
+        category: t.category === 'emocional' ? 'Saúde emocional' : 'Tempo para si',
+        period: 'Manhã',
+        reminder: false,
+        completed: false
+      }))
+    },
+    {
+      id: 'energetica',
+      name: ROUTINE_TEMPLATES.energetica.name,
+      subtitle: ROUTINE_TEMPLATES.energetica.duration,
+      icon: 'Zap',
+      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=400',
+      habits: ROUTINE_TEMPLATES.energetica.tasks.map((t, i) => ({
+        id: `h-ene-${i}`,
+        title: t.title,
+        description: '',
+        category: t.category === 'fisico' ? 'Corpo e bem-estar físico' : 'Organização e vida prática',
+        period: 'Manhã',
+        reminder: false,
+        completed: false
+      }))
+    }
+  ];
+};
 
 const INITIAL_STATE: AppState = {
   isAuthLoading: true,
@@ -86,7 +124,7 @@ const INITIAL_STATE: AppState = {
   momSelfCareAgenda: [],
   manualMomAgenda: [],
   manualChildAgenda: [],
-  routines: [],
+  routines: getInitialRoutines(), // Inicia com as rotinas corretas povoadas
   customHabitTemplates: [],
   customCategories: [],
   habitCompletions: {},
@@ -127,6 +165,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!saved) return INITIAL_STATE;
     try {
       const parsed = JSON.parse(saved);
+      // Garantir que as rotinas não estejam vazias ao carregar do cache
+      if (!parsed.routines || parsed.routines.length === 0 || parsed.routines.some((r: any) => r.name.includes('Rotina A'))) {
+        parsed.routines = getInitialRoutines();
+      }
       return { 
         ...INITIAL_STATE, 
         ...parsed, 
@@ -208,6 +250,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!user) return;
     const { data: routinesData, error } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
     if (error || !routinesData) return;
+    
+    // Se não houver rotinas no banco, usamos as iniciais
+    if (routinesData.length === 0) {
+        setState(prev => ({ ...prev, routines: getInitialRoutines() }));
+        return;
+    }
+
     const mapped: Routine[] = routinesData.map(r => ({
       id: r.id,
       name: r.name,
@@ -278,24 +327,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const template = ROUTINE_TEMPLATES[templateId];
     if (!template) return;
 
-    const itemsToInsert = template.tasks.map(task => ({
+    const itemsToInsert = template.tasks.map((task, index) => ({
       user_id: user.id,
       title: task.title,
       category: task.category,
       date: state.selectedDate,
+      time: `08:${index.toString().padStart(2, '0')}`, // Horários sequenciais sugeridos
       participant_ids: ['mom'],
-      completed: false,
-      owner: 'mãe'
+      completed: false
     }));
 
     const { error } = await supabase.from('agenda_items').insert(itemsToInsert);
     if (error) {
       toast.error("Erro ao aplicar rotina.");
     } else {
-      toast.success(`Rotina "${template.name}" iniciada! Clique para adaptar se desejar.`, {
-        duration: 5000,
-        icon: '✨'
-      });
+      toast.success(`Rotina "${template.name}" iniciada!`, { icon: '✨' });
       await fetchAgendaItems();
     }
   };
