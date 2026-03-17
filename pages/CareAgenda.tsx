@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -9,7 +8,8 @@ import {
   Book, 
   BookOpen, 
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  Heart
 } from 'lucide-react';
 
 export const CareAgenda: React.FC = () => {
@@ -28,11 +28,12 @@ export const CareAgenda: React.FC = () => {
       </div>
 
       <div className="px-6 space-y-4 pb-32">
+        {/* ATUALIZADO: Agora leva para as 8 áreas de cuidado especializado */}
         <AgendaListItem 
-          icon={<CalendarCheck className="w-6 h-6" />} 
-          label="Ver rotinas" 
-          description="Crie seus hábitos e diários e leve uma vida mais leve e organizada"
-          onClick={() => navigate('routines_list')} 
+          icon={<Heart className="w-6 h-6" />} 
+          label="Registrar Rotinas (8 Áreas)" 
+          description="Terapêutico, Sensorial, Comunicacional e mais."
+          onClick={() => navigate('care_instances_list')} 
         />
         <AgendaListItem 
           icon={<Calendar className="w-6 h-6" />} 
@@ -49,7 +50,7 @@ export const CareAgenda: React.FC = () => {
         <AgendaListItem 
           icon={<BookOpen className="w-6 h-6" />} 
           label="Ver agenda integrada" 
-          description="Visão unificada das agendas para evitar conflitos."
+          description="Visão unificada das agendas com análise da IA."
           onClick={() => navigate('integrated_agenda')} 
         />
       </div>
@@ -62,17 +63,11 @@ const AgendaListItem: React.FC<{
   label: string; 
   description: string;
   onClick: () => void;
-  isUnderConstruction?: boolean;
-}> = ({ icon, label, description, onClick, isUnderConstruction }) => (
+}> = ({ icon, label, description, onClick }) => (
   <button 
     onClick={onClick}
-    className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all group relative"
+    className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all group"
   >
-    {isUnderConstruction && (
-      <div className="absolute -top-2 left-8 z-10 bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm border border-white">
-        Em construção
-      </div>
-    )}
     <div className="flex items-center gap-5">
       <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
         {icon}
