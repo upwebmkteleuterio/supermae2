@@ -67,10 +67,9 @@ interface AppContextProps {
   applyRoutineTemplate: (templateId: string) => Promise<void>;
 }
 
-const STORAGE_KEY = 'super_mae_app_state_v33';
+const STORAGE_KEY = 'super_mae_app_state_v34';
 const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
 
-// Função auxiliar para transformar templates em objetos de Rotina reais
 const getInitialRoutines = (): Routine[] => {
   return [
     {
@@ -124,7 +123,7 @@ const INITIAL_STATE: AppState = {
   momSelfCareAgenda: [],
   manualMomAgenda: [],
   manualChildAgenda: [],
-  routines: getInitialRoutines(), // Inicia com as rotinas corretas povoadas
+  routines: getInitialRoutines(),
   customHabitTemplates: [],
   customCategories: [],
   habitCompletions: {},
@@ -165,20 +164,59 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!saved) return INITIAL_STATE;
     try {
       const parsed = JSON.parse(saved);
-      // Garantir que as rotinas não estejam vazias ao carregar do cache
-      if (!parsed.routines || parsed.routines.length === 0 || parsed.routines.some((r: any) => r.name.includes('Rotina A'))) {
-        parsed.routines = getInitialRoutines();
-      }
-      return { 
-        ...INITIAL_STATE, 
-        ...parsed, 
-        isAuthLoading: true, 
-        isProfileLoading: false,
-      };
+      return { ...INITIAL_STATE, ...parsed, isAuthLoading: true, isProfileLoading: false };
     } catch (e) {
       return INITIAL_STATE;
     }
   });
+
+  const fetchRoutines = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { data: routinesData, error } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
+    if (error || !routinesData) return;
+    
+    // Filtrar rotinas "lixo" (nomes antigos ou vazias)
+    const validRoutines = routinesData.filter(r => 
+      r.name !== "Rotina A" && 
+      r.name !== "Rotina Matinal" && 
+      r.name !== "A" &&
+      r.name !== ""
+    );
+
+    // Se o banco tiver rotinas lixo, deletamos elas do banco para limpar
+    const trashIds = routinesData.filter(r => !validRoutines.includes(r)).map(r => r.id);
+    if (trashIds.length > 0) {
+      await supabase.from('routines').delete().in('id', trashIds);
+    }
+
+    // Se não sobrar nenhuma rotina válida no banco, forçamos as iniciais
+    if (validRoutines.length === 0) {
+        setState(prev => ({ ...prev, routines: getInitialRoutines() }));
+        return;
+    }
+
+    const mapped: Routine[] = validRoutines.map(r => ({
+      id: r.id,
+      name: r.name,
+      subtitle: r.subtitle,
+      image: r.image_url,
+      icon: r.icon,
+      habits: (r.habits ?? []).map((h: any) => ({
+        id: h.id,
+        title: h.title,
+        description: h.description,
+        category: h.category,
+        period: h.period,
+        reminder: h.reminder,
+        repetition: h.repetition,
+        customDays: h.custom_days ?? [],
+        completed: false
+      }))
+    }));
+    setState(prev => ({ ...prev, routines: mapped }));
+  }, []);
 
   const fetchMoodLogs = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -245,39 +283,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  const fetchRoutines = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { data: routinesData, error } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
-    if (error || !routinesData) return;
-    
-    // Se não houver rotinas no banco, usamos as iniciais
-    if (routinesData.length === 0) {
-        setState(prev => ({ ...prev, routines: getInitialRoutines() }));
-        return;
-    }
-
-    const mapped: Routine[] = routinesData.map(r => ({
-      id: r.id,
-      name: r.name,
-      subtitle: r.subtitle,
-      image: r.image_url,
-      icon: r.icon,
-      habits: (r.habits ?? []).map((h: any) => ({
-        id: h.id,
-        title: h.title,
-        description: h.description,
-        category: h.category,
-        period: h.period,
-        reminder: h.reminder,
-        repetition: h.repetition,
-        customDays: h.custom_days ?? [],
-        completed: false
-      }))
-    }));
-    setState(prev => ({ ...prev, routines: mapped }));
-  }, []);
-
   const fetchHabitCompletions = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -332,7 +337,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       title: task.title,
       category: task.category,
       date: state.selectedDate,
-      time: `08:${index.toString().padStart(2, '0')}`, // Horários sequenciais sugeridos
+      time: `08:${index.toString().padStart(2, '0')}`,
       participant_ids: ['mom'],
       completed: false
     }));
