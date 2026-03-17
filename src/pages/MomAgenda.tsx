@@ -1,20 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, CheckCircle2, Circle, Clock, MoreVertical } from 'lucide-react';
+import React from 'react';
+import { ChevronLeft, Plus, CheckCircle2, Circle, Clock, MoreVertical, Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 const MomAgenda = () => {
-  const { navigate } = useApp();
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const { navigate, state } = useApp();
 
-  // Mock tasks
-  const tasks = [
-    { id: 1, time: '08:00', title: 'Meditação Matinal', category: 'Bem-estar', completed: true },
-    { id: 2, time: '09:00', title: 'Reunião de Equipe', category: 'Trabalho', completed: false },
-    { id: 3, time: '14:00', title: 'Atividade Física', category: 'Saúde', completed: false },
-    { id: 4, time: '16:00', title: 'Leitura', category: 'Pessoal', completed: false },
-  ];
+  // Filtramos apenas as tarefas manuais da mãe
+  const tasks = state.manualMomAgenda.filter(t => t.date === state.selectedDate);
 
   return (
     <div className="flex flex-col h-full bg-[#FFF5F5] pb-20 overflow-y-auto">
@@ -30,47 +24,57 @@ const MomAgenda = () => {
           </button>
         </div>
 
-        {/* Calendar Strip (Simplified) */}
-        <div className="flex justify-between items-center bg-rose-50 p-3 rounded-2xl">
-          <button className="text-rose-400"><ChevronLeft size={20} /></button>
-          <div className="text-center">
-            <p className="text-xs font-bold text-rose-400 uppercase">Março 2024</p>
-            <p className="text-lg font-bold text-rose-900">Terça, 19</p>
-          </div>
-          <button className="text-rose-400"><ChevronRight size={20} /></button>
+        <div className="text-center bg-rose-50 p-3 rounded-2xl border border-rose-100">
+          <p className="text-xs font-bold text-rose-400 uppercase tracking-tighter">Hoje</p>
+          <p className="text-lg font-bold text-rose-900">Terça, 19 de Março</p>
         </div>
       </div>
 
-      {/* Task List */}
-      <div className="px-6 flex-1">
-        <div className="flex items-center justify-between mb-4">
+      <div className="px-6 space-y-4">
+        <div className="bg-white rounded-2xl p-4 border border-rose-100 flex items-start gap-3 shadow-sm">
+          <Info className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <p className="text-rose-500 text-[10px] leading-relaxed">
+            Aqui você gerencia seus compromissos e lembretes manuais.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between mt-6">
           <h2 className="text-lg font-bold text-rose-900">Tarefas de Hoje</h2>
-          <button className="bg-rose-500 text-white p-1 rounded-lg">
+          <button className="bg-rose-500 text-white p-1 rounded-lg shadow-sm active:scale-95 transition-transform">
             <Plus size={20} />
           </button>
         </div>
 
-        <div className="space-y-4">
-          {tasks.map((task) => (
-            <div key={task.id} className={`bg-white p-4 rounded-2xl border ${task.completed ? 'border-green-100 bg-green-50/30' : 'border-rose-100'} shadow-sm flex items-center gap-4`}>
-              <button className={`${task.completed ? 'text-green-500' : 'text-rose-200'}`}>
-                {task.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
-              </button>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-2 text-xs font-medium text-rose-400 mb-1">
-                  <Clock size={12} />
-                  <span>{task.time}</span>
-                  <span className="mx-1">•</span>
-                  <span>{task.category}</span>
+        {tasks.length > 0 ? (
+          <div className="space-y-3">
+            {tasks.map((task) => (
+              <div key={task.id} className={`bg-white p-4 rounded-2xl border ${task.completed ? 'border-green-100 bg-green-50/20' : 'border-rose-100'} shadow-sm flex items-center gap-4`}>
+                <button className={`${task.completed ? 'text-green-500' : 'text-rose-200'}`}>
+                  {task.completed ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+                </button>
+                
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-rose-400 mb-0.5 uppercase tracking-wider">
+                    <Clock size={10} />
+                    <span>{task.time}</span>
+                    <span className="mx-1">•</span>
+                    <span>{task.category}</span>
+                  </div>
+                  <h3 className={`font-bold text-sm ${task.completed ? 'text-gray-400 line-through' : 'text-rose-900'}`}>
+                    {task.title}
+                  </h3>
                 </div>
-                <h3 className={`font-bold ${task.completed ? 'text-gray-400 line-through' : 'text-rose-900'}`}>
-                  {task.title}
-                </h3>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10">
+            <div className="bg-rose-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Plus className="text-rose-300" size={32} />
             </div>
-          ))}
-        </div>
+            <p className="text-rose-400 text-sm font-medium">Nenhuma tarefa manual para hoje.</p>
+          </div>
+        )}
       </div>
     </div>
   );
