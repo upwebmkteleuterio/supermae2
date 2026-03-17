@@ -6,7 +6,7 @@ import { useApp } from '../store/AppContext';
 import { CalendarHeader } from '../components/CalendarHeader';
 import { TaskModal } from '../components/TaskModal';
 import { AgendaList } from '../components/AgendaList';
-import { Plus, Info } from 'lucide-react';
+import { Plus, Info, CalendarDays } from 'lucide-react';
 import { AgendaItem } from '../types';
 import { Toaster } from 'react-hot-toast';
 
@@ -15,12 +15,9 @@ export const MomAgenda: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<AgendaItem | undefined>(undefined);
 
-  // Filtramos apenas as tarefas manuais que NÃO são as rotinas automáticas de templates
+  // Mostra todas as tarefas salvas no banco para o dia selecionado
   const filteredTasks = state.manualMomAgenda
-    .filter(t => {
-      const isTemplateTask = t.title.includes('Abraço de Mãe') || t.title.includes('Super Mãe');
-      return t.date === state.selectedDate && !isTemplateTask;
-    })
+    .filter(t => t.date === state.selectedDate)
     .sort((a, b) => a.time.localeCompare(b.time));
 
   return (
@@ -31,15 +28,15 @@ export const MomAgenda: React.FC = () => {
 
         <div className="bg-white rounded-[2rem] p-6 mb-8 border border-slate-50 flex items-start gap-4 shadow-sm mt-6">
           <div className="w-10 h-10 bg-indigo-50 text-indigo-400 rounded-xl flex items-center justify-center shrink-0">
-             <Info size={20} />
+             <CalendarDays size={20} />
           </div>
           <p className="text-slate-500 text-[11px] leading-relaxed font-medium">
-            Aqui você gerencia suas tarefas manuais. Para rotinas completas, escolha um modelo no menu "Cuidados".
+            Visualize e conclua seus compromissos. Para adicionar rotinas completas, use o menu "Cuidados".
           </p>
         </div>
 
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-slate-800">Suas Tarefas</h3>
+          <h3 className="font-bold text-slate-800 uppercase text-[10px] tracking-widest ml-2">Tarefas de Hoje</h3>
           <button 
             onClick={() => { setEditingTask(undefined); setShowModal(true); }}
             className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform"
@@ -56,8 +53,8 @@ export const MomAgenda: React.FC = () => {
             owner="mãe"
           />
         ) : (
-          <div className="text-center py-12 bg-white rounded-[2.5rem] border border-dashed border-slate-200">
-            <p className="text-slate-300 text-sm font-medium">Nenhuma tarefa manual para hoje.</p>
+          <div className="text-center py-16 bg-white/50 rounded-[2.5rem] border border-dashed border-slate-200">
+            <p className="text-slate-400 text-sm font-medium">Nenhum compromisso para este dia.</p>
           </div>
         )}
       </div>
