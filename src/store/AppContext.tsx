@@ -65,9 +65,10 @@ interface AppContextProps {
   fetchNotifications: () => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
   applyRoutineTemplate: (templateId: string) => Promise<void>;
+  repeatPreviousDayRoutine: () => Promise<void>;
 }
 
-const STORAGE_KEY = 'super_mae_state_v100_final'; // Mudei radicalmente a chave
+const STORAGE_KEY = 'super_mae_state_v100_final';
 const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
 
 const INITIAL_STATE: AppState = {
@@ -86,7 +87,7 @@ const INITIAL_STATE: AppState = {
   momSelfCareAgenda: [],
   manualMomAgenda: [],
   manualChildAgenda: [],
-  routines: [], // Começa vazio e o fetchRoutines povoa
+  routines: [],
   customHabitTemplates: [],
   customCategories: [],
   habitCompletions: {},
@@ -123,7 +124,6 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(() => {
-    // Tenta limpar caches antigos
     Object.keys(localStorage).forEach(key => {
         if (key.startsWith('super_mae_app_state')) localStorage.removeItem(key);
     });
@@ -141,111 +141,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     
-    console.log('[AppContext] FetchRoutines iniciado');
     const { data: routinesData } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
-    
     const officialNames = [ROUTINE_TEMPLATES.acolhedora.name, ROUTINE_TEMPLATES.energetica.name];
-    
-    // Identificar duplicatas e rotinas inválidas
-    const validRoutines = (routinesData || []).filter(r => officialNames.includes(r.name));
-    
-    // Se houver mais de uma rotina com o mesmo nome oficial, removemos as extras
     const uniqueRoutinesMap = new Map();
     const duplicatesToRemove: string[] = [];
 
-    validRoutines.forEach(r => {
-        if (uniqueRoutinesMap.has(r.name)) {
-            duplicatesToRemove.push(r.id);
-        } else {
-            uniqueRoutinesMap.set(r.name, r);
-        }
+    (routinesData || []).filter(r => officialNames.includes(r.name)).forEach(r => {
+        if (uniqueRoutinesMap.has(r.name)) duplicatesToRemove.push(r.id);
+        else uniqueRoutinesMap.set(r.name, r);
     });
 
     if (duplicatesToRemove.length > 0) {
-        console.log('[AppContext] Removendo duplicatas:', duplicatesToRemove);
         await supabase.from('routines').delete().in('id', duplicatesToRemove);
-        // Recarrega após deletar
         return fetchRoutines();
     }
 
     if (uniqueRoutinesMap.size < 2) {
-        console.log('[AppContext] Criando rotinas oficiais faltantes...');
-        
-        // Criar Abraço de Mãe
         if (!uniqueRoutinesMap.has(officialNames[0])) {
-            const { data: r } = await supabase.from('routines').insert({
-                user_id: user.id,
-                name: officialNames[0],
-                subtitle: ROUTINE_TEMPLATES.acolhedora.duration,
-                icon: 'Heart',
-                image_url: ''
-            }).select().single();
-            if (r) {
-                await supabase.from('habits').insert(ROUTINE_TEMPLATES.acolhedora.tasks.map(t => ({
-                    routine_id: r.id,
-                    user_id: user.id,
-                    title: t.title,
-                    category: 'Saúde emocional',
-                    period: 'A qualquer momento'
-                })));
-            }
+            const { data: r } = await supabase.from('routines').insert({ user_id: user.id, name: officialNames[0], subtitle: ROUTINE_TEMPLATES.acolhedora.duration, icon: 'Heart', image_url: '' }).select().single();
+            if (r) await supabase.from('habits').insert(ROUTINE_TEMPLATES.acolhedora.tasks.map(t => ({ routine_id: r.id, user_id: user.id, title: t.title, category: 'Saúde emocional', period: 'A qualquer momento' })));
         }
-
-        // Criar Super Mãe em Movimento
         if (!uniqueRoutinesMap.has(officialNames[1])) {
-            const { data: r } = await supabase.from('routines').insert({
-                user_id: user.id,
-                name: officialNames[1],
-                subtitle: ROUTINE_TEMPLATES.energetica.duration,
-                icon: 'Zap',
-                image_url: ''
-            }).select().single();
-            if (r) {
-                await supabase.from('habits').insert(ROUTINE_TEMPLATES.energetica.tasks.map(t => ({
-                    routine_id: r.id,
-                    user_id: user.id,
-                    title: t.title,
-                    category: 'Corpo e bem-estar físico',
-                    period: 'Manhã'
-                })));
-            }
+            const { data: r } = await supabase.from('routines').insert({ user_id: user.id, name: officialNames[1], subtitle: ROUTINE_TEMPLATES.energetica.duration, icon: 'Zap', image_url: '' }).select().single();
+            if (r) await supabase.from('habits').insert(ROUTINE_TEMPLATES.energetica.tasks.map(t => ({ routine_id: r.id, user_id: user.id, title: t.title, category: 'Corpo e bem-estar físico', period: 'Manhã' })));
         }
-
-        // Recarrega para garantir que pegamos os IDs corretos e hábitos
         const { data: fresh } = await supabase.from('routines').select(`*, habits(*)`).eq('user_id', user.id);
         const mapped = (fresh || []).filter(r => officialNames.includes(r.name)).map(r => ({
-            id: r.id,
-            name: r.name,
-            subtitle: r.subtitle,
-            image: r.image_url,
-            icon: r.icon,
-            habits: (r.habits ?? []).map((h: any) => ({
-              id: h.id,
-              title: h.title,
-              description: h.description,
-              category: h.category,
-              period: h.period,
-              completed: false
-            }))
+            id: r.id, name: r.name, subtitle: r.subtitle, image: r.image_url, icon: r.icon,
+            habits: (r.habits ?? []).map((h: any) => ({ id: h.id, title: h.title, description: h.description, category: h.category, period: h.period, completed: false }))
         }));
         setState(prev => ({ ...prev, routines: mapped }));
         return;
     }
 
     const mapped: Routine[] = Array.from(uniqueRoutinesMap.values()).map(r => ({
-      id: r.id,
-      name: r.name,
-      subtitle: r.subtitle,
-      image: r.image_url,
-      icon: r.icon,
-      habits: (r.habits ?? []).map((h: any) => ({
-        id: h.id,
-        title: h.title,
-        description: h.description,
-        category: h.category,
-        period: h.period,
-        completed: false
-      }))
+      id: r.id, name: r.name, subtitle: r.subtitle, image: r.image_url, icon: r.icon,
+      habits: (r.habits ?? []).map((h: any) => ({ id: h.id, title: h.title, description: h.description, category: h.category, period: h.period, completed: false }))
     }));
     setState(prev => ({ ...prev, routines: mapped }));
   }, []);
@@ -275,13 +206,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data } = await supabase.from('children').select('*').eq('parent_id', user.id);
     if (data) {
       setState(prev => ({ ...prev, children: data.map(c => ({
-        id: c.id,
-        name: c.name,
-        birthDate: c.birth_date,
+        id: c.id, name: c.name, birthDate: c.birth_date,
         age: c.birth_date ? `${new Date().getFullYear() - new Date(c.birth_date).getFullYear()} anos` : '?',
-        avatar: c.avatar_url || '',
-        hasDiagnosis: c.has_diagnosis,
-        diagnosis_status: c.diagnosis_status
+        avatar: c.avatar_url || '', hasDiagnosis: c.has_diagnosis, diagnosis_status: c.diagnosis_status
       })) }));
     }
   }, []);
@@ -296,15 +223,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       data.forEach(item => {
         const pIds = item.participant_ids ?? [];
         const base = { 
-          id: item.id, 
-          time: (item.time || '00:00').substring(0, 5), 
-          title: item.title, 
-          date: item.date, 
-          category: item.category, 
-          participantIds: pIds, 
-          description: item.description, 
-          completed: item.completed, 
-          reminder: item.reminder 
+          id: item.id, time: (item.time || '00:00').substring(0, 5), title: item.title, date: item.date, category: item.category, 
+          participantIds: pIds, description: item.description, completed: item.completed, reminder: item.reminder 
         };
         if (pIds.includes('mom')) momItems.push({ ...base, owner: 'mãe' } as AgendaItem);
         pIds.filter((id: string) => id !== 'mom').forEach((cid: string) => {
@@ -333,20 +253,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data } = await supabase.from('local_support_posts').select('*').eq('status', 'open').order('date_time', { ascending: true });
     if (data) {
       setState(prev => ({ ...prev, localSupportPosts: data.map(p => ({
-        id: p.id,
-        userId: p.user_id,
-        userName: p.user_name,
-        userAvatar: p.user_avatar,
-        type: p.type,
-        category: p.category,
-        locationCity: p.location_city,
-        locationNeighborhood: p.location_neighborhood,
-        destination: p.destination,
-        dateTime: p.date_time,
-        status: p.status,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        createdAt: p.created_at
+        id: p.id, userId: p.user_id, userName: p.user_name, userAvatar: p.user_avatar, type: p.type, category: p.category, 
+        locationCity: p.location_city, locationNeighborhood: p.location_neighborhood, destination: p.destination, 
+        dateTime: p.date_time, status: p.status, latitude: p.latitude, longitude: p.longitude, createdAt: p.created_at
       })) }));
     }
   }, []);
@@ -357,6 +266,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data } = await supabase.from('app_notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
     if (data) setState(prev => ({ ...prev, notifications: data ?? [] }));
   }, []);
+
+  const repeatPreviousDayRoutine = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const today = state.selectedDate;
+    const yesterdayDate = new Date(today + 'T12:00:00');
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toLocaleDateString('sv-SE');
+
+    const { data: prevItems } = await supabase.from('agenda_items').select('*').eq('user_id', user.id).eq('date', yesterdayStr);
+    
+    if (!prevItems || prevItems.length === 0) {
+        toast.error("Nenhuma tarefa encontrada no dia anterior.");
+        return;
+    }
+
+    const itemsToInsert = prevItems.map(item => ({
+        user_id: user.id,
+        title: item.title,
+        category: item.category,
+        date: today,
+        time: item.time,
+        participant_ids: item.participant_ids,
+        completed: false,
+        description: item.description,
+        reminder: item.reminder
+    }));
+
+    const { error } = await supabase.from('agenda_items').insert(itemsToInsert);
+    if (error) {
+        toast.error("Erro ao repetir rotina.");
+    } else {
+        toast.success("Rotina do dia anterior repetida!", { icon: '🔄' });
+        await fetchAgendaItems();
+    }
+  };
 
   const applyRoutineTemplate = async (templateId: string) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -394,25 +340,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           selectedVoice: profile.selected_voice || prev.selectedVoice,
           userProfile: {
             ...prev.userProfile,
-            name: profile.name || prev.userProfile.name,
-            email: profile.email || prev.userProfile.email,
-            phone: profile.phone || prev.userProfile.phone,
-            state: profile.state || prev.userProfile.state,
-            city: profile.city || prev.userProfile.city,
-            avatar: profile.avatar_url || prev.userProfile.avatar,
+            name: profile.name || prev.userProfile.name, email: profile.email || prev.userProfile.email,
+            phone: profile.phone || prev.userProfile.phone, state: profile.state || prev.userProfile.state,
+            city: profile.city || prev.userProfile.city, avatar: profile.avatar_url || prev.userProfile.avatar,
             welcomingGoal: profile.welcoming_goal || prev.userProfile.welcomingGoal,
-            appInterests: profile.app_interests ?? [],
-            hasSeenWelcomeModal: profile.has_seen_welcome_modal || false,
+            appInterests: profile.app_interests ?? [], hasSeenWelcomeModal: profile.has_seen_welcome_modal || false,
             onboardingCompleted: !!profile.welcoming_goal
           }
         }));
         await Promise.all([fetchMoodLogs(), fetchChildren(), fetchAgendaItems(), fetchRoutines(), fetchHabitCompletions(), fetchLocalSupportPosts(), fetchNotifications()]);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setState(prev => ({ ...prev, isProfileLoading: false }));
-    }
+    } catch (e) { console.error(e); } finally { setState(prev => ({ ...prev, isProfileLoading: false })); }
   }, [fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, fetchLocalSupportPosts, fetchNotifications]);
 
   useEffect(() => {
@@ -468,14 +406,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addAgendaItem = async (item: AgendaItem) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description });
+    const { error } = await supabase.from('agenda_items').insert({ user_id: user.id, title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participant_ids ?? [], reminder: item.reminder, description: item.description });
     if (error) return false;
     await fetchAgendaItems();
     return true;
   };
 
   const updateAgendaItem = async (item: AgendaItem) => {
-    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participantIds ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
+    const { error } = await supabase.from('agenda_items').update({ title: item.title, time: item.time, date: item.date, category: item.category, participant_ids: item.participant_ids ?? [], reminder: item.reminder, description: item.description, completed: item.completed }).eq('id', item.id);
     if (error) return false;
     await fetchAgendaItems();
     return true;
@@ -519,13 +457,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addHabitToRoutine = async (routineId: string, habit: Activity) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
-    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] });
+    const { error } = await supabase.from('habits').insert({ routine_id: routineId, user_id: user.id, title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.custom_days ?? [] });
     if (error) return false;
     await fetchRoutines();
     return true;
   };
   const updateHabitInRoutine = async (routineId: string, habit: Activity) => {
-    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.customDays ?? [] }).eq('id', habit.id);
+    const { error } = await supabase.from('habits').update({ title: habit.title, description: habit.description, category: habit.category, period: habit.period, reminder: habit.reminder, repetition: habit.repetition, custom_days: habit.custom_days ?? [] }).eq('id', habit.id);
     if (error) return false;
     await fetchRoutines();
     return true;
@@ -676,7 +614,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild, toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion, updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine, setDailyMission, completeDailyMission, addReward, resetState, addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, uploadMoodPhoto, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote, setTempMoodPhotoUrl, setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount, fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead, applyRoutineTemplate
+      state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild, toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion, updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine, setDailyMission, completeDailyMission, addReward, resetState, addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, uploadMoodPhoto, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote, setTempMoodPhotoUrl, setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount, fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead, applyRoutineTemplate, repeatPreviousDayRoutine
     }}>
       {children}
     </AppContext.Provider>
