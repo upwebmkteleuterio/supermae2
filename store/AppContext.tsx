@@ -2,6 +2,13 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { AppState, ViewState, MoodType, Child, Activity, AgendaItem, DailyMission, ChatMessage, UserProfile, Routine, CareTask, LocalSupportPost, AppNotification } from '../types';
 import { supabase } from '../lib/supabase';
 
+// Helper para encontrar hábitos pelos IDs dos templates
+const findHabitById = (id: string): Activity | undefined => {
+  // Esta lista deve ser sincronizada com os IDs em HabitSelection.tsx se necessário
+  // Por simplicidade, o sistema já usa esses IDs na lógica de seleção
+  return undefined; 
+};
+
 interface AppContextProps {
   state: AppState;
   navigate: (page: ViewState) => void;
@@ -18,6 +25,7 @@ interface AppContextProps {
   updateMomSelfCare: (activities: Activity[]) => void;
   addRoutine: (routine: Routine) => Promise<boolean>;
   deleteRoutine: (id: string) => Promise<boolean>;
+  updateRoutine: (id: string, updates: Partial<Routine>) => Promise<boolean>;
   selectRoutine: (id: string | null) => void;
   addHabitToRoutine: (routineId: string, habit: Activity) => Promise<boolean>;
   updateHabitInRoutine: (routineId: string, habit: Activity) => Promise<boolean>;
@@ -64,6 +72,8 @@ interface AppContextProps {
   markPostAsCompleted: (postId: string) => Promise<void>;
   fetchNotifications: () => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
+  
+  installTemplate: (template: any) => Promise<boolean>;
 }
 
 const STORAGE_KEY = 'super_mae_app_state_v32';
@@ -172,7 +182,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         age: c.birth_date ? `${new Date().getFullYear() - new Date(c.birth_date).getFullYear()} anos` : '?',
         avatar: c.avatar_url || '',
         hasDiagnosis: c.has_diagnosis,
-        diagnosisStatus: c.diagnosis_status
+        diagnosis_status: c.diagnosis_status
       })) }));
     }
   }, []);
@@ -470,6 +480,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
+  const updateRoutine = async (id: string, updates: Partial<Routine>) => {
+    const { error } = await supabase.from('routines').update({ 
+      name: updates.name,
+      subtitle: updates.subtitle,
+      icon: updates.icon,
+      image_url: updates.image
+    }).eq('id', id);
+    if (error) return false;
+    await fetchRoutines();
+    return true;
+  };
+
   const selectRoutine = (id: string | null) => setState(prev => ({ ...prev, selectedRoutineId: id }));
 
   const addHabitToRoutine = async (routineId: string, habit: Activity) => {
@@ -701,6 +723,53 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await fetchNotifications();
   };
 
+  const installTemplate = async (template: any): Promise<boolean> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    // 1. Criar a Rotina
+    const { data: routineData, error: rError } = await supabase.from('routines').insert({
+      user_id: user.id,
+      name: template.name,
+      subtitle: template.subtitle,
+      icon: template.icon
+    }).select().single();
+
+    if (rError || !routineData) return false;
+
+    // 2. Mapear hábitos padrões (Simulação dos títulos baseada nos IDs fornecidos)
+    // No mundo real, buscaríamos no banco, aqui vamos inserir os títulos padronizados
+    const titlesMap: Record<string, string> = {
+      'se3': 'Respirar fundo três vezes com presença',
+      'se1': 'Fazer check-in emocional no app',
+      'se2': 'Escolher frase ou áudio de acolhimento',
+      'ts3': 'Ritual de carinho (chá ou pausa)',
+      'cl6': 'Registrar gratidão ou pequena alegria',
+      'se11': 'Intenção de gentileza consigo mesma',
+      'cl1': 'Playlist animada ou áudio motivacional',
+      'cl4': 'Exercício físico leve (dança ou alongamento)',
+      'ea5': 'Check-in de intenção',
+      'ov2': 'Planejar 3 tarefas simples',
+      'cb6': 'Ritual rápido de autocuidado',
+      'pr5': 'Mensagem de força para o dia'
+    };
+
+    const habitsToInsert = template.habitIds.map((id: string) => ({
+      routine_id: routineData.id,
+      user_id: user.id,
+      title: titlesMap[id] || 'Atividade da Rotina',
+      period: 'A qualquer momento',
+      repetition: 'Todos os dias'
+    }));
+
+    const { error: hError } = await supabase.from('habits').insert(habitsToInsert);
+    
+    if (hError) return false;
+    
+    await fetchRoutines();
+    return true;
+  };
+
   const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
   const setTempMoodNote = (note: string) => setState(prev => ({ ...prev, tempMoodNote: note }));
   const setTempMoodPhotoUrl = (url: string) => setState(prev => ({ ...prev, tempMoodPhotoUrl: url }));
@@ -725,11 +794,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     <AppContext.Provider value={{ 
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild,
       toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion,
-      updateMomSelfCare, addRoutine, deleteRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
+      updateMomSelfCare, addRoutine, deleteRoutine, updateRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine,
       setDailyMission, completeDailyMission, addReward, resetState,
       addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, uploadMoodPhoto, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote, setTempMoodPhotoUrl,
       setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount,
-      fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead
+      fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead,
+      installTemplate
     }}>
       {children}
     </AppContext.Provider>
