@@ -1,3 +1,4 @@
+Criar Novo -> Sugestões">
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -67,7 +68,44 @@ export const RoutinesList: React.FC = () => {
 
       <div className="px-6 pb-32">
         
-        {/* Seção 1: Templates Prontos */}
+        {/* Seção 1: Listagem das Ativas (Agora no Topo) */}
+        <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2">Suas rotinas ativas</h2>
+        <div className="space-y-4 mb-8">
+          {loading && state.routines.length === 0 ? (
+            [1,2].map(i => <div key={i} className="w-full h-28 bg-slate-50 animate-pulse rounded-[2rem]"></div>)
+          ) : state.routines.length === 0 ? (
+            <div className="py-10 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem]">
+              <p className="text-slate-400 text-sm font-medium">Você ainda não criou rotinas.</p>
+            </div>
+          ) : (
+            state.routines.map((routine) => (
+              <RoutineCard 
+                key={routine.id} 
+                routine={routine} 
+                onClick={handleOpenRoutine}
+                onEdit={(r) => { setEditingRoutine(r); setNewRoutineName(r.name); }}
+                onDelete={(id) => setDeletingId(id)}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Seção 2: Criar Manual (No Meio) */}
+        <button 
+          onClick={() => setShowModal(true)}
+          disabled={loading}
+          className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all mb-10 group relative disabled:opacity-50"
+        >
+          <div className="flex items-center gap-5 relative">
+            <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform relative z-10">
+              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+            </div>
+            <span className="text-slate-700 font-bold text-sm">Criar rotina do zero</span>
+          </div>
+          <ChevronRight className="w-6 h-6 text-purple-300" />
+        </button>
+
+        {/* Seção 3: Sugestões Especiais (Agora no Final) */}
         <div className="mb-10">
           <h2 className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-4 ml-2">Sugestões Especiais</h2>
           <div className="space-y-4">
@@ -106,44 +144,6 @@ export const RoutinesList: React.FC = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* Seção 2: Criar Manual */}
-        <button 
-          onClick={() => setShowModal(true)}
-          disabled={loading}
-          className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all mb-10 group relative disabled:opacity-50"
-        >
-          <div className="flex items-center gap-5 relative">
-            <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform relative z-10">
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
-            </div>
-            <span className="text-slate-700 font-bold text-sm">Criar rotina do zero</span>
-          </div>
-          <ChevronRight className="w-6 h-6 text-purple-300" />
-        </button>
-
-        {/* Seção 3: Listagem das Ativas */}
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2">Suas rotinas ativas</h2>
-        
-        <div className="space-y-4">
-          {loading && state.routines.length === 0 ? (
-            [1,2,3].map(i => <div key={i} className="w-full h-28 bg-slate-50 animate-pulse rounded-[2rem]"></div>)
-          ) : state.routines.length === 0 ? (
-            <div className="py-10 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem]">
-              <p className="text-slate-400 text-sm font-medium">Você ainda não criou rotinas.</p>
-            </div>
-          ) : (
-            state.routines.map((routine) => (
-              <RoutineCard 
-                key={routine.id} 
-                routine={routine} 
-                onClick={handleOpenRoutine}
-                onEdit={(r) => { setEditingRoutine(r); setNewRoutineName(r.name); }}
-                onDelete={(id) => setDeletingId(id)}
-              />
-            ))
-          )}
         </div>
       </div>
 
