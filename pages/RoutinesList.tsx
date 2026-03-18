@@ -1,9 +1,8 @@
-Criar Novo -> Sugestões">
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
-import { Plus, ChevronRight, ArrowLeft, Loader2, Sparkles, Check, X } from 'lucide-react';
+import { Plus, ChevronRight, ArrowLeft, Loader2, Check, X } from 'lucide-react';
 import { RoutineCard } from '../components/RoutineCard';
 import { CreateRoutineModal } from '../components/CreateRoutineModal';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -68,7 +67,7 @@ export const RoutinesList: React.FC = () => {
 
       <div className="px-6 pb-32">
         
-        {/* Seção 1: Listagem das Ativas (Agora no Topo) */}
+        {/* Seção 1: Listagem das Ativas */}
         <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2">Suas rotinas ativas</h2>
         <div className="space-y-4 mb-8">
           {loading && state.routines.length === 0 ? (
@@ -90,7 +89,7 @@ export const RoutinesList: React.FC = () => {
           )}
         </div>
 
-        {/* Seção 2: Criar Manual (No Meio) */}
+        {/* Seção 2: Criar Manual */}
         <button 
           onClick={() => setShowModal(true)}
           disabled={loading}
@@ -105,7 +104,7 @@ export const RoutinesList: React.FC = () => {
           <ChevronRight className="w-6 h-6 text-purple-300" />
         </button>
 
-        {/* Seção 3: Sugestões Especiais (Agora no Final) */}
+        {/* Seção 3: Sugestões Especiais */}
         <div className="mb-10">
           <h2 className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-4 ml-2">Sugestões Especiais</h2>
           <div className="space-y-4">
