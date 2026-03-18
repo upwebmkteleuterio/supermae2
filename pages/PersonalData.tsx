@@ -151,12 +151,19 @@ export const PersonalData: React.FC = () => {
               isEditing={isEditing}
               onChange={val => setFormData(prev => ({ ...prev, email: val }))}
             />
-            <EditItem 
-              icon={<Phone className="w-5 h-5" />} 
-              label="Telefone" 
-              value={formData.phone} 
+            <EditItem
+              icon={<Phone className="w-5 h-5" />}
+              label="Telefone"
+              value={formData.phone}
               isEditing={isEditing}
               onChange={val => setFormData(prev => ({ ...prev, phone: val }))}
+            />
+            <EditItem
+              icon={<Save className="w-5 h-5" />}
+              label="Contato de Apoio"
+              value={formData.support_contact || ''}
+              isEditing={isEditing}
+              onChange={val => setFormData(prev => ({ ...prev, support_contact: val }))}
             />
           </div>
         </div>

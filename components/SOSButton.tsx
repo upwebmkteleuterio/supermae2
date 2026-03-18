@@ -41,7 +41,7 @@ export const SOSButton: React.FC = () => {
   };
 
   const handleWhatsApp = () => {
-    const contact = state.userProfile?.phone;
+    const contact = state.userProfile?.support_contact;
     const message = encodeURIComponent("Oi, não tô bem agora. Só queria que você soubesse.");
     if (contact && contact.trim() !== "") {
       const cleanNumber = contact.replace(/\D/g, '');

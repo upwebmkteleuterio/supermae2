@@ -56,6 +56,7 @@ export interface UserProfile {
   appInterests?: string[];
   onboardingCompleted?: boolean;
   hasSeenWelcomeModal?: boolean;
+  support_contact?: string;
 }
 
 export interface Activity {

@@ -119,7 +119,8 @@ const INITIAL_STATE: AppState = {
     city: '',
     avatar: 'https://images.icon-icons.com/2859/PNG/512/avatar_face_girl_female_woman_profile_smiley_happy_people_icon_181665.png',
     onboardingCompleted: false,
-    hasSeenWelcomeModal: false
+    hasSeenWelcomeModal: false,
+    support_contact: ''
   },
   selectedCareCategoryId: null,
   selectedCareIntensity: null,
@@ -317,6 +318,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             welcomingGoal: profile.welcoming_goal || prev.userProfile.welcomingGoal,
             appInterests: profile.app_interests ?? [],
             hasSeenWelcomeModal: profile.has_seen_welcome_modal || false,
+            support_contact: profile.support_contact || '',
             onboardingCompleted: !!profile.welcoming_goal
           }
         }));
@@ -585,6 +587,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (profile.welcomingGoal !== undefined) updateData.welcoming_goal = profile.welcomingGoal;
     if (profile.appInterests !== undefined) updateData.app_interests = profile.appInterests;
     if (profile.phone !== undefined) updateData.phone = profile.phone;
+    if (profile.support_contact !== undefined) updateData.support_contact = profile.support_contact;
     if (profile.hasSeenWelcomeModal !== undefined) updateData.has_seen_welcome_modal = profile.hasSeenWelcomeModal;
     const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id);
     if (error) return false;
