@@ -12,6 +12,7 @@ const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const REPETITION_OPTIONS = ["Todos os dias", "Segunda a sexta", "Sábado e Domingo", "Personalizar"];
 
 const CATEGORY_COLORS: Record<string, string> = {
+  // Mãe
   "Saúde emocional": "bg-pink-50/50 border-pink-100",
   "Corpo e bem-estar físico": "bg-green-50/50 border-green-100",
   "Relações e rede de apoio": "bg-indigo-50/50 border-indigo-100",
@@ -19,7 +20,16 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Criatividade e leveza": "bg-yellow-50/50 border-yellow-100",
   "Espiritualidade e auto conexão": "bg-blue-50/50 border-blue-100",
   "Propósito e realização pessoal": "bg-purple-50/50 border-purple-100",
-  "Tempo para si": "bg-rose-50/50 border-rose-100"
+  "Tempo para si": "bg-rose-50/50 border-rose-100",
+  // Filho
+  "Cuidado Terapêutico": "bg-blue-50/50 border-blue-100",
+  "Cuidado Sensorial": "bg-purple-50/50 border-purple-100",
+  "Cuidado Comunicacional": "bg-teal-50/50 border-teal-100",
+  "Cuidado Lúdico e Afetivo": "bg-pink-50/50 border-pink-100",
+  "Cuidado Médico e Funcional": "bg-amber-50/50 border-amber-100",
+  "Cuidado de Autonomia e Rotina": "bg-emerald-50/50 border-emerald-100",
+  "Cuidado Relacional com a Mãe": "bg-rose-50/50 border-rose-100",
+  "Cuidado Educacional": "bg-indigo-50/50 border-indigo-100"
 };
 
 export const RoutineDetail: React.FC = () => {
@@ -143,12 +153,14 @@ export const RoutineDetail: React.FC = () => {
                 ) : (
                   habits.map(habit => {
                     const completed = isHabitCompleted(habit.id);
-                    const categoryColor = habit.category ? CATEGORY_COLORS[habit.category] : 'bg-white border-slate-100';
-                    const [bgColor, borderColor] = categoryColor.split(' ');
+                    const categoryColor = (habit.category && CATEGORY_COLORS[habit.category]) ? CATEGORY_COLORS[habit.category] : 'bg-white border-slate-100';
+                    const colorParts = categoryColor.split(' ');
+                    const bgColor = colorParts[0] || 'bg-white';
+                    const borderColor = colorParts[1] || 'border-slate-100';
                     
                     return (
                       <div key={habit.id} className="relative group">
-                        <div className={`${bgColor} bg-white px-5 py-4 rounded-[1.8rem] border ${borderColor || 'border-slate-100'} shadow-sm flex items-center gap-4 transition-all ${completed ? 'opacity-50 grayscale-[0.3]' : ''}`}>
+                        <div className={`${bgColor} bg-white px-5 py-4 rounded-[1.8rem] border ${borderColor} shadow-sm flex items-center gap-4 transition-all ${completed ? 'opacity-50 grayscale-[0.3]' : ''}`}>
                           <div className="shrink-0 scale-75 -ml-2">
                             <HeartCheckbox 
                               checked={completed} 
