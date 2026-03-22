@@ -77,7 +77,11 @@ interface AppContextProps {
 }
 
 const STORAGE_KEY = 'super_mae_app_state_v32';
-const getTodayStr = () => new Date().toLocaleDateString('sv-SE');
+// Força a captura da data local real do dispositivo do usuário
+const getTodayStr = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
 
 const INITIAL_STATE: AppState = {
   isAuthLoading: true,

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 
@@ -9,22 +8,28 @@ interface CalendarHeaderProps {
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ disabled = false }) => {
   const { state, setSelectedDate } = useApp();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isInitialScroll = useRef(true);
+
+  // Hoje no calendário deve ser o dia real do sistema
+  const today = useMemo(() => new Date(), []);
 
   const days = useMemo(() => {
     const arr = [];
-    const today = new Date();
     for (let i = -45; i <= 30; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       arr.push(d);
     }
     return arr;
-  }, []);
+  }, [today]);
 
   const formatDate = (date: Date) => {
     const day = date.getDate();
     const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-    const dStr = date.toLocaleDateString('sv-SE'); 
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(date.getDate()).padStart(2, '0');
+    const dStr = `${year}-${month}-${dayStr}`; // ISO format for state consistency
     return { day, weekday, dStr };
   };
 
@@ -34,16 +39,22 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ disabled = false
 
     const activeBtn = container.querySelector(`[data-date="${dateStr}"]`) as HTMLElement;
     if (activeBtn) {
+      isInitialScroll.current = true; // Bloqueia o "snapping" durante o scroll forçado
       const targetScroll = activeBtn.offsetLeft + (activeBtn.offsetWidth / 2) - (container.offsetWidth / 2);
       container.scrollTo({
         left: targetScroll,
         behavior
       });
+      
+      // Libera o snapping após o scroll terminar
+      setTimeout(() => {
+        isInitialScroll.current = false;
+      }, 500);
     }
   };
 
   const handleScroll = () => {
-    if (!scrollContainerRef.current || disabled) return;
+    if (!scrollContainerRef.current || disabled || isInitialScroll.current) return;
     
     const container = scrollContainerRef.current;
     const containerCenter = container.scrollLeft + container.offsetWidth / 2;
@@ -116,7 +127,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({ disabled = false
               </span>
               <span className="text-xl font-black">{day}</span>
               
-              {dStr === new Date().toLocaleDateString('sv-SE') && (
+              {dStr === today.toLocaleDateString('sv-SE') && (
                 <div className={`w-1 h-1 rounded-full mt-1.5 ${active ? 'bg-white' : 'bg-purple-300'}`}></div>
               )}
             </button>
