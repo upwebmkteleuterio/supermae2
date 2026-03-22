@@ -143,10 +143,12 @@ export const RoutineDetail: React.FC = () => {
                 ) : (
                   habits.map(habit => {
                     const completed = isHabitCompleted(habit.id);
-                    const colorClass = habit.category ? CATEGORY_COLORS[habit.category] : 'bg-white border-slate-100';
+                    const categoryColor = habit.category ? CATEGORY_COLORS[habit.category] : 'bg-white border-slate-100';
+                    const [bgColor, borderColor] = categoryColor.split(' ');
+                    
                     return (
                       <div key={habit.id} className="relative group">
-                        <div className={`${colorClass.split(' ')[0]} bg-white px-5 py-4 rounded-[1.8rem] border ${colorClass.split(' ')[1] || 'border-slate-100'} shadow-sm flex items-center gap-4 transition-all ${completed ? 'opacity-50 grayscale-[0.3]' : ''}`}>
+                        <div className={`${bgColor} bg-white px-5 py-4 rounded-[1.8rem] border ${borderColor || 'border-slate-100'} shadow-sm flex items-center gap-4 transition-all ${completed ? 'opacity-50 grayscale-[0.3]' : ''}`}>
                           <div className="shrink-0 scale-75 -ml-2">
                             <HeartCheckbox 
                               checked={completed} 
