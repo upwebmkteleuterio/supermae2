@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -135,7 +134,15 @@ export const ChannelsList: React.FC = () => {
   const isAtypical = state.userProfile.welcomingGoal?.toLowerCase().includes('atípico');
 
   const atypicalChannels = useMemo(() => CHANNELS.filter(c => c.category === 'atipica'), []);
-  const generalChannels = useMemo(() => CHANNELS.filter(c => c.category === 'geral'), []);
+  
+  // Duplicando os canais solicitados na lista geral
+  const generalChannels = useMemo(() => {
+    const general = CHANNELS.filter(c => c.category === 'geral');
+    const duplicatedFromAtypical = CHANNELS.filter(c => 
+      ['atipica_desabafa', 'atipica_levezas', 'atipica_indica'].includes(c.id)
+    );
+    return [...general, ...duplicatedFromAtypical];
+  }, []);
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
@@ -170,7 +177,7 @@ export const ChannelsList: React.FC = () => {
           <div className="space-y-4">
             {atypicalChannels.map((channel) => (
               <ChannelCard 
-                key={channel.id}
+                key={`${channel.id}-atypical`}
                 icon={channel.icon}
                 title={channel.title}
                 description={channel.description}
@@ -194,7 +201,7 @@ export const ChannelsList: React.FC = () => {
           <div className="space-y-4">
             {generalChannels.map((channel) => (
               <ChannelCard 
-                key={channel.id}
+                key={`${channel.id}-general`}
                 icon={channel.icon}
                 title={channel.title}
                 description={channel.description}
