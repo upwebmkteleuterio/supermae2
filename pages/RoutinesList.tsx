@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
-import { Plus, ChevronRight, ArrowLeft, Loader2, Check, X } from 'lucide-react';
+import { Plus, ChevronRight, ArrowLeft, Loader2, Check, X, Users, User, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import { RoutineCard } from '../components/RoutineCard';
 import { CreateRoutineModal } from '../components/CreateRoutineModal';
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -11,7 +11,8 @@ import { ROUTINE_TEMPLATES } from '../constants/Templates';
 import { getRoutineIcon } from '../constants/Icons';
 
 export const RoutinesList: React.FC = () => {
-  const { state, goBack, addRoutine, selectRoutine, navigate, fetchRoutines, installTemplate, deleteRoutine, updateRoutine } = useApp();
+  const { state, goBack, addRoutine, selectRoutine, navigate, fetchRoutines, installTemplate, deleteRoutine, updateRoutine, selectChild } = useApp();
+  const [activeTab, setActiveTab] = useState<'mom' | 'children'>('mom');
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [installingId, setInstallingId] = useState<string | null>(null);
@@ -29,6 +30,14 @@ export const RoutinesList: React.FC = () => {
     load();
   }, [fetchRoutines]);
 
+  const selectedChild = state.children.find(c => c.id === state.selectedChildId);
+
+  const filteredRoutines = useMemo(() => {
+    return state.routines.filter(r => 
+      activeTab === 'mom' ? !r.child_id : r.child_id === state.selectedChildId
+    );
+  }, [state.routines, activeTab, state.selectedChildId]);
+
   const handleInstallTemplate = async (template: any) => {
     setInstallingId(template.id);
     await installTemplate(template);
@@ -37,7 +46,12 @@ export const RoutinesList: React.FC = () => {
 
   const handleSaveNewRoutine = async (routine: Routine) => {
     setLoading(true);
-    await addRoutine(routine);
+    // Adiciona o child_id se estivermos na aba de filhos
+    const routineData = { 
+      ...routine, 
+      child_id: activeTab === 'children' ? state.selectedChildId || undefined : undefined 
+    };
+    await addRoutine(routineData);
     setShowModal(false);
     setLoading(false);
   };
@@ -55,7 +69,7 @@ export const RoutinesList: React.FC = () => {
 
   return (
     <Layout headerTransparent themeColor="bg-[#FDFCFE]">
-      <div className="pt-12 px-6 flex items-center justify-between mb-8">
+      <div className="pt-12 px-6 flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
             <ArrowLeft className="w-6 h-6" />
@@ -65,85 +79,180 @@ export const RoutinesList: React.FC = () => {
         <SOSButton />
       </div>
 
-      <div className="px-6 pb-32">
-        
-        {/* Seção 1: Listagem das Ativas */}
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2">Suas rotinas ativas</h2>
-        <div className="space-y-4 mb-8">
-          {loading && state.routines.length === 0 ? (
-            [1,2].map(i => <div key={i} className="w-full h-28 bg-slate-50 animate-pulse rounded-[2rem]"></div>)
-          ) : state.routines.length === 0 ? (
-            <div className="py-10 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem]">
-              <p className="text-slate-400 text-sm font-medium">Você ainda não criou rotinas.</p>
-            </div>
-          ) : (
-            state.routines.map((routine) => (
-              <RoutineCard 
-                key={routine.id} 
-                routine={routine} 
-                onClick={handleOpenRoutine}
-                onEdit={(r) => { setEditingRoutine(r); setNewRoutineName(r.name); }}
-                onDelete={(id) => setDeletingId(id)}
-              />
-            ))
-          )}
+      {/* Tabs Segmented Control */}
+      <div className="px-6 mb-8">
+        <div className="bg-slate-100 p-1.5 rounded-[2rem] flex items-center gap-1 shadow-inner border border-slate-200/50">
+          <button 
+            onClick={() => setActiveTab('mom')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+              activeTab === 'mom' 
+              ? 'bg-white text-purple-600 shadow-md shadow-purple-100 ring-1 ring-purple-100' 
+              : 'text-slate-400 hover:text-slate-500'
+            }`}
+          >
+            <User className="w-3.5 h-3.5" />
+            Para Mim
+          </button>
+          <button 
+            onClick={() => setActiveTab('children')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${
+              activeTab === 'children' 
+              ? 'bg-white text-purple-600 shadow-md shadow-purple-100 ring-1 ring-purple-100' 
+              : 'text-slate-400 hover:text-slate-500'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            Para os Filhos
+          </button>
         </div>
+      </div>
 
-        {/* Seção 2: Criar Manual */}
-        <button 
-          onClick={() => setShowModal(true)}
-          disabled={loading}
-          className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all mb-10 group relative disabled:opacity-50"
-        >
-          <div className="flex items-center gap-5 relative">
-            <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform relative z-10">
-              {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
-            </div>
-            <span className="text-slate-700 font-bold text-sm">Criar rotina do zero</span>
-          </div>
-          <ChevronRight className="w-6 h-6 text-purple-300" />
-        </button>
-
-        {/* Seção 3: Sugestões Especiais */}
-        <div className="mb-10">
-          <h2 className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-4 ml-2">Sugestões Especiais</h2>
-          <div className="space-y-4">
-            {ROUTINE_TEMPLATES.map(template => {
-              const isInstalled = state.routines.some(r => r.name === template.name);
-              return (
-                <div 
-                  key={template.id}
-                  className="bg-purple-50/50 rounded-[2rem] p-5 border border-purple-100 flex items-center justify-between transition-all"
+      <div className="px-6 pb-32">
+        {activeTab === 'children' && !selectedChild ? (
+          /* Seleção de Filho se estiver na aba de filhos e nenhum selecionado */
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+             <div className="flex flex-col mb-2 ml-2">
+                <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Selecione um filho</h2>
+                <p className="text-[10px] text-slate-400 font-medium">Escolha para quem deseja gerenciar as rotinas</p>
+             </div>
+             
+             {state.children.map((child) => (
+                <button
+                  key={child.id}
+                  onClick={() => selectChild(child.id)}
+                  className="w-full bg-white rounded-[2rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all group"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-purple-500 shadow-sm shrink-0">
-                      {getRoutineIcon(template.icon, "w-6 h-6")}
+                  <div className="flex items-center gap-5">
+                    <div className="w-16 h-16 rounded-[1.5rem] overflow-hidden bg-slate-100 border border-slate-100 shadow-sm">
+                      <img src={child.avatar} alt={child.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="text-left">
-                      <span className="text-slate-800 font-bold text-sm block">{template.name}</span>
-                      <span className="text-purple-400 text-[10px] font-medium uppercase">{template.duration}</span>
+                      <h4 className="font-bold text-slate-800 text-base">{child.name}</h4>
+                      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{child.age}</p>
                     </div>
                   </div>
-                  
-                  {isInstalled ? (
-                    <div className="bg-white px-4 py-2 rounded-full flex items-center gap-2 border border-purple-100 shadow-sm animate-in fade-in">
-                      <Check className="w-3.5 h-3.5 text-green-500" />
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Instalado</span>
-                    </div>
-                  ) : (
-                    <button 
-                      onClick={() => handleInstallTemplate(template)}
-                      disabled={installingId === template.id}
-                      className="bg-purple-600 text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-purple-100 active:scale-95 transition-all disabled:opacity-50"
-                    >
-                      {installingId === template.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Instalar'}
-                    </button>
-                  )}
+                  <ChevronRight className="w-6 h-6 text-purple-200" />
+                </button>
+              ))}
+
+              <button
+                onClick={() => navigate('add_child')}
+                className="w-full bg-white/50 rounded-[2rem] p-5 flex items-center justify-between border-2 border-dashed border-slate-200 active:scale-[0.98] transition-all group"
+              >
+                <div className="flex items-center gap-5">
+                  <div className="w-16 h-16 rounded-[1.5rem] bg-slate-100/50 text-slate-300 flex items-center justify-center border border-slate-200 border-dashed">
+                    <ImageIcon className="w-7 h-7 opacity-50" />
+                  </div>
+                  <span className="text-slate-500 font-bold text-sm">Adicionar filho(a)</span>
                 </div>
-              );
-            })}
+                <Plus className="w-6 h-6 text-slate-300" />
+              </button>
           </div>
-        </div>
+        ) : (
+          /* Listagem de Rotinas (Mãe ou Filho Selecionado) */
+          <div className="animate-in fade-in duration-500">
+            {activeTab === 'children' && selectedChild && (
+              <div className="flex items-center justify-between mb-8 bg-purple-50 p-4 rounded-[2.5rem] border border-purple-100 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white shadow-sm">
+                    <img src={selectedChild.avatar} alt={selectedChild.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-purple-700 text-sm">Rotinas de {selectedChild.name}</h3>
+                    <p className="text-[9px] font-black text-purple-400 uppercase tracking-widest">{selectedChild.diagnosisStatus}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => selectChild(null)}
+                  className="p-3 bg-white text-purple-500 rounded-full shadow-sm active:scale-90 transition-transform"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-2">
+              {activeTab === 'mom' ? 'Suas rotinas ativas' : `Rotinas ativas`}
+            </h2>
+            <div className="space-y-4 mb-8">
+              {loading && filteredRoutines.length === 0 ? (
+                [1,2].map(i => <div key={i} className="w-full h-28 bg-slate-50 animate-pulse rounded-[2rem]"></div>)
+              ) : filteredRoutines.length === 0 ? (
+                <div className="py-12 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem] bg-slate-50/50">
+                  <p className="text-slate-400 text-xs font-bold px-10">Você ainda não criou rotinas {activeTab === 'mom' ? 'para você' : `para ${selectedChild?.name}`}.</p>
+                </div>
+              ) : (
+                filteredRoutines.map((routine) => (
+                  <RoutineCard 
+                    key={routine.id} 
+                    routine={routine} 
+                    onClick={handleOpenRoutine}
+                    onEdit={(r) => { setEditingRoutine(r); setNewRoutineName(r.name); }}
+                    onDelete={(id) => setDeletingId(id)}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Criar Manual */}
+            <button 
+              onClick={() => setShowModal(true)}
+              disabled={loading}
+              className="w-full bg-white rounded-[1.8rem] p-5 flex items-center justify-between border border-slate-50 shadow-sm active:scale-[0.98] transition-all mb-10 group relative disabled:opacity-50"
+            >
+              <div className="flex items-center gap-5 relative">
+                <div className="w-14 h-14 bg-[#F3E8FF] text-purple-600 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform relative z-10">
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Plus className="w-6 h-6" />}
+                </div>
+                <span className="text-slate-700 font-bold text-sm">Criar rotina do zero</span>
+              </div>
+              <ChevronRight className="w-6 h-6 text-purple-300" />
+            </button>
+
+            {/* Sugestões Especiais (Apenas para Mãe por enquanto) */}
+            {activeTab === 'mom' && (
+              <div className="mb-10">
+                <h2 className="text-[10px] font-black uppercase tracking-widest text-purple-400 mb-4 ml-2">Sugestões Especiais</h2>
+                <div className="space-y-4">
+                  {ROUTINE_TEMPLATES.map(template => {
+                    const isInstalled = state.routines.some(r => r.name === template.name && !r.child_id);
+                    return (
+                      <div 
+                        key={template.id}
+                        className="bg-purple-50/50 rounded-[2rem] p-5 border border-purple-100 flex items-center justify-between transition-all"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-purple-500 shadow-sm shrink-0">
+                            {getRoutineIcon(template.icon, "w-6 h-6")}
+                          </div>
+                          <div className="text-left">
+                            <span className="text-slate-800 font-bold text-sm block">{template.name}</span>
+                            <span className="text-purple-400 text-[10px] font-medium uppercase">{template.duration}</span>
+                          </div>
+                        </div>
+                        
+                        {isInstalled ? (
+                          <div className="bg-white px-4 py-2 rounded-full flex items-center gap-2 border border-purple-100 shadow-sm animate-in fade-in">
+                            <Check className="w-3.5 h-3.5 text-green-500" />
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Instalado</span>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => handleInstallTemplate(template)}
+                            disabled={installingId === template.id}
+                            className="bg-purple-600 text-white px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-purple-100 active:scale-95 transition-all disabled:opacity-50"
+                          >
+                            {installingId === template.id ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Instalar'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Modal de Edição de Nome */}

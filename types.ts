@@ -105,6 +105,7 @@ export interface Routine {
   image?: string;
   icon?: string;
   habits: Activity[];
+  child_id?: string;
 }
 
 export interface CareTask {

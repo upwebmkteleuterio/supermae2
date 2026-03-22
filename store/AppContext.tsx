@@ -230,6 +230,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       subtitle: r.subtitle,
       image: r.image_url,
       icon: r.icon,
+      child_id: r.child_id,
       habits: (r.habits ?? []).map((h: any) => ({
         id: h.id,
         title: h.title,
@@ -462,12 +463,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     
-    const { data, error } = await supabase.from('routines').insert({ 
-      user_id: user.id, 
-      name: routine.name, 
-      subtitle: routine.subtitle, 
-      icon: routine.icon, 
-      image_url: routine.image 
+    const { data, error } = await supabase.from('routines').insert({
+      user_id: user.id,
+      name: routine.name,
+      subtitle: routine.subtitle,
+      icon: routine.icon,
+      image_url: routine.image,
+      child_id: routine.child_id
     }).select().single();
 
     if (error) return false;
