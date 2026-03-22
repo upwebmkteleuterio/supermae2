@@ -2,10 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
-import { Plus, ArrowLeft, ChevronRight, Check, X, Bell, Clock, Calendar as CalendarIcon, ChevronDown, Tag, Trash2, AlertCircle } from 'lucide-react';
+import { Plus, ArrowLeft, ChevronRight, Check, X, Bell, Clock, Calendar as CalendarIcon, ChevronDown, Tag, AlertCircle } from 'lucide-react';
 import { Activity } from '../types';
 
-const PRESET_CATEGORIES = [
+const MOM_CATEGORIES = [
   "Saúde emocional",
   "Corpo e bem-estar físico",
   "Relações e rede de apoio",
@@ -16,10 +16,22 @@ const PRESET_CATEGORIES = [
   "Tempo para si"
 ];
 
+const CHILD_CATEGORIES = [
+  "Cuidado Terapêutico",
+  "Cuidado Sensorial",
+  "Cuidado Comunicacional",
+  "Cuidado Lúdico e Afetivo",
+  "Cuidado Médico e Funcional",
+  "Cuidado de Autonomia e Rotina",
+  "Cuidado Relacional com a Mãe",
+  "Cuidado Educacional"
+];
+
 const WEEK_DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const REPETITION_OPTIONS = ["Todos os dias", "Segunda a sexta", "Sábado e Domingo", "Personalizar"];
 
 const CATEGORY_COLORS: Record<string, string> = {
+  // Mãe
   "Saúde emocional": "bg-pink-50/50",
   "Corpo e bem-estar físico": "bg-green-50/50",
   "Relações e rede de apoio": "bg-indigo-50/50",
@@ -27,10 +39,19 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Criatividade e leveza": "bg-yellow-50/50",
   "Espiritualidade e auto conexão": "bg-blue-50/50",
   "Propósito e realização pessoal": "bg-purple-50/50",
-  "Tempo para si": "bg-rose-50/50"
+  "Tempo para si": "bg-rose-50/50",
+  // Filho
+  "Cuidado Terapêutico": "bg-blue-50/50",
+  "Cuidado Sensorial": "bg-purple-50/50",
+  "Cuidado Comunicacional": "bg-teal-50/50",
+  "Cuidado Lúdico e Afetivo": "bg-pink-50/50",
+  "Cuidado Médico e Funcional": "bg-amber-50/50",
+  "Cuidado de Autonomia e Rotina": "bg-emerald-50/50",
+  "Cuidado Relacional com a Mãe": "bg-rose-50/50",
+  "Cuidado Educacional": "bg-indigo-50/50"
 };
 
-const PRESET_HABITS: Activity[] = [
+const MOM_PRESET_HABITS: Activity[] = [
   // Saúde Emocional
   { id: 'se1', title: 'Fazer check-in emocional no app', description: '', duration: '', completed: false, category: 'Saúde emocional' },
   { id: 'se2', title: 'Escolher uma frase de acolhimento para o dia', description: '', duration: '', completed: false, category: 'Saúde emocional' },
@@ -104,7 +125,7 @@ const PRESET_HABITS: Activity[] = [
   { id: 'ea6', title: 'Meditar ou ouvir uma meditação guiada', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
   { id: 'ea7', title: 'Acender uma vela ou criar um momento ritual', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
   { id: 'ea8', title: 'Respirar com as mãos no coração', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
-  { id: 'ea9', title: 'Conectar-se com algo que te dê esperança', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
+  { id: 'ea9', title: 'Conectar-se with algo que te dê esperança', description: '', duration: '', completed: false, category: 'Espiritualidade e auto conexão' },
 
   // Propósito e realização pessoal
   { id: 'pr1', title: 'Lembrar de um sonho antigo sem cobrança', description: '', duration: '', completed: false, category: 'Propósito e realização pessoal' },
@@ -130,6 +151,72 @@ const PRESET_HABITS: Activity[] = [
   { id: 'ts10', title: 'Dizer “agora é meu momento” e se permitir', description: '', duration: '', completed: false, category: 'Tempo para si' },
 ];
 
+const CHILD_PRESET_HABITS: Activity[] = [
+  // Cuidado Terapêutico
+  { id: 'ct1', title: 'Terapia Ocupacional', category: 'Cuidado Terapêutico', completed: false, description: '', duration: '' },
+  { id: 'ct2', title: 'Psicoterapia ou ABA', category: 'Cuidado Terapêutico', completed: false, description: '', duration: '' },
+  { id: 'ct3', title: 'Fisioterapia motora', category: 'Cuidado Terapêutico', completed: false, description: '', duration: '' },
+  { id: 'ct4', title: 'Sessões de Fonoaudiologia', category: 'Cuidado Terapêutico', completed: false, description: '', duration: '' },
+  { id: 'ct5', title: 'Musicoterapia ou terapia aquática', category: 'Cuidado Terapêutico', completed: false, description: '', duration: '' },
+  { id: 'ct6', title: 'Registro de evolução nas terapias (diário)', category: 'Cuidado Terapêutico', completed: false, description: '', duration: '' },
+  
+  // Cuidado Sensorial
+  { id: 'cs1', title: 'Brincadeiras sensoriais', category: 'Cuidado Sensorial', completed: false, description: '', duration: '' },
+  { id: 'cs2', title: 'Estratégias calmantes (cantinho, fone)', category: 'Cuidado Sensorial', completed: false, description: '', duration: '' },
+  { id: 'cs3', title: 'Trilha auditiva calmante', category: 'Cuidado Sensorial', completed: false, description: '', duration: '' },
+  { id: 'cs4', title: 'Calendário de sinais de crises', category: 'Cuidado Sensorial', completed: false, description: '', duration: '' },
+  { id: 'cs5', title: 'Planejamento de estímulos (luz/som)', category: 'Cuidado Sensorial', completed: false, description: '', duration: '' },
+
+  // Cuidado Comunicacional
+  { id: 'cc1', title: 'Prática de nomeação de sentimentos', category: 'Cuidado Comunicacional', completed: false, description: '', duration: '' },
+  { id: 'cc2', title: 'Uso de comunicação alternativa (PECS)', category: 'Cuidado Comunicacional', completed: false, description: '', duration: '' },
+  { id: 'cc3', title: 'Brincadeiras de turno (esperar/ouvir)', category: 'Cuidado Comunicacional', completed: false, description: '', duration: '' },
+  { id: 'cc4', title: 'Registro de novas palavras/gestos', category: 'Cuidado Comunicacional', completed: false, description: '', duration: '' },
+  { id: 'cc5', title: 'Interações dirigidas com familiares', category: 'Cuidado Comunicacional', completed: false, description: '', duration: '' },
+
+  // Cuidado Lúdico e Afetivo
+  { id: 'cl1_f', title: 'Tempo livre com objeto favorito', category: 'Cuidado Lúdico e Afetivo', completed: false, description: '', duration: '' },
+  { id: 'cl2_f', title: 'Atividades de prazer não terapêuticas', category: 'Cuidado Lúdico e Afetivo', completed: false, description: '', duration: '' },
+  { id: 'cl3_f', title: 'Ritual do sono com massagem/história', category: 'Cuidado Lúdico e Afetivo', completed: false, description: '', duration: '' },
+  { id: 'cl4_f', title: 'Sessão de abraço ou toque profundo', category: 'Cuidado Lúdico e Afetivo', completed: false, description: '', duration: '' },
+  { id: 'cl5_f', title: 'Trilha emocional (acalmar)', category: 'Cuidado Lúdico e Afetivo', completed: false, description: '', duration: '' },
+
+  // Cuidado Médico e Funcional
+  { id: 'cm1', title: 'Registro de sintomas e crises', category: 'Cuidado Médico e Funcional', completed: false, description: '', duration: '' },
+  { id: 'cm2', title: 'Controle de medicações', category: 'Cuidado Médico e Funcional', completed: false, description: '', duration: '' },
+  { id: 'cm3', title: 'Agenda de consultas e exames', category: 'Cuidado Médico e Funcional', completed: false, description: '', duration: '' },
+  { id: 'cm4', title: 'Checklists de rotina (sono/alimentação)', category: 'Cuidado Médico e Funcional', completed: false, description: '', duration: '' },
+  { id: 'cm5', title: 'Diário de dores ou desconfortos', category: 'Cuidado Médico e Funcional', completed: false, description: '', duration: '' },
+
+  // Cuidado de Autonomia e Rotina
+  { id: 'ca1', title: 'Participação em escolhas simples', category: 'Cuidado de Autonomia e Rotina', completed: false, description: '', duration: '' },
+  { id: 'ca2', title: 'Estímulo à autonomia na higiene', category: 'Cuidado de Autonomia e Rotina', completed: false, description: '', duration: '' },
+  { id: 'ca3', title: 'Agenda visual de rotinas', category: 'Cuidado de Autonomia e Rotina', completed: false, description: '', duration: '' },
+  { id: 'ca4', title: 'Reforço positivo para tarefas', category: 'Cuidado de Autonomia e Rotina', completed: false, description: '', duration: '' },
+  { id: 'ca5', title: 'Diário de conquistas', category: 'Cuidado de Autonomia e Rotina', completed: false, description: '', duration: '' },
+
+  // Cuidado Relacional com a Mãe
+  { id: 'cr1', title: 'Registro de momentos positivos', category: 'Cuidado Relacional com a Mãe', completed: false, description: '', duration: '' },
+  { id: 'cr2', title: 'Atividades de conexão (respirar juntos)', category: 'Cuidado Relacional com a Mãe', completed: false, description: '', duration: '' },
+  { id: 'cr3', title: 'Trilha de vínculo (música/toque)', category: 'Cuidado Relacional com a Mãe', completed: false, description: '', duration: '' },
+  { id: 'cr4', title: 'Registro de frases/gestos marcantes', category: 'Cuidado Relacional com a Mãe', completed: false, description: '', duration: '' },
+  { id: 'cr5', title: 'Momentos de pausa conjunta', category: 'Cuidado Relacional com a Mãe', completed: false, description: '', duration: '' },
+
+  // Cuidado Educacional
+  { id: 'ce1', title: 'Acompanhamento do PEI', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce2', title: 'Reuniões com professores/coordenação', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce3', title: 'Registro de adaptações curriculares', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce4', title: 'Solicitação de mediador', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce5', title: 'Monitoramento de inclusão escolar', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce6', title: 'Registro de sobrecarga ou exclusão', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce7', title: 'Diário de evolução escolar', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce8', title: 'Planejamento de tarefas adaptadas', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce9', title: 'Comunicação escola-terapeutas', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce10', title: 'Checklist de direitos educacionais', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce11', title: 'Preparação para avaliações e eventos', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+  { id: 'ce12', title: 'Plano de transição escolar', category: 'Cuidado Educacional', completed: false, description: '', duration: '' },
+];
+
 export const HabitSelection: React.FC = () => {
   const { state, goBack, addHabitToRoutine, registerHabitTemplate, deleteCategory } = useApp();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
@@ -139,14 +226,23 @@ export const HabitSelection: React.FC = () => {
   const [migrateTo, setMigrateTo] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState(false);
 
+  // Identifica se estamos em uma rotina de filho
+  const currentRoutine = state.routines.find(r => r.id === state.selectedRoutineId);
+  const isChildRoutine = !!currentRoutine?.child_id;
+
+  const activeCategories = isChildRoutine ? CHILD_CATEGORIES : MOM_CATEGORIES;
+  const activePresetHabits = isChildRoutine ? CHILD_PRESET_HABITS : MOM_PRESET_HABITS;
+
   const dynamicCategories = useMemo(() => {
-    const set = new Set([...PRESET_CATEGORIES, ...state.customCategories]);
+    // Custom categories apply only to the context they were created in (by logic, though here they are global)
+    // For simplicity, we show them as extra categories
+    const set = new Set([...activeCategories, ...state.customCategories]);
     return ["Todos", ...Array.from(set)];
-  }, [state.customCategories]);
+  }, [state.customCategories, activeCategories]);
 
   const allAvailableHabits = useMemo(() => {
-    return [...PRESET_HABITS, ...state.customHabitTemplates];
-  }, [state.customHabitTemplates]);
+    return [...activePresetHabits, ...state.customHabitTemplates];
+  }, [state.customHabitTemplates, activePresetHabits]);
 
   const [habitPeriod, setHabitPeriod] = useState<'Manhã' | 'Tarde' | 'Noite' | 'A qualquer momento'>('A qualquer momento');
   const [habitReminder, setHabitReminder] = useState(false);
@@ -154,7 +250,7 @@ export const HabitSelection: React.FC = () => {
   const [customDays, setCustomDays] = useState<number[]>([]);
 
   const [customHabitName, setCustomHabitName] = useState('');
-  const [customHabitCat, setCustomHabitCat] = useState(PRESET_CATEGORIES[0]);
+  const [customHabitCat, setCustomHabitCat] = useState(activeCategories[0]);
   const [isNewCategory, setIsNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -221,6 +317,10 @@ export const HabitSelection: React.FC = () => {
         <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
           <ArrowLeft className="w-6 h-6" />
         </button>
+        <div className="flex flex-col items-center">
+            <h1 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400">Escolha o hábito</h1>
+            <p className="text-[10px] font-bold text-purple-400">{isChildRoutine ? 'Rotina do Filho' : 'Sua Rotina'}</p>
+        </div>
         <SOSButton />
       </div>
 
@@ -240,7 +340,7 @@ export const HabitSelection: React.FC = () => {
 
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 -mx-6 px-6">
           {dynamicCategories.map(cat => {
-            const isCustom = !PRESET_CATEGORIES.includes(cat) && cat !== "Todos";
+            const isCustom = !activeCategories.includes(cat) && cat !== "Todos";
             return (
               <div key={cat} className="relative group/pill">
                 <button
@@ -422,7 +522,7 @@ export const HabitSelection: React.FC = () => {
                     <div className="space-y-3">
                       <div className="relative">
                         <select value={customHabitCat} onChange={(e) => setCustomHabitCat(e.target.value)} className="w-full appearance-none bg-white border border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-600 focus:ring-2 ring-purple-500/20 outline-none shadow-sm">
-                          {dynamicCategories.filter(c => c !== "Todos").map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                          {activeCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
                         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
                       </div>
