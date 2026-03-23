@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, ShieldCheck, FileText, Lock } from 'lucide-react';
 
@@ -22,7 +21,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ type, onClose }) => {
             </div>
             <div>
               <h3 className="font-bold text-slate-800">{isTerms ? 'Termos de Uso' : 'Política de Privacidade'}</h3>
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Versão 1.0 - Março 2025</p>
+              <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Versão 1.0 - Março 2026</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 text-slate-300 hover:text-slate-500 transition-colors">

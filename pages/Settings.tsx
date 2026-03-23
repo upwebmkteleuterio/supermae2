@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
@@ -43,7 +42,7 @@ export const Settings: React.FC = () => {
       <div className="pt-12 px-6 flex items-center justify-between mb-8">
         <div>
           <h2 className="text-slate-800 font-bold text-2xl leading-tight">{userProfile.name.split(' ')[0]}!</h2>
-          <p className="text-slate-400 text-xs font-medium">Membro desde março de 2025</p>
+          <p className="text-slate-400 text-xs font-medium">Membro desde março de 2026</p>
         </div>
         <div className="flex gap-2">
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm bg-slate-100">
