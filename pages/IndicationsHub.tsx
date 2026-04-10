@@ -28,13 +28,12 @@ const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT"
 export const IndicationsHub: React.FC = () => {
   const { state, goBack, fetchIndications, deleteIndication } = useApp();
   
-  // Filtro inicial baseado no estado do usuário
+  // Filtro inicial baseado no estado do usuário cadastrado no perfil
   const [selectedState, setSelectedState] = useState(state.userProfile.state || '');
   const [cityQuery, setCityQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
 
-  // States para Modais e Menus
   const [activePartner, setActivePartner] = useState<any>(null);
   const [showIndicateModal, setShowIndicateModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -57,7 +56,8 @@ export const IndicationsHub: React.FC = () => {
       const matchesCat = selectedCat ? p.category === selectedCat : true;
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesState = selectedState ? p.state === selectedState : true;
-      const matchesCity = cityQuery ? p.city.toLowerCase().includes(cityQuery.toLowerCase()) : true;
+      // Filtro de cidade parcial
+      const matchesCity = cityQuery.trim() === '' || p.city.toLowerCase().includes(cityQuery.toLowerCase());
       return matchesCat && matchesSearch && matchesState && matchesCity;
     });
   }, [state.indications, selectedCat, searchQuery, selectedState, cityQuery]);
@@ -84,35 +84,59 @@ export const IndicationsHub: React.FC = () => {
         <SOSButton />
       </div>
 
-      <div className="px-6 space-y-8 pb-40">
-        {/* Busca por Nome */}
-        <div className="relative group">
+      <div className="px-6 space-y-6 pb-40">
+        {/* Barra de Busca por Nome */}
+        <div className="relative">
           <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"><Search size={20} /></div>
-          <input type="text" placeholder="Buscar por nome..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full bg-white border border-slate-100 rounded-[2rem] py-5 pl-14 pr-6 text-sm font-bold text-slate-700 shadow-sm focus:ring-2 ring-purple-100 outline-none transition-all" />
+          <input 
+            type="text" 
+            placeholder="Buscar por nome..." 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e.target.value)} 
+            className="w-full bg-white border border-slate-100 rounded-[2rem] py-5 pl-14 pr-6 text-sm font-bold text-slate-700 shadow-sm focus:ring-2 ring-purple-100 outline-none transition-all" 
+          />
         </div>
 
-        {/* Filtros Geográficos */}
+        {/* Filtros Geográficos: Estado e Cidade */}
         <div className="grid grid-cols-5 gap-3">
           <div className="col-span-2 relative">
              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400 pointer-events-none"><Map size={16} /></div>
-             <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} className="w-full bg-white border border-slate-100 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-bold text-slate-600 outline-none appearance-none shadow-sm">
-               <option value="">UF</option>
+             <select 
+               value={selectedState} 
+               onChange={(e) => setSelectedState(e.target.value)} 
+               className="w-full bg-white border border-slate-100 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-bold text-slate-600 outline-none appearance-none shadow-sm focus:ring-2 ring-purple-50"
+             >
+               <option value="">Brasil</option>
                {STATES.map(s => <option key={s} value={s}>{s}</option>)}
              </select>
           </div>
           <div className="col-span-3 relative">
              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400 pointer-events-none"><Building2 size={16} /></div>
-             <input type="text" placeholder="Buscar Cidade" value={cityQuery} onChange={(e) => setCityQuery(e.target.value)} className="w-full bg-white border border-slate-100 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-bold text-slate-600 outline-none shadow-sm" />
+             <input 
+               type="text" 
+               placeholder="Buscar Cidade" 
+               value={cityQuery} 
+               onChange={(e) => setCityQuery(e.target.value)} 
+               className="w-full bg-white border border-slate-100 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-bold text-slate-600 outline-none shadow-sm focus:ring-2 ring-purple-50" 
+             />
           </div>
         </div>
 
-        {/* Categorias */}
+        {/* Categorias (Horizontal Scroll) */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-2">Categorias</h2>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2">
-            <button onClick={() => setSelectedCat(null)} className={`px-6 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all border-2 ${selectedCat === null ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-50 text-slate-400'}`}>Ver Tudo</button>
+            <button 
+              onClick={() => setSelectedCat(null)} 
+              className={`px-6 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all border-2 ${selectedCat === null ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-50 text-slate-400'}`}
+            >
+              Ver Tudo
+            </button>
             {CATEGORIES.map(cat => (
-              <button key={cat.id} onClick={() => setSelectedCat(cat.id)} className={`flex items-center gap-2 px-5 py-3 rounded-full border-2 transition-all whitespace-nowrap ${selectedCat === cat.id ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-50 text-slate-400'}`}>
+              <button 
+                key={cat.id} 
+                onClick={() => setSelectedCat(cat.id)} 
+                className={`flex items-center gap-2 px-5 py-3 rounded-full border-2 transition-all whitespace-nowrap ${selectedCat === cat.id ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-50 text-slate-400'}`}
+              >
                 <span className={selectedCat === cat.id ? 'text-white' : cat.color.split(' ')[1]}>{cat.icon}</span>
                 <span className="text-xs font-bold">{cat.id}</span>
               </button>
@@ -120,17 +144,16 @@ export const IndicationsHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Listagem Real */}
-        <div className="space-y-6">
+        {/* Listagem de Resultados */}
+        <div className="space-y-6 pt-2">
           <div className="flex items-center justify-between ml-2">
             <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{selectedCat || 'Todas as indicações'}</h2>
-            <span className="text-[10px] font-bold text-purple-400">{filteredPartners.length} resultados</span>
+            <span className="text-[10px] font-bold text-purple-400">{filteredPartners.length} encontrados</span>
           </div>
 
           <div className="grid gap-8">
             {filteredPartners.map(partner => (
               <div key={partner.id} className="bg-white rounded-[2.5rem] border border-slate-50 shadow-sm transition-all pb-8 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
-                {/* Header do Card com Ícone e Menu */}
                 <div className="h-32 w-full flex items-center justify-center relative bg-slate-50/50 border-b border-slate-50">
                   <div className={`w-16 h-16 rounded-3xl ${getCatColor(partner.category)} flex items-center justify-center shadow-inner`}>
                     {getCatIcon(partner.category)}
@@ -161,7 +184,10 @@ export const IndicationsHub: React.FC = () => {
                   </div>
 
                   {/* Avaliações abaixo do endereço */}
-                  <div onClick={() => { setActivePartner(partner); setShowFeedbackListModal(true); }} className="flex items-center gap-3 mb-6 cursor-pointer active:scale-95 transition-transform w-fit">
+                  <div 
+                    onClick={() => { setActivePartner(partner); setShowFeedbackListModal(true); }} 
+                    className="flex items-center gap-3 mb-6 cursor-pointer active:scale-95 transition-transform w-fit"
+                  >
                      <div className="flex gap-0.5">
                        {[1,2,3,4,5].map(i => <Star key={i} size={12} className={i <= Math.floor(partner.rating || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-100'} />)}
                      </div>
@@ -177,7 +203,7 @@ export const IndicationsHub: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3">
-                    <button onClick={() => window.open(`https://wa.me/${partner.phone.replace(/\D/g, '')}`, '_blank')} className="w-full h-14 bg-emerald-500 text-white rounded-2xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-100 flex items-center justify-center gap-3 active:scale-[0.98] transition-all">
+                    <button onClick={() => window.open(`https://wa.me/${partner.phone}`, '_blank')} className="w-full h-14 bg-emerald-500 text-white rounded-2xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-100 flex items-center justify-center gap-3 active:scale-[0.98] transition-all">
                       <MessageCircle size={18} /> Entrar em contato
                     </button>
                     <button onClick={() => { setActivePartner(partner); setShowFeedbackModal(true); }} className="w-full h-14 bg-white text-purple-600 border-2 border-purple-100 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 active:bg-purple-50 transition-all">
@@ -196,10 +222,9 @@ export const IndicationsHub: React.FC = () => {
         <span className="text-[10px] font-black uppercase tracking-widest">Indicar agora</span>
       </button>
 
-      {/* MODAIS CONECTADOS */}
       {showIndicateModal && <IndicateServiceModal onClose={() => setShowIndicateModal(false)} />}
-      {showFeedbackModal && <ServiceFeedbackModal partnerName={activePartner?.name} onClose={() => setShowFeedbackModal(false)} />}
-      {showFeedbackListModal && <FeedbackListModal partnerName={activePartner?.name} onClose={() => setShowFeedbackListModal(false)} />}
+      {showFeedbackModal && <ServiceFeedbackModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackModal(false)} />}
+      {showFeedbackListModal && <FeedbackListModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackListModal(false)} />}
       {deletingId && (
         <ConfirmModal title="Excluir indicação?" message="Tem certeza que deseja remover esta indicação? Esta ação não pode ser desfeita." confirmText="Sim, excluir" onConfirm={() => { deleteIndication(deletingId); setDeletingId(null); }} onClose={() => setDeletingId(null)} />
       )}
