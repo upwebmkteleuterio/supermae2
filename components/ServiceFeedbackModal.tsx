@@ -1,16 +1,30 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, Star, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { X, Star, MessageSquare, CheckCircle2, Loader2 } from 'lucide-react';
+import { useApp } from '../store/AppContext';
 
 interface ServiceFeedbackModalProps {
+  partnerId: string;
   partnerName: string;
   onClose: () => void;
 }
 
-export const ServiceFeedbackModal: React.FC<ServiceFeedbackModalProps> = ({ partnerName, onClose }) => {
+export const ServiceFeedbackModal: React.FC<ServiceFeedbackModalProps> = ({ partnerId, partnerName, onClose }) => {
+  const { addIndicationReview } = useApp();
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
+  const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSend = async () => {
+    if (rating === 0) return;
+    setLoading(true);
+    const success = await addIndicationReview(partnerId, rating, comment);
+    if (success) onClose();
+    else alert("Erro ao enviar avaliação.");
+    setLoading(false);
+  };
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-6 animate-in fade-in duration-300">
@@ -50,18 +64,20 @@ export const ServiceFeedbackModal: React.FC<ServiceFeedbackModalProps> = ({ part
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Conte sua experiência</label>
             <textarea 
+              value={comment}
+              onChange={e => setComment(e.target.value)}
               placeholder="Fale um pouco sobre o atendimento..."
               className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-medium text-slate-700 outline-none h-32 resize-none focus:ring-2 ring-purple-100"
             />
           </div>
 
           <button 
-            onClick={onClose}
-            disabled={rating === 0}
-            className="w-full bg-purple-600 text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-100 active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30"
+            onClick={handleSend}
+            disabled={rating === 0 || loading}
+            className="w-full bg-purple-600 text-white h-14 rounded-[2rem] font-bold shadow-xl shadow-purple-100 active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30"
           >
-            <CheckCircle2 className="w-4 h-4" />
-            Enviar Avaliação
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+            {loading ? 'Enviando...' : 'Enviar Avaliação'}
           </button>
         </div>
       </div>

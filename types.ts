@@ -110,6 +110,33 @@ export interface Routine {
   child_id?: string;
 }
 
+export interface IndicationPartner {
+  id: string;
+  user_id: string;
+  name: string;
+  state: string;
+  city: string;
+  neighborhood?: string;
+  category: string;
+  phone: string;
+  rating?: number;
+  reviews_count?: number;
+  creator_name?: string;
+  creator_avatar?: string;
+  created_at: string;
+}
+
+export interface IndicationReview {
+  id: string;
+  partner_id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
 export interface CareTask {
   id: string;
   text: string;
@@ -199,4 +226,5 @@ export interface AppState {
   careTasks: CareTask[];
   localSupportPosts: LocalSupportPost[];
   notifications: AppNotification[];
+  indications: IndicationPartner[];
 }

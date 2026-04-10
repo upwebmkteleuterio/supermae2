@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, MapPin, Phone, Tag, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, MapPin, Phone, Tag, Save, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { useApp } from '../store/AppContext';
 
 interface IndicateServiceModalProps {
   onClose: () => void;
@@ -11,22 +12,37 @@ const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT"
 const CATEGORIES = ["Terapias", "Escolas", "Saúde", "Lazer", "Compras"];
 
 export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onClose }) => {
-  const [phone, setPhone] = useState('');
+  const { createIndication } = useApp();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    state: '',
+    city: '',
+    neighborhood: '',
+    category: '',
+    phone: ''
+  });
+
+  const [displayPhone, setDisplayPhone] = useState('');
   const [isPhoneValid, setIsPhoneValid] = useState(false);
 
   const formatPhone = (value: string) => {
-    // Remove tudo o que não é dígito
     const digits = value.replace(/\D/g, '');
-    
-    // Aplica a máscara (00) 00000-0000
     let masked = digits;
     if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
     if (digits.length > 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-    
-    setPhone(masked);
-    
-    // Validação simples: Brasil tem 11 dígitos (2 DDD + 9 número)
+    setDisplayPhone(masked);
+    setFormData(prev => ({ ...prev, phone: digits }));
     setIsPhoneValid(digits.length === 11);
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || !formData.state || !formData.city || !formData.category || !isPhoneValid) return;
+    setLoading(true);
+    const success = await createIndication(formData);
+    if (success) onClose();
+    else alert("Erro ao salvar. Tente novamente.");
+    setLoading(false);
   };
 
   return (
@@ -44,6 +60,8 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome do Local/Profissional *</label>
             <input 
               type="text" 
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
               placeholder="Ex: Clínica ABC"
               className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 focus:ring-2 ring-purple-100 outline-none"
             />
@@ -52,7 +70,11 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Estado *</label>
-              <select className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none">
+              <select 
+                value={formData.state}
+                onChange={e => setFormData({...formData, state: e.target.value})}
+                className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none"
+              >
                 <option value="">UF</option>
                 {STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -61,6 +83,8 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Cidade *</label>
               <input 
                 type="text" 
+                value={formData.city}
+                onChange={e => setFormData({...formData, city: e.target.value})}
                 placeholder="Sua cidade"
                 className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none"
               />
@@ -71,6 +95,8 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Bairro (Opcional)</label>
             <input 
               type="text" 
+              value={formData.neighborhood}
+              onChange={e => setFormData({...formData, neighborhood: e.target.value})}
               placeholder="Ex: Centro"
               className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none"
             />
@@ -78,7 +104,11 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
 
           <div className="space-y-1">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria *</label>
-            <select className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none">
+            <select 
+              value={formData.category}
+              onChange={e => setFormData({...formData, category: e.target.value})}
+              className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none"
+            >
               <option value="">Selecionar...</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -89,32 +119,24 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
             <div className="relative">
               <input 
                 type="tel" 
-                value={phone}
+                value={displayPhone}
                 onChange={(e) => formatPhone(e.target.value)}
                 placeholder="(00) 00000-0000"
                 className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none pl-12 transition-all ${
-                  phone.length > 0 && !isPhoneValid ? 'ring-2 ring-red-100' : ''
+                  displayPhone.length > 0 && !isPhoneValid ? 'ring-2 ring-red-100' : ''
                 }`}
               />
               <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isPhoneValid ? 'text-green-500' : 'text-slate-300'}`} />
-              {phone.length > 0 && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                   {isPhoneValid ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-red-300" />}
-                </div>
-              )}
             </div>
-            {phone.length > 0 && !isPhoneValid && (
-              <p className="text-[9px] text-red-400 font-bold ml-2 mt-1">Digite um número válido com DDD</p>
-            )}
           </div>
 
           <button 
-            onClick={onClose}
-            disabled={!isPhoneValid}
+            onClick={handleSave}
+            disabled={loading || !isPhoneValid || !formData.name}
             className="w-full bg-purple-600 text-white h-14 rounded-[2rem] font-bold shadow-xl shadow-purple-100 mt-6 active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30"
           >
-            <Save className="w-4 h-4" />
-            Salvar Indicação
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {loading ? 'Salvando...' : 'Salvar Indicação'}
           </button>
         </div>
       </div>
