@@ -4,6 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Layout } from '../components/Layout';
 import { useApp } from '../store/AppContext';
 import { SOSButton } from '../components/SOSButton';
+import { IntegrityBanner } from '../components/diagnostics/IntegrityBanner';
+import { LogMonitor } from '../components/diagnostics/LogMonitor';
+import { runDeepScan, DiagnosticLog } from '../utils/DiagnosticService';
 import { IndicateServiceModal } from '../components/IndicateServiceModal';
 import { ServiceFeedbackModal } from '../components/ServiceFeedbackModal';
 import { FeedbackListModal } from '../components/FeedbackListModal';
@@ -28,7 +31,10 @@ const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT"
 export const IndicationsHub: React.FC = () => {
   const { state, goBack, fetchIndications, deleteIndication } = useApp();
   
-  // Filtro inicial: Tenta pegar do perfil, se não tiver, começa vazio para mostrar "Brasil"
+  // Diagnóstico
+  const [diagLogs, setDiagLogs] = useState<DiagnosticLog[]>([]);
+  const [dbRawCount, setDbRawCount] = useState(0);
+
   const [selectedState, setSelectedState] = useState(state.userProfile.state || '');
   const [cityQuery, setCityQuery] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,33 +53,28 @@ export const IndicationsHub: React.FC = () => {
     const init = async () => {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setCurrentUserId(user.id);
+      if (user) {
+        setCurrentUserId(user.id);
+        const scans = await runDeepScan(user.id);
+        setDiagLogs(scans);
+        
+        // Verifica o count bruto direto no banco (sem filtros de app)
+        const { count } = await supabase.from('indications_partners').select('*', { count: 'exact', head: true });
+        setDbRawCount(count || 0);
+      }
       await fetchIndications();
       setLoading(false);
     };
     init();
   }, [fetchIndications]);
 
-  // Lógica de filtragem aprimorada e mais tolerante
   const filteredPartners = useMemo(() => {
     if (!state.indications) return [];
-
     return state.indications.filter(p => {
-      // 1. Filtro de Categoria (Só aplica se houver uma selecionada)
       const matchesCat = !selectedCat || p.category === selectedCat;
-
-      // 2. Filtro de Busca por Nome (Case insensitive)
-      const matchesSearch = !searchQuery.trim() || 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
-
-      // 3. Filtro de Estado (UF) - Com trim para evitar erros de espaços no banco
-      const matchesState = !selectedState || 
-        (p.state && p.state.trim().toUpperCase() === selectedState.trim().toUpperCase());
-
-      // 4. Filtro de Cidade (Parcial e case insensitive)
-      const matchesCity = !cityQuery.trim() || 
-        (p.city && p.city.toLowerCase().includes(cityQuery.toLowerCase().trim()));
-
+      const matchesSearch = !searchQuery.trim() || p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesState = !selectedState || (p.state && p.state.trim().toUpperCase() === selectedState.trim().toUpperCase());
+      const matchesCity = !cityQuery.trim() || (p.city && p.city.toLowerCase().includes(cityQuery.toLowerCase().trim()));
       return matchesCat && matchesSearch && matchesState && matchesCity;
     });
   }, [state.indications, selectedCat, searchQuery, selectedState, cityQuery]);
@@ -90,7 +91,7 @@ export const IndicationsHub: React.FC = () => {
 
   return (
     <Layout headerTransparent themeColor="bg-[#F8F9FE]">
-      <div className="pt-12 px-6 flex items-center justify-between mb-8">
+      <div className="pt-12 px-6 flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
           <button onClick={goBack} className="p-3 bg-purple-100/50 rounded-full text-purple-600 active:scale-90 transition-transform">
             <ArrowLeft className="w-6 h-6" />
@@ -100,19 +101,15 @@ export const IndicationsHub: React.FC = () => {
         <SOSButton />
       </div>
 
-      <div className="px-6 space-y-6 pb-40">
-        {/* Busca por Nome */}
-        <div className="relative group">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"><Search size={20} /></div>
-          <input 
-            type="text" 
-            placeholder="Buscar por nome..." 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e.target.value)} 
-            className="w-full bg-white border border-slate-100 rounded-[2rem] py-5 pl-14 pr-6 text-sm font-bold text-slate-700 shadow-sm focus:ring-2 ring-purple-100 outline-none transition-all" 
-          />
-        </div>
+      {/* 🚀 Diagnostic Probe Components */}
+      <IntegrityBanner 
+        dbStatus={diagLogs.some(l => l.status === 'ERROR') ? 'error' : 'online'} 
+        isAtypical={!!state.userProfile.welcomingGoal?.includes('atípico')}
+        dbCount={dbRawCount}
+        uiCount={filteredPartners.length}
+      />
 
+      <div className="px-6 space-y-6 pb-40">
         {/* Filtros Geográficos */}
         <div className="grid grid-cols-5 gap-3">
           <div className="col-span-2 relative">
@@ -138,43 +135,12 @@ export const IndicationsHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Categorias (Horizontal Scroll) */}
-        <div className="space-y-4">
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-2 px-2">
-            <button 
-              onClick={() => setSelectedCat(null)} 
-              className={`px-6 py-3 rounded-full text-xs font-bold whitespace-nowrap transition-all border-2 ${selectedCat === null ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-50 text-slate-400'}`}
-            >
-              Ver Tudo
-            </button>
-            {CATEGORIES.map(cat => (
-              <button 
-                key={cat.id} 
-                onClick={() => setSelectedCat(cat.id)} 
-                className={`flex items-center gap-2 px-5 py-3 rounded-full border-2 transition-all whitespace-nowrap ${selectedCat === cat.id ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-50 text-slate-400'}`}
-              >
-                <span className={selectedCat === cat.id ? 'text-white' : cat.color.split(' ')[1]}>{cat.icon}</span>
-                <span className="text-xs font-bold">{cat.id}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Listagem de Resultados */}
         <div className="space-y-6 pt-2">
-          <div className="flex items-center justify-between ml-2">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              {loading ? 'Carregando...' : (selectedCat || 'Todas as indicações')}
-            </h2>
-            <span className="text-[10px] font-bold text-purple-400">
-               {loading ? '...' : filteredPartners.length} encontrados
-            </span>
-          </div>
-
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-4">
               <Loader2 className="animate-spin text-purple-400" size={32} />
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Buscando indicações...</p>
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Iniciando Varredura...</p>
             </div>
           ) : filteredPartners.length === 0 ? (
             <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem] bg-white">
@@ -191,68 +157,12 @@ export const IndicationsHub: React.FC = () => {
                     <div className={`w-16 h-16 rounded-3xl ${getCatColor(partner.category)} flex items-center justify-center shadow-inner`}>
                       {getCatIcon(partner.category)}
                     </div>
-                    
-                    {partner.user_id === currentUserId && (
-                      <div className="absolute top-4 right-4">
-                        <button 
-                          onClick={() => setActiveMenu(activeMenu === partner.id ? null : partner.id)} 
-                          className="p-2 bg-white/80 rounded-full text-slate-300 hover:text-slate-500 shadow-sm"
-                        >
-                          <MoreVertical size={20} />
-                        </button>
-                        {activeMenu === partner.id && (
-                          <>
-                            <div className="fixed inset-0 z-[55]" onClick={() => setActiveMenu(null)} />
-                            <div className="absolute right-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-[60] min-w-[110px] animate-in zoom-in-95 duration-200">
-                              <button onClick={() => { alert("Funcionalidade de edição em breve!"); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2"><Pencil size={14} /> Editar</button>
-                              <button onClick={() => { setDeletingId(partner.id); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} /> Excluir</button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
                   </div>
-
                   <div className="px-6 pt-6">
                     <h3 className="font-bold text-slate-800 text-lg leading-tight mb-2">{partner.name}</h3>
-                    
                     <div className="flex items-center gap-1.5 text-slate-400 text-[11px] font-bold uppercase tracking-tight mb-2">
                       <MapPin size={12} className="text-purple-400" />
-                      {partner.neighborhood ? `${partner.neighborhood}, ` : ''}{partner.city} - {partner.state}
-                    </div>
-
-                    {/* Avaliações abaixo do endereço */}
-                    <div 
-                      onClick={() => { setActivePartner(partner); setShowFeedbackListModal(true); }} 
-                      className="flex items-center gap-3 mb-6 cursor-pointer active:scale-95 transition-transform w-fit"
-                    >
-                       <div className="flex gap-0.5">
-                         {[1,2,3,4,5].map(i => <Star key={i} size={12} className={i <= Math.floor(partner.rating || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-100'} />)}
-                       </div>
-                       <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">{partner.reviews_count || 0} avaliações</span>
-                    </div>
-
-                    {/* Quem indicou */}
-                    <div className="flex items-center gap-3 mb-8 bg-slate-50 p-3 rounded-2xl border border-slate-100/50 w-fit">
-                      <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
-                        <img src={partner.creator_avatar || 'https://images.icon-icons.com/2859/PNG/512/avatar_face_girl_female_woman_profile_smiley_happy_people_icon_181665.png'} alt="Creator" className="w-full h-full object-cover" />
-                      </div>
-                      <span className="text-[11px] font-bold text-slate-500">Indicado por <span className="text-purple-600">{partner.creator_name || 'Mãe'}</span></span>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3">
-                      <button 
-                        onClick={() => window.open(`https://wa.me/${partner.phone.replace(/\D/g, '')}`, '_blank')} 
-                        className="w-full h-14 bg-emerald-500 text-white rounded-2xl font-bold text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-100 flex items-center justify-center gap-3 active:scale-[0.98] transition-all"
-                      >
-                        <MessageCircle size={18} /> Entrar em contato
-                      </button>
-                      <button 
-                        onClick={() => { setActivePartner(partner); setShowFeedbackModal(true); }} 
-                        className="w-full h-14 bg-white text-purple-600 border-2 border-purple-100 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 active:bg-purple-50 transition-all"
-                      >
-                        Deixar meu feedback
-                      </button>
+                      {partner.city} - {partner.state}
                     </div>
                   </div>
                 </div>
@@ -261,6 +171,12 @@ export const IndicationsHub: React.FC = () => {
           )}
         </div>
       </div>
+
+      <LogMonitor 
+        logs={diagLogs} 
+        onClear={() => setDiagLogs([])} 
+        mismatchReport={{ dbCount: dbRawCount, uiCount: filteredPartners.length }} 
+      />
 
       <button 
         className="fixed bottom-28 right-6 bg-purple-600 text-white rounded-full px-6 py-4 shadow-xl shadow-purple-200 flex items-center gap-3 active:scale-95 transition-all z-50 border-4 border-white" 
@@ -274,7 +190,7 @@ export const IndicationsHub: React.FC = () => {
       {showFeedbackModal && <ServiceFeedbackModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackModal(false)} />}
       {showFeedbackListModal && <FeedbackListModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackListModal(false)} />}
       {deletingId && (
-        <ConfirmModal title="Excluir indicação?" message="Tem certeza que deseja remover esta indicação? Esta ação não pode ser desfeita." confirmText="Sim, excluir" onConfirm={() => { deleteIndication(deletingId); setDeletingId(null); }} onClose={() => setDeletingId(null)} />
+        <ConfirmModal title="Excluir indicação?" message="Tem certeza que deseja remover esta indicação?" confirmText="Sim, excluir" onConfirm={() => { deleteIndication(deletingId); setDeletingId(null); }} onClose={() => setDeletingId(null)} />
       )}
     </Layout>
   );
