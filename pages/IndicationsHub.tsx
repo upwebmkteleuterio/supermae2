@@ -34,6 +34,7 @@ export const IndicationsHub: React.FC = () => {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
 
   const [activePartner, setActivePartner] = useState<any>(null);
+  const [editingPartner, setEditingPartner] = useState<any>(null);
   const [showIndicateModal, setShowIndicateModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showFeedbackListModal, setShowFeedbackListModal] = useState(false);
@@ -57,7 +58,7 @@ export const IndicationsHub: React.FC = () => {
     if (!state.indications) return [];
     return state.indications.filter(p => {
       const matchesCat = !selectedCat || p.category === selectedCat;
-      const matchesSearch = !searchQuery.trim() || p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !searchQuery.trim() || p.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
       const matchesState = !selectedState || (p.state && p.state.trim().toUpperCase() === selectedState.trim().toUpperCase());
       const matchesCity = !cityQuery.trim() || (p.city && p.city.toLowerCase().includes(cityQuery.toLowerCase().trim()));
       return matchesCat && matchesSearch && matchesState && matchesCity;
@@ -165,9 +166,13 @@ export const IndicationsHub: React.FC = () => {
                       <div className="absolute top-4 right-4">
                         <button onClick={() => setActiveMenu(activeMenu === partner.id ? null : partner.id)} className="p-2 bg-white/80 rounded-full text-slate-300 shadow-sm"><MoreVertical size={20} /></button>
                         {activeMenu === partner.id && (
-                          <div className="absolute right-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-[60] min-w-[110px]">
-                            <button onClick={() => { setDeletingId(partner.id); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} /> Excluir</button>
-                          </div>
+                          <>
+                            <div className="fixed inset-0 z-[55]" onClick={() => setActiveMenu(null)} />
+                            <div className="absolute right-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-[60] min-w-[110px] animate-in zoom-in-95 duration-200">
+                              <button onClick={() => { setEditingPartner(partner); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2"><Pencil size={14} /> Editar</button>
+                              <button onClick={() => { setDeletingId(partner.id); setActiveMenu(null); }} className="w-full px-4 py-2 text-left text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} /> Excluir</button>
+                            </div>
+                          </>
                         )}
                       </div>
                     )}
@@ -206,16 +211,22 @@ export const IndicationsHub: React.FC = () => {
         </div>
       </div>
 
-      <button className="fixed bottom-28 right-6 bg-purple-600 text-white rounded-full px-6 py-4 shadow-xl shadow-purple-200 flex items-center gap-3 active:scale-95 transition-all z-50 border-4 border-white" onClick={() => setShowIndicateModal(true)}>
+      <button className="fixed bottom-28 right-6 bg-purple-600 text-white rounded-full px-6 py-4 shadow-xl shadow-purple-200 flex items-center gap-3 active:scale-95 transition-all z-50 border-4 border-white" onClick={() => { setEditingPartner(null); setShowIndicateModal(true); }}>
         <Plus size={20} />
         <span className="text-[10px] font-black uppercase tracking-widest">Indicar agora</span>
       </button>
 
-      {showIndicateModal && <IndicateServiceModal onClose={() => setShowIndicateModal(false)} />}
+      {(showIndicateModal || editingPartner) && (
+        <IndicateServiceModal 
+          onClose={() => { setShowIndicateModal(false); setEditingPartner(null); }} 
+          initialData={editingPartner}
+        />
+      )}
+      
       {showFeedbackModal && <ServiceFeedbackModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackModal(false)} />}
       {showFeedbackListModal && <FeedbackListModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackListModal(false)} />}
       {deletingId && (
-        <ConfirmModal title="Excluir indicação?" message="Tem certeza que deseja remover esta indicação?" confirmText="Sim, excluir" onConfirm={() => { deleteIndication(deletingId); setDeletingId(null); }} onClose={() => setDeletingId(null)} />
+        <ConfirmModal title="Excluir indicação?" message="Tem certeza que deseja remover esta indicação? Esta ação não pode ser desfeita." confirmText="Sim, excluir" onConfirm={() => { deleteIndication(deletingId); setDeletingId(null); }} onClose={() => setDeletingId(null)} />
       )}
     </Layout>
   );
