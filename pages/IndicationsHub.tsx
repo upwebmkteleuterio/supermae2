@@ -58,7 +58,6 @@ export const IndicationsHub: React.FC = () => {
         const scans = await runDeepScan(user.id);
         setDiagLogs(scans);
         
-        // Verifica o count bruto direto no banco (sem filtros de app)
         const { count } = await supabase.from('indications_partners').select('*', { count: 'exact', head: true });
         setDbRawCount(count || 0);
       }
@@ -101,7 +100,6 @@ export const IndicationsHub: React.FC = () => {
         <SOSButton />
       </div>
 
-      {/* 🚀 Diagnostic Probe Components */}
       <IntegrityBanner 
         dbStatus={diagLogs.some(l => l.status === 'ERROR') ? 'error' : 'online'} 
         isAtypical={!!state.userProfile.welcomingGoal?.includes('atípico')}
@@ -110,7 +108,6 @@ export const IndicationsHub: React.FC = () => {
       />
 
       <div className="px-6 space-y-6 pb-40">
-        {/* Filtros Geográficos */}
         <div className="grid grid-cols-5 gap-3">
           <div className="col-span-2 relative">
              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-purple-400 pointer-events-none"><Map size={16} /></div>
@@ -135,18 +132,17 @@ export const IndicationsHub: React.FC = () => {
           </div>
         </div>
 
-        {/* Listagem de Resultados */}
         <div className="space-y-6 pt-2">
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-4">
               <Loader2 className="animate-spin text-purple-400" size={32} />
-              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Iniciando Varredura...</p>
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Varredura em curso...</p>
             </div>
           ) : filteredPartners.length === 0 ? (
             <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem] bg-white">
               <Users className="w-12 h-12 text-slate-100 mx-auto mb-4" />
               <p className="text-slate-400 text-sm font-medium px-10">
-                Nenhuma indicação encontrada para estes filtros nesta região.
+                Nenhuma indicação encontrada.
               </p>
             </div>
           ) : (
@@ -178,20 +174,12 @@ export const IndicationsHub: React.FC = () => {
         mismatchReport={{ dbCount: dbRawCount, uiCount: filteredPartners.length }} 
       />
 
-      <button 
-        className="fixed bottom-28 right-6 bg-purple-600 text-white rounded-full px-6 py-4 shadow-xl shadow-purple-200 flex items-center gap-3 active:scale-95 transition-all z-50 border-4 border-white" 
-        onClick={() => setShowIndicateModal(true)}
-      >
+      <button className="fixed bottom-28 right-6 bg-purple-600 text-white rounded-full px-6 py-4 shadow-xl shadow-purple-200 flex items-center gap-3 active:scale-95 transition-all z-50 border-4 border-white" onClick={() => setShowIndicateModal(true)}>
         <Plus size={20} />
         <span className="text-[10px] font-black uppercase tracking-widest">Indicar agora</span>
       </button>
 
       {showIndicateModal && <IndicateServiceModal onClose={() => setShowIndicateModal(false)} />}
-      {showFeedbackModal && <ServiceFeedbackModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackModal(false)} />}
-      {showFeedbackListModal && <FeedbackListModal partnerId={activePartner?.id} partnerName={activePartner?.name} onClose={() => setShowFeedbackListModal(false)} />}
-      {deletingId && (
-        <ConfirmModal title="Excluir indicação?" message="Tem certeza que deseja remover esta indicação?" confirmText="Sim, excluir" onConfirm={() => { deleteIndication(deletingId); setDeletingId(null); }} onClose={() => setDeletingId(null)} />
-      )}
     </Layout>
   );
 };

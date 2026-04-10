@@ -24,7 +24,7 @@ export const IntegrityBanner: React.FC<IntegrityBannerProps> = ({ dbStatus, isAt
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <ShieldCheck size={12} className="text-purple-500" />
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">RLS: {isAtypical ? 'ATYPICAL_SCOPE' : 'GENERAL'}</span>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">RLS: {isAtypical ? 'ATYPICAL' : 'GENERAL'}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <Activity size={12} className={isBroken ? 'text-red-500' : 'text-blue-500'} />

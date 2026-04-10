@@ -36,7 +36,7 @@ export const LogMonitor: React.FC<LogMonitorProps> = ({ logs, onClear, mismatchR
     <div className="fixed inset-x-4 bottom-32 z-[210] bg-slate-900 rounded-[2rem] shadow-2xl border border-slate-800 flex flex-col max-h-[60vh] overflow-hidden animate-in slide-in-from-bottom-10">
       <div className="p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
         <div className="flex gap-4">
-           <button onClick={() => setActiveTab('logs')} className={`text-xs font-black uppercase tracking-widest ${activeTab === 'logs' ? 'text-purple-400' : 'text-slate-500'}`}>Transaction Trace</button>
+           <button onClick={() => setActiveTab('logs')} className={`text-xs font-black uppercase tracking-widest ${activeTab === 'logs' ? 'text-purple-400' : 'text-slate-50'}`}>Transaction Trace</button>
            <button onClick={() => setActiveTab('mismatch')} className={`text-xs font-black uppercase tracking-widest ${activeTab === 'mismatch' ? 'text-red-400' : 'text-slate-500'}`}>Mismatch Report</button>
         </div>
         <button onClick={() => setIsOpen(false)} className="text-slate-500 hover:text-white"><X size={20} /></button>

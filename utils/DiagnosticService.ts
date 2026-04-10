@@ -13,7 +13,7 @@ export interface DiagnosticLog {
 export const runDeepScan = async (userId: string) => {
   const logs: DiagnosticLog[] = [];
 
-  // Strategy 1: Busca Direta (Testa o básico da tabela)
+  // Strategy 1: Busca Direta
   try {
     const { data, error } = await supabase
       .from('indications_partners')
@@ -29,7 +29,7 @@ export const runDeepScan = async (userId: string) => {
     });
   } catch (e) { console.error(e); }
 
-  // Strategy 2: Busca por Relacionamento (Testa Foreign Keys e RLS complexa)
+  // Strategy 2: Busca por Relacionamento
   try {
     const { data, error } = await supabase
       .from('indications_partners')
@@ -48,7 +48,7 @@ export const runDeepScan = async (userId: string) => {
     });
   } catch (e) { console.error(e); }
 
-  // Strategy 3: Busca por Filtro Bruto (Detecta falhas de Casting)
+  // Strategy 3: Busca por Filtro Bruto
   try {
     const { data, error } = await supabase
       .from('indications_partners')
