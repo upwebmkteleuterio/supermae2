@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { X, MapPin, Phone, Tag, Save } from 'lucide-react';
+import { X, MapPin, Phone, Tag, Save, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface IndicateServiceModalProps {
   onClose: () => void;
@@ -11,14 +11,23 @@ const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT"
 const CATEGORIES = ["Terapias", "Escolas", "Saúde", "Lazer", "Compras"];
 
 export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onClose }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    state: '',
-    city: '',
-    neighborhood: '',
-    category: '',
-    phone: ''
-  });
+  const [phone, setPhone] = useState('');
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+
+  const formatPhone = (value: string) => {
+    // Remove tudo o que não é dígito
+    const digits = value.replace(/\D/g, '');
+    
+    // Aplica a máscara (00) 00000-0000
+    let masked = digits;
+    if (digits.length > 2) masked = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length > 7) masked = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+    
+    setPhone(masked);
+    
+    // Validação simples: Brasil tem 11 dígitos (2 DDD + 9 número)
+    setIsPhoneValid(digits.length === 11);
+  };
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-6 animate-in fade-in duration-300">
@@ -80,16 +89,29 @@ export const IndicateServiceModal: React.FC<IndicateServiceModalProps> = ({ onCl
             <div className="relative">
               <input 
                 type="tel" 
+                value={phone}
+                onChange={(e) => formatPhone(e.target.value)}
                 placeholder="(00) 00000-0000"
-                className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none pl-12"
+                className={`w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold text-slate-700 outline-none pl-12 transition-all ${
+                  phone.length > 0 && !isPhoneValid ? 'ring-2 ring-red-100' : ''
+                }`}
               />
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+              <Phone className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isPhoneValid ? 'text-green-500' : 'text-slate-300'}`} />
+              {phone.length > 0 && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                   {isPhoneValid ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertCircle className="w-4 h-4 text-red-300" />}
+                </div>
+              )}
             </div>
+            {phone.length > 0 && !isPhoneValid && (
+              <p className="text-[9px] text-red-400 font-bold ml-2 mt-1">Digite um número válido com DDD</p>
+            )}
           </div>
 
           <button 
             onClick={onClose}
-            className="w-full bg-purple-600 text-white py-5 rounded-[2rem] font-bold shadow-xl shadow-purple-100 mt-6 active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+            disabled={!isPhoneValid}
+            className="w-full bg-purple-600 text-white h-14 rounded-[2rem] font-bold shadow-xl shadow-purple-100 mt-6 active:scale-95 transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-30"
           >
             <Save className="w-4 h-4" />
             Salvar Indicação

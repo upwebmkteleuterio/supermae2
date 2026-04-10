@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { X, Star, MessageSquare, Quote } from 'lucide-react';
+import { X, Star, Quote, Users } from 'lucide-react';
 
 interface FeedbackListModalProps {
   partnerName: string;
@@ -19,9 +19,15 @@ export const FeedbackListModal: React.FC<FeedbackListModalProps> = ({ partnerNam
     <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-6 animate-in fade-in duration-300">
       <div className="w-full max-w-sm bg-white rounded-[2.5rem] flex flex-col shadow-2xl animate-in zoom-in-95 duration-300 max-h-[80vh]">
         <div className="p-8 border-b border-slate-50 flex justify-between items-center shrink-0">
-          <div>
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Avaliações das Mães</h3>
-            <h4 className="text-slate-800 font-bold text-base truncate max-w-[200px]">{partnerName}</h4>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Avaliações das Mães</h3>
+               <div className="bg-purple-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-purple-100">
+                  <Users size={8} className="text-purple-500" />
+                  <span className="text-[9px] font-black text-purple-600">{MOCK_REVIEWS.length}</span>
+               </div>
+            </div>
+            <h4 className="text-slate-800 font-bold text-base truncate pr-4">{partnerName}</h4>
           </div>
           <button onClick={onClose} className="p-2 text-slate-300 hover:text-slate-500 transition-colors">
             <X className="w-6 h-6" />
@@ -57,7 +63,7 @@ export const FeedbackListModal: React.FC<FeedbackListModalProps> = ({ partnerNam
         </div>
 
         <div className="p-6 border-t border-slate-50 shrink-0">
-           <button onClick={onClose} className="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest">Fechar</button>
+           <button onClick={onClose} className="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest active:opacity-60 transition-opacity">Fechar</button>
         </div>
       </div>
     </div>
