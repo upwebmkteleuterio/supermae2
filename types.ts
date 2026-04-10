@@ -1,3 +1,4 @@
+"use client";
 
 export type MoodType = 'light' | 'strong' | 'breathe';
 
@@ -41,7 +42,8 @@ export type ViewState =
   | 'payment_selection'
   | 'local_support_mural'
   | 'notifications_list'
-  | 'shuffle_suggestions';
+  | 'shuffle_suggestions'
+  | 'indications_hub';
 
 export interface UserProfile {
   name: string;

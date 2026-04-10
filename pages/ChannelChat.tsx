@@ -1,3 +1,4 @@
+"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../store/AppContext';
@@ -13,7 +14,8 @@ import {
   Truck,
   ChevronRight,
   CalendarCheck,
-  BrainCircuit
+  BrainCircuit,
+  Star
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { GoogleGenAI } from "@google/genai";
@@ -214,6 +216,25 @@ export const ChannelChat: React.FC = () => {
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-blue-300" />
+          </button>
+        )}
+
+        {/* Banner de Indicações (Indica Aí, Mãe!) - Conforme solicitado com faixa superior */}
+        {channelInfo.id === 'atipica_indica' && (
+          <button 
+            onClick={() => navigate('indications_hub')}
+            className="w-full bg-amber-50 rounded-2xl p-4 flex items-center justify-between border border-amber-100 shadow-sm animate-in fade-in zoom-in-95 duration-500 mb-2"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-md">
+                <Star className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest leading-none mb-1">Empresas e Serviços</p>
+                <h4 className="text-xs font-bold text-amber-700">Explorar Indicações das Mães</h4>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-amber-300" />
           </button>
         )}
 

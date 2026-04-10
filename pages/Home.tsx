@@ -1,3 +1,4 @@
+"use client";
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
@@ -17,7 +18,8 @@ import {
   LogOut,
   User as UserIcon,
   Loader2,
-  Truck
+  Truck,
+  Star
 } from 'lucide-react';
 
 export const Home: React.FC = () => {
@@ -165,6 +167,10 @@ export const Home: React.FC = () => {
         <div className="space-y-4">
           <ExploreItem onClick={() => navigate('sentiment_analysis')} icon={<MessageCircle className="w-7 h-7" />} title="Análise de sentimentos" subtitle="Precisa de ajuda em algo?" color="bg-[#F3F0FF]" iconColor="text-purple-300" />
           <ExploreItem onClick={() => navigate('local_support_mural')} icon={<Truck className="w-7 h-7" />} title="Mural de Apoio Local" subtitle="Caronas e ajuda mútua" color="bg-[#E0F2FE]" iconColor="text-blue-400" />
+          
+          {/* Novo Menu de Indicações conforme solicitado */}
+          <ExploreItem onClick={() => navigate('indications_hub')} icon={<Star className="w-7 h-7" />} title="Indica Aí, Mãe!" subtitle="Serviços e parceiros de confiança" color="bg-[#FFF8F0]" iconColor="text-amber-500" />
+          
           <ExploreItem onClick={() => navigate('care_agenda')} icon={<Calendar className="w-7 h-7" />} title="Agenda de cuidados" subtitle="Planeje momentos para você" color="bg-[#F3F0FF]" iconColor="text-purple-300" />
           <ExploreItem onClick={() => navigate('channels_list')} icon={<Users className="w-7 h-7" />} title="Canais temáticos" subtitle="Conecte-se com outras mães" color="bg-[#F3F0FF]" iconColor="text-purple-300" />
         </div>

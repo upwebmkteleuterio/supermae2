@@ -1,3 +1,4 @@
+"use client";
 
 import React, { useEffect } from 'react';
 import { AppProvider, useApp } from './store/AppContext';
@@ -40,6 +41,7 @@ import { SubscriptionPlans } from './pages/SubscriptionPlans';
 import { LocalSupportMural } from './pages/LocalSupportMural';
 import { NotificationsList } from './pages/NotificationsList';
 import { ShuffleSuggestions } from './pages/ShuffleSuggestions';
+import { IndicationsHub } from './pages/IndicationsHub';
 import { BottomNav } from './components/BottomNav';
 import { Loader2 } from 'lucide-react';
 
@@ -105,6 +107,7 @@ const AppRouter: React.FC = () => {
     case 'local_support_mural': return <LocalSupportMural />;
     case 'notifications_list': return <NotificationsList />;
     case 'shuffle_suggestions': return <ShuffleSuggestions />;
+    case 'indications_hub': return <IndicationsHub />;
     case 'subscription_plans':
     case 'payment_selection':
       return <SubscriptionPlans />;
