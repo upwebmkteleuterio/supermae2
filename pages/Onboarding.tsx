@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../store/AppContext';
-import { ArrowLeft, Check, ShieldCheck, Eye, EyeOff, X, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, ShieldCheck, Eye, EyeOff, X, AlertCircle, Loader2, MailCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
@@ -20,12 +20,13 @@ const INTEREST_OPTIONS = [
 ];
 
 export const Onboarding: React.FC = () => {
-  const { navigate, goBack, updateUserProfile } = useApp();
+  const { navigate, goBack, updateUserProfile, requestPasswordReset } = useApp();
   const [step, setStep] = useState(1);
   const [isLogin, setIsLogin] = useState(() => localStorage.getItem('auth_mode') === 'login');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   useEffect(() => {
     if (error) {
@@ -119,6 +120,21 @@ export const Onboarding: React.FC = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setError("Por favor, digite seu e-mail para recuperar a senha.");
+      return;
+    }
+    setLoading(true);
+    const { success, error: resetError } = await requestPasswordReset(formData.email);
+    setLoading(false);
+    if (success) {
+      setResetSent(true);
+    } else {
+      setError(resetError || "Erro ao enviar e-mail de recuperação.");
+    }
+  };
+
   const handleNext = async () => {
     if (step === 1) {
       await handleAuth();
@@ -174,6 +190,26 @@ export const Onboarding: React.FC = () => {
         <div className="absolute top-[20%] -left-20 w-80 h-80 bg-purple-200/20 rounded-full blur-[90px] animate-float-slow"></div>
         <div className="absolute bottom-[20%] -right-20 w-72 h-72 bg-purple-300/10 rounded-full blur-[110px] animate-float-reverse"></div>
       </div>
+
+      {resetSent && (
+        <div className="fixed inset-0 z-[110] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-[2.5rem] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-300 max-w-sm w-full">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MailCheck className="w-8 h-8 text-purple-600" />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-2">E-mail Enviado!</h3>
+            <p className="text-slate-500 text-sm leading-relaxed mb-8">
+              Enviamos instruções de recuperação de senha para <span className="font-bold text-slate-800">{formData.email}</span>. Verifique sua caixa de entrada e spam.
+            </p>
+            <button
+              onClick={() => setResetSent(false)}
+              className="w-full bg-purple-600 text-white py-4 rounded-full font-bold shadow-lg shadow-purple-100 active:scale-95 transition-all"
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="fixed top-12 left-6 right-6 z-[100] animate-in slide-in-from-top-4 duration-300">
@@ -253,6 +289,17 @@ export const Onboarding: React.FC = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {isLogin && (
+                <div className="text-right pr-2">
+                   <button
+                     onClick={handleForgotPassword}
+                     disabled={loading}
+                     className="text-purple-600 font-bold text-[10px] uppercase tracking-wider hover:opacity-70 transition-opacity"
+                   >
+                     Esqueci minha senha
+                   </button>
+                </div>
+              )}
               {!isLogin && (
                 <input 
                   type="password" placeholder="Confirmar Senha" 

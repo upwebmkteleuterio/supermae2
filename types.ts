@@ -43,7 +43,8 @@ export type ViewState =
   | 'local_support_mural'
   | 'notifications_list'
   | 'shuffle_suggestions'
-  | 'indications_hub';
+  | 'indications_hub'
+  | 'reset_password';
 
 export interface UserProfile {
   name: string;

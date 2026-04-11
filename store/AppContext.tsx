@@ -68,6 +68,10 @@ interface AppContextProps {
   fetchNotifications: () => Promise<void>;
   markNotificationAsRead: (id: string) => Promise<void>;
   
+  // Recuperação de senha
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; error: string | null }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; error: string | null }>;
+  
   // Indicações
   fetchIndications: () => Promise<void>;
   createIndication: (partner: Partial<IndicationPartner>) => Promise<boolean>;
@@ -400,6 +404,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } else if (event === 'SIGNED_OUT') {
         setState({ ...INITIAL_STATE, isAuthLoading: false });
         localStorage.removeItem(STORAGE_KEY);
+      } else if (event === 'PASSWORD_RECOVERY') {
+        setState(prev => ({ ...prev, isAuthenticated: true, isAuthLoading: false, currentPage: 'reset_password' }));
       }
     });
     return () => subscription.unsubscribe();
@@ -652,6 +658,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}`,
+    });
+    return { success: !error, error: error?.message || null };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { success: !error, error: error?.message || null };
+  };
+
   const setTempMoodSelection = (ids: string[]) => setState(prev => ({ ...prev, tempMoodSelection: ids }));
   const setTempMoodNote = (note: string) => setState(prev => ({ ...prev, tempMoodNote: note }));
   const setTempMoodPhotoUrl = (url: string) => setState(prev => ({ ...prev, tempMoodPhotoUrl: url }));
@@ -671,8 +689,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ 
+    <AppContext.Provider value={{
       state, navigate, goBack, setSelectedDate, setMood, addChild, selectChild, toggleBreathing, addAgendaItem, updateAgendaItem, deleteAgendaItem, toggleAgendaItemCompletion, updateMomSelfCare, addRoutine, deleteRoutine, updateRoutine, selectRoutine, addHabitToRoutine, updateHabitInRoutine, registerHabitTemplate, deleteCategory, toggleHabitCompletion, deleteHabitFromRoutine, setDailyMission, completeDailyMission, addReward, resetState, addChatMessage, addChannelMessage, clearChatHistory, setVoice, updateUserProfile, persistUserProfile, uploadAvatar, uploadMoodPhoto, saveMoodRecord, saveChildMoodRecord, fetchMoodLogs, fetchChildren, fetchAgendaItems, fetchRoutines, fetchHabitCompletions, setTempMoodSelection, setTempMoodNote, setTempMoodPhotoUrl, setSelectedChannel, setSelectedCareCategory, setSelectedCareIntensity, setCareTasks, toggleCareTask, logout, deleteAccount, fetchLocalSupportPosts, createLocalSupportPost, updateLocalSupportPost, deleteLocalSupportPost, markInterestInPost, markPostAsCompleted, fetchNotifications, markNotificationAsRead, installTemplate,
+      requestPasswordReset, updatePassword,
       fetchIndications, createIndication, updateIndication, deleteIndication, addIndicationReview, fetchIndicationReviews
     }}>
       {children}

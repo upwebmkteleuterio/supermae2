@@ -5,6 +5,7 @@ import { AppProvider, useApp } from './store/AppContext';
 import { Home } from './pages/Home';
 import { Welcome } from './pages/Welcome';
 import { Onboarding } from './pages/Onboarding';
+import { ResetPassword } from './pages/ResetPassword';
 import { SelfCareSelection } from './pages/SelfCareSelection';
 import { MomSelfCare } from './pages/MomSelfCare';
 import { MomAgenda } from './pages/MomAgenda';
@@ -64,13 +65,14 @@ const AppRouter: React.FC = () => {
   if (state.isAuthLoading) return <SplashScreen />;
   if (state.isBreathingActive) return <BreathingExercise />;
 
-  if (!state.isAuthenticated && state.currentPage !== 'welcome' && state.currentPage !== 'onboarding') {
+  if (!state.isAuthenticated && state.currentPage !== 'welcome' && state.currentPage !== 'onboarding' && state.currentPage !== 'reset_password') {
     return <Welcome />;
   }
 
   switch (state.currentPage) {
     case 'welcome': return <Welcome />;
     case 'onboarding': return <Onboarding />;
+    case 'reset_password': return <ResetPassword />;
     case 'home': return <Home />;
     case 'self_care_selection': return <SelfCareSelection />;
     case 'mom_self_care': return <MomSelfCare />;
