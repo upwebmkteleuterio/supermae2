@@ -11,25 +11,25 @@ import { MoodType, Activity, AgendaItem } from './types';
 
 export const SENTIMENTS = [
   { id: 'lonely', label: 'Sozinha', color: '#A89F91', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-4h2N0fRw1WrzB5vTIEc00ifNh9ppzO11dwIzyo-3Bx3yUkdNzzUSr7I67URP-lAyBPCShpTdFCiWgIz87RbUX7yKcq3b8YSKEoPi26B2FYKFe0o_oVNhGsL7ylNblIjIX_KPJRmrR314DkXHi3Haz4R0q5XbW0U3U3tQ3Dr5nOSNJBTlGzM3aQbFxCg74N2nsEc86JViVGZ6agwpunN266MnKQbxb44Zp-TISdzMnkwjU22k3mhZf0yDKBUSkOVA_DOFDoZ7HayV' },
-  { id: 'anxious', label: 'Ansiosa', color: '#E6A27C', img: '/sentiments/mom/Ansiosa.png' },
-  { id: 'proud', label: 'Orgulhosa de mim', color: '#C17F6A', img: '/sentiments/mom/Orgulhosa de si mesma.png' },
-  { id: 'exhausted', label: 'Exausta', color: '#D9C5B2', img: '/sentiments/mom/Exausta.png' },
-  { id: 'sad', label: 'Triste', color: '#8797A1', img: '/sentiments/mom/Triste.png' },
+  { id: 'anxious', label: 'Ansiosa', color: '#E6A27C', img: 'dyad-media://media/supermae/.dyad/media/cf5a9a3e5c4d3f360e898c90d2b83d05.png' },
+  { id: 'proud', label: 'Orgulhosa de mim', color: '#C17F6A', img: 'dyad-media://media/supermae/.dyad/media/0ab924faf20558e9b74a5fc1c6db1f8d.png' },
+  { id: 'exhausted', label: 'Exausta', color: '#D9C5B2', img: 'dyad-media://media/supermae/.dyad/media/88a07fec26955688eac1e90b1e1592fa.png' },
+  { id: 'sad', label: 'Triste', color: '#8797A1', img: 'dyad-media://media/supermae/.dyad/media/a3f497c900d5c34c45eb45b87f4bb2e4.png' },
   { id: 'hopeful', label: 'Esperançosa', color: '#D9B371', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBDRVSlh-pGM0Q-UlfA0dpTyZ2MDuwda9d3WA8er8TabrU5W9DcfoZaMpuTYevXNCUanxTOG4LaDJwS1yGPrMs_G4uStXch_Y_0R-1YkyN77jszD1BEe_nuxTnMFg98duYRxB1oeyJFl6MiWEWRpUITwCOqZgij1-3yqKM43V4l2YjUEBpt7HvqRqLP4fd5ot0nTRP1cqEM0TvUi4VGpcEYh3HDztY0NJbtq-lSQHxYscp9D3t1gvx-KRNNxsVH4n3r-f9ERYfUT3p_' },
-  { id: 'guilty', label: 'Culpada', color: '#A67D78', img: '/sentiments/mom/Culpada.png' },
-  { id: 'irritated', label: 'Irritada', color: '#D1A3A4', img: '/sentiments/mom/Irritada.png' },
+  { id: 'guilty', label: 'Culpada', color: '#A67D78', img: 'dyad-media://media/supermae/.dyad/media/ff2d2c452057772b77bc0eff3e3f7ff3.png' },
+  { id: 'irritated', label: 'Irritada', color: '#D1A3A4', img: 'dyad-media://media/supermae/.dyad/media/8a96c0dacfe8e57a09e759ae38526f14.png' },
   { id: 'happy', label: 'Alegre', color: '#9FB18D', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBNfUAkigUEk8-Daom1kD65SkI9TfNzKv84d3OrejI-Vb1PhDDtTT0PAI8sj1UgahI592Aa0IpR1wG0ImYcgubd5yXCr6Rr-ntC41uErZGjb_1mL2qtgx_Hyh1mtnTp0GvT7IE7XPgLaKjBNas007lR3pEhZvOVRktjlq5Bev8AfFBn9qiLWDN4pUk5YZvw_iiReioSNJq_F8o1_HW8drIwULfx0sF5e23sGhTOX_BoAeg4as4yd18T3ULenDwWnau-xpV5arKFUvfR' },
-  { id: 'angry', label: 'Raivosa', color: '#E49B8D', img: '/sentiments/mom/Raivosa.png' },
-  { id: 'insecure', label: 'Insegura', color: '#F2A48E', img: '/sentiments/mom/Insegura.png' },
-  { id: 'confused', label: 'Confusa', color: '#8DA198', img: '/sentiments/mom/Confusa.png' },
-  { id: 'supported', label: 'Amparada', color: '#B8A2C1', img: '/sentiments/mom/Amparada.png' },
-  { id: 'euphoric', label: 'Eufórica', color: '#F5D142', img: '/sentiments/mom/Euforica.png' },
-  { id: 'grateful', label: 'Grata', color: '#8DBB94', img: '/sentiments/mom/Grata.png' },
+  { id: 'angry', label: 'Raivosa', color: '#E49B8D', img: 'dyad-media://media/supermae/.dyad/media/1f4d5cf1392585f7cc534b4e99ac8eac.png' },
+  { id: 'insecure', label: 'Insegura', color: '#F2A48E', img: 'dyad-media://media/supermae/.dyad/media/41a3219d0c69ccd12b29b0f18da81dce.png' },
+  { id: 'confused', label: 'Confusa', color: '#8DA198', img: 'dyad-media://media/supermae/.dyad/media/e1c441ad1bb49bac96f76bca814ba819.png' },
+  { id: 'supported', label: 'Amparada', color: '#B8A2C1', img: 'dyad-media://media/supermae/.dyad/media/54ea87e97ca1a4b8b7d2dd85fb3de987.png' },
+  { id: 'euphoric', label: 'Eufórica', color: '#F5D142', img: 'dyad-media://media/supermae/.dyad/media/bf8470488f3900ca1e85c9a710a511f9.png' },
+  { id: 'grateful', label: 'Grata', color: '#8DBB94', img: 'dyad-media://media/supermae/.dyad/media/cb0e39305737bb945e47c45b9405b3bd.png' },
   { id: 'secure', label: 'Segura', color: '#5DA1B3', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBDRVSlh-pGM0Q-UlfA0dpTyZ2MDuwda9d3WA8er8TabrU5W9DcfoZaMpuTYevXNCUanxTOG4LaDJwS1yGPrMs_G4uStXch_Y_0R-1YkyN77jszD1BEe_nuxTnMFg98duYRxB1oeyJFl6MiWEWRpUITwCOqZgij1-3yqKM43V4l2YjUEBpt7HvqRqLP4fd5ot0nTRP1cqEM0TvUi4VGpcEYh3HDztY0NJbtq-lSQHxYscp9D3t1gvx-KRNNxsVH4n3r-f9ERYfUT3p_' },
-  { id: 'calm', label: 'Calma', color: '#A2C1B8', img: '/sentiments/mom/Calma.png' },
-  { id: 'enthusiastic', label: 'Entusiasmada', color: '#F28C38', img: '/sentiments/mom/Entusiasmada.png' },
-  { id: 'inspired', label: 'Inspirada', color: '#9B8DF2', img: '/sentiments/mom/Inspirada.png' },
-  { id: 'frustrated', label: 'Frustrada', color: '#A18D8D', img: '/sentiments/mom/Frustrada.png' },
+  { id: 'calm', label: 'Calma', color: '#A2C1B8', img: 'dyad-media://media/supermae/.dyad/media/67026d772792f72a0554c8bc9d1292f2.png' },
+  { id: 'enthusiastic', label: 'Entusiasmada', color: '#F28C38', img: 'dyad-media://media/supermae/.dyad/media/7831750cc5481ddac696ac19a1a6abba.png' },
+  { id: 'inspired', label: 'Inspirada', color: '#9B8DF2', img: 'dyad-media://media/supermae/.dyad/media/225996c25bf28b7a5d679d26b8320d67.png' },
+  { id: 'frustrated', label: 'Frustrada', color: '#A18D8D', img: 'dyad-media://media/supermae/.dyad/media/20920ea250522b292f15f94d5dfb0cb0.png' },
 ];
 
 export const SENTIMENTS_CHILD = [
@@ -48,6 +48,7 @@ export const SENTIMENTS_CHILD = [
 ];
 
 export const AI_CONFIG = {
+  // ... resto do arquivo mantido exatamente igual
   SYSTEM_INSTRUCTION: `Você é uma mentora especialista em autocuidado e inteligência emocional para mães, especialmente mães de crianças atípicas (TEA, TDAH, etc.). Sua voz é acolhedora, empática, sem julgamentos e prática. 
   Você deve usar as informações contextuais da usuária (perfil, diagnóstico dos filhos, objetivos) para personalizar cada resposta.`,
   
