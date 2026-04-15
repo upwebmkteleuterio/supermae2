@@ -43,6 +43,7 @@ import { LocalSupportMural } from './pages/LocalSupportMural';
 import { NotificationsList } from './pages/NotificationsList';
 import { ShuffleSuggestions } from './pages/ShuffleSuggestions';
 import { IndicationsHub } from './pages/IndicationsHub';
+import { AnimationPreview } from './pages/AnimationPreview';
 import { BottomNav } from './components/BottomNav';
 import { Loader2 } from 'lucide-react';
 
@@ -56,14 +57,21 @@ const SplashScreen: React.FC = () => (
 );
 
 const AppRouter: React.FC = () => {
-  const { state } = useApp();
+  const { state, navigate } = useApp();
 
   useEffect(() => {
+    // Lógica para detectar o link individual /animacao
+    if (window.location.pathname === '/animacao') {
+      navigate('animation_preview');
+    }
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [state.currentPage]);
+  }, [state.currentPage, navigate]);
 
   if (state.isAuthLoading) return <SplashScreen />;
   if (state.isBreathingActive) return <BreathingExercise />;
+
+  // Se estiver no preview da animação, ignora autenticação para o cliente ver
+  if (state.currentPage === 'animation_preview') return <AnimationPreview />;
 
   if (!state.isAuthenticated && state.currentPage !== 'welcome' && state.currentPage !== 'onboarding' && state.currentPage !== 'reset_password') {
     return <Welcome />;
