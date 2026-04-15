@@ -44,7 +44,8 @@ export type ViewState =
   | 'notifications_list'
   | 'shuffle_suggestions'
   | 'indications_hub'
-  | 'reset_password';
+  | 'reset_password'
+  | 'animation_preview';
 
 export interface UserProfile {
   name: string;
