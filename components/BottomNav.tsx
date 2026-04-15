@@ -24,7 +24,8 @@ const NAV_ITEMS: NavItemConfig[] = [
   { id: 'config', icon: Settings, label: 'Config', pages: ['settings', 'personal_data'], target: 'settings' },
 ];
 
-const HIDDEN_PAGES: ViewState[] = ['welcome', 'onboarding', 'breathing_exercise', 'channel_chat'];
+// Adicionado 'animation_preview' à lista de páginas que escondem o menu
+const HIDDEN_PAGES: ViewState[] = ['welcome', 'onboarding', 'breathing_exercise', 'channel_chat', 'animation_preview'];
 
 export const BottomNav: React.FC = () => {
   const { state, navigate } = useApp();
