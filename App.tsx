@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './store/AppContext';
 import { Home } from './pages/Home';
 import { Welcome } from './pages/Welcome';
@@ -48,29 +48,66 @@ import { BottomNav } from './components/BottomNav';
 import { Loader2 } from 'lucide-react';
 
 const SplashScreen: React.FC = () => (
-  <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-4">
-    <div className="w-16 h-16 bg-purple-600 rounded-2xl flex items-center justify-center animate-pulse shadow-lg">
-       <span className="text-white font-black text-2xl">SM</span>
+  <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[999] overflow-hidden">
+    {/* Fundo com bolhas idêntico ao Welcome/Login */}
+    <div className="absolute inset-0 pointer-events-none z-0">
+      <div className="absolute top-[5%] -left-32 w-96 h-96 bg-purple-400/20 rounded-full blur-[100px] animate-float-slow"></div>
+      <div className="absolute top-[35%] -right-32 w-80 h-80 bg-purple-500/15 rounded-full blur-[120px] animate-float-reverse"></div>
+      <div className="absolute bottom-[-10%] left-[20%] w-72 h-72 bg-pink-300/10 rounded-full blur-[90px] animate-float-slow"></div>
     </div>
-    <Loader2 className="w-6 h-6 animate-spin text-purple-200" />
+
+    <div className="relative z-10 flex flex-col items-center gap-8 w-full max-w-[280px]">
+      {/* Logo Centralizada */}
+      <div className="w-32 h-32 rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-50 duration-700">
+        <img src="/logo.png" alt="Super Mãe Logo" className="w-full h-full object-cover" />
+      </div>
+
+      {/* Barra de Carregamento e Texto */}
+      <div className="w-full flex flex-col items-center gap-3">
+        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+          <div 
+            className="h-full bg-purple-600 rounded-full"
+            style={{ 
+              animation: 'loadingProgress 5s linear forwards'
+            }}
+          />
+        </div>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
+          carregando experiência
+        </p>
+      </div>
+    </div>
+
+    <style>{`
+      @keyframes loadingProgress {
+        from { width: 0%; }
+        to { width: 100%; }
+      }
+    `}</style>
   </div>
 );
 
 const AppRouter: React.FC = () => {
   const { state, navigate } = useApp();
+  const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
-    // Lógica para detectar o link individual /animacao
+    // Timer de 5 segundos para a splash screen
+    const timer = setTimeout(() => {
+      setSplashVisible(false);
+    }, 5000);
+
     if (window.location.pathname === '/animacao') {
       navigate('animation_preview');
     }
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [state.currentPage, navigate]);
 
-  if (state.isAuthLoading) return <SplashScreen />;
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  // Enquanto a splash estiver visível ou o auth ainda estiver carregando (apenas se for a primeira vez)
+  if (splashVisible || state.isAuthLoading) return <SplashScreen />;
+  
   if (state.isBreathingActive) return <BreathingExercise />;
-
-  // Se estiver no preview da animação, ignora autenticação para o cliente ver
   if (state.currentPage === 'animation_preview') return <AnimationPreview />;
 
   if (!state.isAuthenticated && state.currentPage !== 'welcome' && state.currentPage !== 'onboarding' && state.currentPage !== 'reset_password') {
