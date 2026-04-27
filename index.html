@@ -1,10 +1,18 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Super Mãe</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#A855F7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Super Mãe">
+    <link rel="apple-touch-icon" href="/logo.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="liquid-card.css">
@@ -138,11 +146,20 @@
     </style>
     <script src="https://cdn.lordicon.com/lordicon.js"></script>
     <script>
-        // Shim robusto para suportar GEMINI_API_KEY no browser se estiver disponível
         window.process = window.process || { env: {} };
         window.process.env = window.process.env || {};
-        // Tenta capturar a chave de qualquer nome comum usado no deploy
         window.process.env.API_KEY = window.process.env.API_KEY || window.process.env.GEMINI_API_KEY || '';
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').then(reg => {
+              console.log('SW registrado!', reg);
+            }).catch(err => {
+              console.log('Erro ao registrar SW', err);
+            });
+          });
+        }
     </script>
 <script type="importmap">
 {
@@ -163,7 +180,6 @@
 </head>
 <body class="bg-slate-50 text-slate-900 overflow-x-hidden">
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-<script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
