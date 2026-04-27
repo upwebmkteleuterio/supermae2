@@ -56,15 +56,15 @@ const SplashScreen: React.FC = () => (
       <div className="absolute bottom-[-10%] left-[20%] w-72 h-72 bg-pink-300/10 rounded-full blur-[90px] animate-float-slow"></div>
     </div>
 
-    <div className="relative z-10 flex flex-col items-center gap-12 w-full max-w-[280px]">
-      {/* Logo Sem Moldura */}
-      <div className="w-40 h-auto animate-in zoom-in-50 duration-700">
+    <div className="relative z-10 flex flex-col items-center gap-12 w-full max-w-[320px]">
+      {/* Logo Maior e Sem Moldura */}
+      <div className="w-56 h-auto animate-in zoom-in-50 duration-1000">
         <img src="/logo.png" alt="Super Mãe Logo" className="w-full h-auto object-contain" />
       </div>
 
-      {/* Barra de Carregamento e Texto */}
+      {/* Barra de Carregamento Curta e Texto */}
       <div className="w-full flex flex-col items-center gap-3">
-        <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-[160px] h-1.5 bg-slate-100 rounded-full overflow-hidden shadow-inner">
           <div 
             className="h-full bg-purple-600 rounded-full"
             style={{ 
@@ -92,6 +92,7 @@ const AppRouter: React.FC = () => {
   const [splashVisible, setSplashVisible] = useState(true);
 
   useEffect(() => {
+    // Timer de 5 segundos para a splash screen
     const timer = setTimeout(() => {
       setSplashVisible(false);
     }, 5000);
